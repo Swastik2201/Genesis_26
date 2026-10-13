@@ -4,35 +4,6 @@
 
 ---
 
-## 1. Screenshots
-
-<!-- Dashboard & HUD Preview Screenshots -->
-<div align="center">
-  <table>
-    <tr>
-      <td width="50%">
-        <img src="web/assets/live_run_preview.png" alt="Live Run Decision Viewer" onerror="this.src='https://placehold.co/600x360/0d1117/38bdf8?text=Live+Run+Decision+Viewer'" width="100%"/>
-        <p align="center"><b>Live Run: State &rarr; Laya Questions &rarr; Probabilities &rarr; Action</b></p>
-      </td>
-      <td width="50%">
-        <img src="web/assets/autopsy_preview.png" alt="Decision Autopsy Panel" onerror="this.src='https://placehold.co/600x360/0d1117/ef4444?text=Decision+Autopsy+Panel'" width="100%"/>
-        <p align="center"><b>Decision Autopsy: Isolating Misses & Framing Hypotheses</b></p>
-      </td>
-    </tr>
-    <tr>
-      <td width="50%">
-        <img src="web/assets/question_lab_preview.png" alt="Question Lab Experiments" onerror="this.src='https://placehold.co/600x360/0d1117/a855f7?text=Question+Lab+Benchmarking'" width="100%"/>
-        <p align="center"><b>Question Lab: Perception-First vs Direct Action Benchmarks</b></p>
-      </td>
-      <td width="50%">
-        <img src="web/assets/calibration_preview.png" alt="Confidence Reality Check" onerror="this.src='https://placehold.co/600x360/0d1117/10b981?text=Confidence+Reality+Check'" width="100%"/>
-        <p align="center"><b>Confidence Reality Check: Reliability Bins & ECE Curves</b></p>
-      </td>
-    </tr>
-  </table>
-</div>
-
----
 
 ## 2. Problem Statement
 
