@@ -1,0 +1,41 @@
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python byte-code and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Model caches and checkpoints
+.cache/
+huggingface/
+*.bin
+*.safetensors
+*.pt
+*.onnx
+
+# Environment & credentials
+.env
+.env.*
+*.key
+*.token
+
+# Logs (ignore runtime runs, preserve structure and logs/best/)
+logs/runs/*
+!logs/runs/.gitkeep
+!logs/best/.gitkeep
+
+# Node.js
+node_modules/
+
+# OS and Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

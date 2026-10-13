@@ -1,0 +1,3 @@
+-r requirements/a.txt
+-r requirements/b.txt
+-r requirements/d.txt

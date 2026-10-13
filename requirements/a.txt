@@ -1,0 +1,2 @@
+# Lane A dependencies (Game integration, adapter, loop, validator)
+# Add lane-specific dependencies here.

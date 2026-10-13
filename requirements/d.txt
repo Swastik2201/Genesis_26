@@ -1,0 +1,5 @@
+# Lane D dependencies (Contracts, server, logger, autopsy, replay, docs)
+fastapi>=0.100.0
+uvicorn>=0.20.0
+jsonschema>=4.20.0
+pytest>=8.0.0
