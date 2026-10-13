@@ -160,3 +160,39 @@ Observed output in `res["answers"]["collision_imminent"]`:
 2. **Confidence vs Answer Confidence:** Laya distinguishes between `confidence` (temperature-calibrated) and `answer_confidence` (raw model probability).
 3. **Temperature Clamping:** Laya clamps temperatures to $[0.5, 5.0]$ and logs a `RuntimeWarning` when checkpoint config carries outliers.
 4. **Multi-Question Efficiency:** All questions passed in a single dictionary are evaluated in a single forward pass without re-encoding state text.
+
+---
+
+## 5. Mock-Game Question Set Hypotheses (Prompt 3)
+
+The following four question formulation strategies were implemented in [`bot/questions/`](../bot/questions/) for evaluation in the Question Lab:
+
+### 5.1 Variant 1: Perception-First (`v1_perception`)
+- **File:** [`bot/questions/v1_perception.py`](../bot/questions/v1_perception.py)
+- **Hypothesis:** Laya performs best when evaluating factual perception questions about the environment state ("Which lane is safest?", "Which lane is blocked?") rather than making strategic move choices directly. Mapping perception probabilities into actions via deterministic code logic will outperform direct action selection.
+- **Questions:**
+  - `safest_lane`: `choice` among left, centre, right.
+  - `blocked_lane`: `choice` among left, centre, right, none.
+- **Expected Advantage:** High scene comprehension, lower policy confusion, resilient mapping.
+
+### 5.2 Variant 2: Direct Action Control (`v2_direct_action`)
+- **File:** [`bot/questions/v2_direct_action.py`](../bot/questions/v2_direct_action.py)
+- **Hypothesis (Control):** Asking the model directly "Which action should we take?" forces the model to act as a raw policy selector rather than an environment perceiver. We hypothesize this performs worse, produces more invalid/suboptimal moves, and is less calibrated than perception-first formulation.
+- **Questions:**
+  - `recommended_action`: `choice` directly across legal actions (`move_left`, `stay`, `move_right`).
+- **Expected Advantage:** Minimal code mapping overhead; useful as baseline control.
+
+### 5.3 Variant 3: Hybrid Binary Gates (`v3_hybrid_gates`)
+- **File:** [`bot/questions/v3_hybrid_gates.py`](../bot/questions/v3_hybrid_gates.py)
+- **Hypothesis:** Binary "noul" yes/no gates provide sharper, better-calibrated probability estimates than multi-class choice questions for hazard detection. Combining an imminent collision gate ($P(\text{collision}) \ge 0.50$) with directional escape gates using explicit configurable thresholds delivers robust obstacle evasion.
+- **Questions:**
+  - `collision_imminent`: `noul` gate for hazard in current lane.
+  - `left_lane_free`: `noul` gate for left lane availability.
+  - `right_lane_free`: `noul` gate for right lane availability.
+- **Expected Advantage:** Sharp thresholding for emergency evasion vs cruising.
+
+### 5.4 Variant 4: Terse State Representation (`v4_terse_state`)
+- **File:** [`bot/questions/v4_terse_state.py`](../bot/questions/v4_terse_state.py)
+- **Hypothesis:** Trimming conversational phrasing and secondary details (such as current score or safe option lists) from the state text focuses Laya's attention on immediate obstacle facts and reduces token usage / latency without compromising decision accuracy.
+- **Questions:** Identical to `v1_perception`, evaluated against stripped concise state text.
+- **Expected Advantage:** Lower per-call latency, higher token efficiency.

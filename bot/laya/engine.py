@@ -189,6 +189,10 @@ class LayaEngine:
         else:
             state_text = str(state)
 
+        # Allow question sets (e.g. v4_terse_state) to preprocess/compress state text
+        if hasattr(self.question_set, "compress_state_text"):
+            state_text = getattr(self.question_set, "compress_state_text")(state_text)
+
         # 2. Build typed questions from the configured question set
         questions = self.question_set.build_questions(state)
         if not questions:
