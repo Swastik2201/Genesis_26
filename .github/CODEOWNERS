@@ -1,0 +1,40 @@
+# CODEOWNERS for Beat the Bot
+
+# Lane A: Game Integration
+/bot/adapters/        @member-a
+/bot/normaliser.py    @member-a
+/bot/validator.py     @member-a
+/bot/loop.py          @member-a
+/bot/config.py        @member-a
+/mock_game/           @member-a
+/tests/lane_a/        @member-a
+/requirements/a.txt   @member-a
+
+# Lane B: Laya Engine and Experiments
+/bot/laya/            @member-b
+/bot/questions/       @member-b
+/bot/calibration.py   @member-b
+/experiments/         @member-b
+/tests/lane_b/        @member-b
+/requirements/b.txt   @member-b
+
+# Lane C: Frontend
+/web/                 @member-c
+
+# Lane D: Contracts, Logger, Server, Autopsy, Replay, Docs
+/contracts/           @member-d
+/server/              @member-d
+/bot/logger.py        @member-d
+/bot/autopsy.py       @member-d
+/logs/                @member-d
+/docs/                @member-d
+/scripts/             @member-d
+/.github/             @member-d
+/lanes.json           @member-d
+/README.md            @member-d
+/AGENTS.md            @member-d
+/STEPS.md             @member-d
+/team/                @member-d
+/requirements.txt     @member-d
+/requirements/d.txt   @member-d
+/tests/lane_d/        @member-d

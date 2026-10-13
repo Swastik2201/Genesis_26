@@ -1,0 +1,58 @@
+{
+  "a": {
+    "name": "Game Integration",
+    "branch": "feat/game-integration",
+    "allowed_prefixes": [
+      "bot/adapters/",
+      "bot/normaliser.py",
+      "bot/validator.py",
+      "bot/loop.py",
+      "bot/config.py",
+      "mock_game/",
+      "tests/lane_a/",
+      "requirements/a.txt"
+    ]
+  },
+  "b": {
+    "name": "Laya Engine and Experiments",
+    "branch": "feat/laya-engine",
+    "allowed_prefixes": [
+      "bot/laya/",
+      "bot/questions/",
+      "bot/calibration.py",
+      "experiments/",
+      "tests/lane_b/",
+      "requirements/b.txt"
+    ]
+  },
+  "c": {
+    "name": "Frontend",
+    "branch": "feat/frontend",
+    "allowed_prefixes": [
+      "web/"
+    ]
+  },
+  "d": {
+    "name": "Contracts, Logger, Server, Autopsy and Docs",
+    "branch": "feat/server-logs",
+    "allowed_prefixes": [
+      "contracts/",
+      "server/",
+      "bot/logger.py",
+      "bot/autopsy.py",
+      "logs/",
+      "docs/",
+      "scripts/",
+      ".github/",
+      "lanes.json",
+      "README.md",
+      "AGENTS.md",
+      "STEPS.md",
+      "team/",
+      "requirements.txt",
+      "requirements/d.txt",
+      "tests/lane_d/",
+      ".gitignore"
+    ]
+  }
+}
