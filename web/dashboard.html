@@ -153,11 +153,11 @@
         </div>
       </div>
 
-      <div class="topbar-right">
-        <!-- Demo Ribbon -->
-        <span id="topbar-demo-ribbon" class="demo-ribbon" style="display: none;" title="Server unreachable or mock requested. Using deterministic fixture data.">
-          DEMO DATA
-        </span>
+        <!-- Sound Toggle Button (Pure Web Audio, OFF by default) -->
+        <button id="btn-sound-toggle" class="sound-toggle-btn btn btn-ghost btn-sm" aria-label="Toggle synthesized sound effects" title="Toggle synthesized Web Audio sound (OFF by default)">
+          <span id="sound-icon" aria-hidden="true">🔇</span>
+          <span id="sound-label">SOUND: OFF</span>
+        </button>
 
         <!-- LIVE Badge (pulses only when events are streaming) -->
         <span id="status-live-badge" class="badge badge-cyan" aria-live="polite">
@@ -170,6 +170,9 @@
       </div>
     </header>
 
+    <!-- Accessible screen-reader live region (polite, throttled announcements) -->
+    <div id="live-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
     <!-- Main Content Panel Area (Swapped without page reload via router.js) -->
     <main class="dashboard-main" id="panel-container" role="main" aria-live="polite">
       <!-- Mounted active panel renders here -->
@@ -181,6 +184,9 @@
     import { initRouter } from './js/router.js';
     import { store } from './js/store.js';
     import * as api from './js/api.js';
+    import { gameConfig } from './config.js';
+    import * as sound from './js/sound.js';
+    import { initParticleBackground } from './js/fx.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
       const panelContainer = document.getElementById('panel-container');
@@ -191,37 +197,106 @@
       const statusScore = document.getElementById('status-score');
       const statusLatency = document.getElementById('status-latency');
       const statusLiveBadge = document.getElementById('status-live-badge');
-      const demoRibbon = document.getElementById('topbar-demo-ribbon');
-      const demoModeBadge = document.getElementById('demo-mode-badge');
       const serverStatusBadge = document.getElementById('server-status-badge');
+      const soundBtn = document.getElementById('btn-sound-toggle');
+      const soundIcon = document.getElementById('sound-icon');
+      const soundLabel = document.getElementById('sound-label');
+      const announcer = document.getElementById('live-announcer');
+
+      // 0. Apply Central Game Configuration from web/config.js
+      if (statusGame && gameConfig.gameId) {
+        statusGame.textContent = gameConfig.gameId;
+      }
+      const brandText = document.querySelector('.sidebar-brand-text');
+      if (brandText && gameConfig.gameName) {
+        brandText.textContent = gameConfig.gameName;
+      }
+
+      // Initialize ambient particles (capped, rAF, pauses when hidden)
+      initParticleBackground('.bg-ambient');
 
       // 1. Initialize client-side hash router
       initRouter(panelContainer);
 
-      // 2. Check health and determine mock status
-      try {
-        const healthData = await api.health();
-        if (serverStatusBadge) {
-          serverStatusBadge.textContent = healthData.mode === 'live' ? 'ONLINE' : 'MOCK / DEMO';
-          serverStatusBadge.className = `badge ${healthData.mode === 'live' ? 'badge-good' : 'badge-demo'}`;
-        }
-      } catch (err) {
-        console.warn('Health check failed; running in mock fallback mode.', err);
+      // 2. Handle ?run=<session> or ?session=<session> query parameter
+      const urlParams = new URLSearchParams(window.location.search);
+      const requestedSession = urlParams.get('run') || urlParams.get('session');
+      if (requestedSession) {
+        store.setSession(requestedSession);
       }
 
-      // 3. Load available runs and populate global session picker
+      // 3. Sound Toggle Button Handler
+      if (soundBtn) {
+        function updateSoundUI() {
+          const enabled = sound.isSoundEnabled();
+          soundIcon.textContent = enabled ? '🔊' : '🔇';
+          soundLabel.textContent = enabled ? 'SOUND: ON' : 'SOUND: OFF';
+          if (enabled) soundBtn.classList.add('sound-active');
+          else soundBtn.classList.remove('sound-active');
+        }
+        updateSoundUI();
+
+        soundBtn.addEventListener('click', () => {
+          sound.toggleSound();
+          updateSoundUI();
+        });
+      }
+
+      // 4. Keyboard Navigation for Sidebar Navigation Tabs
+      const navLinks = Array.from(document.querySelectorAll('.sidebar-nav .nav-link-btn'));
+      navLinks.forEach((link, idx) => {
+        link.setAttribute('tabindex', '0');
+        link.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const nextIdx = (idx + 1) % navLinks.length;
+            navLinks[nextIdx].focus();
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prevIdx = (idx - 1 + navLinks.length) % navLinks.length;
+            navLinks[prevIdx].focus();
+          } else if (e.key === 'Home') {
+            e.preventDefault();
+            navLinks[0].focus();
+          } else if (e.key === 'End') {
+            e.preventDefault();
+            navLinks[navLinks.length - 1].focus();
+          }
+        });
+      });
+
+      // 5. Check health and determine demo / mock status
+      let isMockActive = api.isMock();
+      try {
+        const healthData = await api.health();
+        isMockActive = healthData.mode === 'mock_demo' || api.isMock();
+        if (serverStatusBadge) {
+          serverStatusBadge.textContent = isMockActive ? 'DEMO / MOCK' : 'ONLINE';
+          serverStatusBadge.className = `badge ${isMockActive ? 'badge-demo' : 'badge-good'}`;
+        }
+      } catch (err) {
+        console.warn('Health check failed; activating demo fallback mode.', err);
+        isMockActive = true;
+        api.setMockMode(true);
+      }
+
+      // Inject / Show Top Demo Mode Ribbon if server unreachable or mock active
+      renderDemoModeRibbon(isMockActive);
+
+      // 6. Load available runs and populate global session picker
       try {
         const sessionRuns = await api.runs();
         if (Array.isArray(sessionRuns) && sessionRuns.length > 0) {
           store.setSessions(sessionRuns);
           sessionSelect.innerHTML = sessionRuns.map(r => `
-            <option value="${r.session_id}">${r.session_id} (${r.final_score ?? 0} pts)</option>
+            <option value="${r.session_id}" ${r.session_id === (requestedSession || store.getState().currentSession) ? 'selected' : ''}>
+              ${r.session_id} (${r.final_score ?? 0} pts)
+            </option>
           `).join('');
 
-          // Select first session if none set
-          if (!store.getState().currentSession) {
-            store.setSession(sessionRuns[0].session_id);
-          }
+          // Select requested session or default to first
+          const targetSession = requestedSession || sessionRuns[0].session_id;
+          store.setSession(targetSession);
         }
       } catch (err) {
         console.error('Failed to load runs:', err);
@@ -233,10 +308,11 @@
         store.setSession(selectedId);
       });
 
-      // 4. Subscribe to Store updates to reflect telemetry in Topbar
+      // 7. Subscribe to Store updates to reflect telemetry in Topbar and Screen Reader
+      let lastAnnounceTime = 0;
       store.subscribe((state) => {
         if (statusSession) statusSession.textContent = state.currentSession || 'latest';
-        if (statusGame) statusGame.textContent = state.gameId || 'mock-runner-v1';
+        if (statusGame) statusGame.textContent = state.gameId || gameConfig.gameId;
         if (statusStep) statusStep.textContent = state.stepCount;
         if (statusScore) statusScore.textContent = `${state.score} PTS`;
         if (statusLatency) {
@@ -254,15 +330,65 @@
           }
         }
 
-        // Mock indicator visibility
-        const isMockActive = state.isMockMode || api.isMock();
-        if (demoRibbon) {
-          demoRibbon.style.display = isMockActive ? 'inline-flex' : 'none';
-        }
-        if (demoModeBadge) {
-          demoModeBadge.style.display = isMockActive ? 'block' : 'none';
+        // Screen reader announcement (throttled to at most once per 1.5 seconds)
+        if (announcer && state.latestEvent) {
+          const now = Date.now();
+          if (now - lastAnnounceTime > 1500) {
+            lastAnnounceTime = now;
+            const ev = state.latestEvent;
+            announcer.textContent = `Step ${ev.step}: Action ${ev.final_action || 'none'}. Score: ${state.score} points. ${ev.outcome || ''}`;
+          }
         }
       });
+
+      function renderDemoModeRibbon(active) {
+        let ribbon = document.getElementById('demo-mode-top-ribbon');
+        if (active) {
+          if (!ribbon) {
+            ribbon = document.createElement('div');
+            ribbon.id = 'demo-mode-top-ribbon';
+            ribbon.className = 'demo-mode-top-ribbon';
+            ribbon.setAttribute('role', 'status');
+            ribbon.innerHTML = `
+              <div class="demo-ribbon-content">
+                <span class="demo-ribbon-badge">⚡ DEMO MODE</span>
+                <span class="demo-ribbon-text">
+                  REPLAYING RECORDED RUN // Standalone demonstration fixtures active (Server unreachable)
+                </span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <button id="btn-demo-retry" class="btn btn-secondary btn-xs" style="padding: 2px 8px; font-size: 10px;">RETRY SERVER</button>
+                <button id="btn-demo-dismiss" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 14px;" aria-label="Dismiss banner">✕</button>
+              </div>
+            `;
+            document.body.insertBefore(ribbon, document.body.firstChild);
+
+            // Re-adjust topbar and main top positions slightly to accommodate ribbon
+            const topbar = document.querySelector('.dashboard-topbar');
+            if (topbar) topbar.style.top = `${ribbon.offsetHeight}px`;
+            const main = document.querySelector('.dashboard-main');
+            if (main) main.style.marginTop = `${60 + ribbon.offsetHeight}px`;
+
+            const retryBtn = ribbon.querySelector('#btn-demo-retry');
+            if (retryBtn) {
+              retryBtn.addEventListener('click', () => {
+                window.location.search = '';
+              });
+            }
+
+            const dismissBtn = ribbon.querySelector('#btn-demo-dismiss');
+            if (dismissBtn) {
+              dismissBtn.addEventListener('click', () => {
+                ribbon.style.display = 'none';
+                if (topbar) topbar.style.top = '0';
+                if (main) main.style.marginTop = '60px';
+              });
+            }
+          }
+        } else if (ribbon) {
+          ribbon.style.display = 'none';
+        }
+      }
     });
   </script>
 </body>

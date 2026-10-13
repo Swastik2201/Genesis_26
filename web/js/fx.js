@@ -290,3 +290,107 @@ export function initDecisionSimulator(config) {
     }
   };
 }
+
+/**
+ * Initializes a high-efficiency ambient particle background.
+ * Capped to max 30 particles (15 on mobile) to avoid frame drops.
+ * Pauses automatically when tab is hidden or prefers-reduced-motion is enabled.
+ */
+export function initParticleBackground(targetSelector = '.bg-ambient') {
+  if (prefersReducedMotion() || typeof window === 'undefined') return;
+
+  const targetContainer = document.querySelector(targetSelector);
+  if (!targetContainer) return;
+
+  let canvas = document.getElementById('ambient-particle-canvas');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'ambient-particle-canvas';
+    canvas.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.6;';
+    targetContainer.style.position = 'relative';
+    targetContainer.appendChild(canvas);
+  }
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  let animationFrameId = null;
+  let isPaused = false;
+  let width = 0;
+  let height = 0;
+
+  function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+
+  const maxParticles = width < 768 ? 15 : 30;
+  const particles = [];
+  const colors = ['rgba(34, 230, 255, ', 'rgba(255, 61, 242, ', 'rgba(57, 255, 136, '];
+
+  for (let i = 0; i < maxParticles; i++) {
+    particles.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
+      radius: Math.random() * 1.8 + 0.8,
+      baseAlpha: Math.random() * 0.25 + 0.1,
+      color: colors[Math.floor(Math.random() * colors.length)]
+    });
+  }
+
+  function render() {
+    if (isPaused) return;
+
+    ctx.clearRect(0, 0, width, height);
+
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if (p.x < 0) p.x = width;
+      else if (p.x > width) p.x = 0;
+      if (p.y < 0) p.y = height;
+      else if (p.y > height) p.y = 0;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `${p.color}${p.baseAlpha})`;
+      ctx.fill();
+    }
+
+    animationFrameId = requestAnimationFrame(render);
+  }
+
+  // Start animation loop
+  animationFrameId = requestAnimationFrame(render);
+
+  // Pause when tab is hidden or backgrounded to conserve battery/CPU
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      isPaused = true;
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    } else {
+      if (isPaused) {
+        isPaused = false;
+        animationFrameId = requestAnimationFrame(render);
+      }
+    }
+  });
+
+  return {
+    destroy: () => {
+      isPaused = true;
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', resize);
+      if (canvas && canvas.parentElement) {
+        canvas.parentElement.removeChild(canvas);
+      }
+    }
+  };
+}
+

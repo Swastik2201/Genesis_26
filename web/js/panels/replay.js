@@ -9,6 +9,7 @@
 import { store } from '../store.js';
 import * as api from '../api.js';
 import { renderDecisionGrid } from '../components/decisionCard.js';
+import * as sound from '../sound.js';
 
 let currentSessionId = null;
 let currentEvents = [];
@@ -333,6 +334,7 @@ function seekRelative(delta, container) {
   const newStep = Math.max(0, Math.min(maxStep, activeStep + delta));
   if (newStep !== activeStep) {
     activeStep = newStep;
+    sound.playStepClickSound();
     updateStepUI(container);
   }
 }
