@@ -1,0 +1,67 @@
+{
+  "name": "lab-01",
+  "created_at": "2026-10-13T18:54:36.406Z",
+  "adapter": "mock",
+  "variants": [
+    {
+      "question_set": "v1_perception",
+      "games": 3,
+      "avg_score": 30.0,
+      "best_score": 50.0,
+      "invalid_rate": 0.1429,
+      "avg_latency_ms": 1118.58,
+      "completion_rate": 1.0,
+      "avg_confidence": 0.626,
+      "session_ids": [
+        "stub-1791917611282",
+        "stub-1791917616305",
+        "stub-1791917619291"
+      ]
+    },
+    {
+      "question_set": "v2_direct_action",
+      "games": 3,
+      "avg_score": 86.67,
+      "best_score": 220.0,
+      "invalid_rate": 0.0938,
+      "avg_latency_ms": 712.33,
+      "completion_rate": 1.0,
+      "avg_confidence": 0.6109,
+      "session_ids": [
+        "stub-1791917626956",
+        "stub-1791917630087",
+        "stub-1791917633289"
+      ]
+    },
+    {
+      "question_set": "v3_hybrid_gates",
+      "games": 3,
+      "avg_score": 23.33,
+      "best_score": 60.0,
+      "invalid_rate": 0.2857,
+      "avg_latency_ms": 1200.63,
+      "completion_rate": 1.0,
+      "avg_confidence": 0.5402,
+      "session_ids": [
+        "stub-1791917649773",
+        "stub-1791917653236",
+        "stub-1791917654588"
+      ]
+    },
+    {
+      "question_set": "v4_terse_state",
+      "games": 3,
+      "avg_score": 23.33,
+      "best_score": 40.0,
+      "invalid_rate": 0.0,
+      "avg_latency_ms": 980.11,
+      "completion_rate": 1.0,
+      "avg_confidence": 0.62,
+      "session_ids": [
+        "stub-1791917666595",
+        "stub-1791917668347",
+        "stub-1791917671236"
+      ]
+    }
+  ]
+}

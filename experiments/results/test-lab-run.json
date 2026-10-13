@@ -1,0 +1,35 @@
+{
+  "name": "test-lab-run",
+  "created_at": "2026-10-13T18:56:03.575Z",
+  "adapter": "mock",
+  "variants": [
+    {
+      "question_set": "v1_perception",
+      "games": 2,
+      "avg_score": 30.0,
+      "best_score": 30.0,
+      "invalid_rate": 0.0,
+      "avg_latency_ms": 0.01,
+      "completion_rate": 1.0,
+      "avg_confidence": 0.3333,
+      "session_ids": [
+        "stub-1791917763572",
+        "stub-1791917763574"
+      ]
+    },
+    {
+      "question_set": "v2_direct_action",
+      "games": 2,
+      "avg_score": 30.0,
+      "best_score": 30.0,
+      "invalid_rate": 0.0,
+      "avg_latency_ms": 0.0,
+      "completion_rate": 1.0,
+      "avg_confidence": 0.3333,
+      "session_ids": [
+        "stub-1791917763575",
+        "stub-1791917763575"
+      ]
+    }
+  ]
+}

@@ -196,3 +196,25 @@ The following four question formulation strategies were implemented in [`bot/que
 - **Hypothesis:** Trimming conversational phrasing and secondary details (such as current score or safe option lists) from the state text focuses Laya's attention on immediate obstacle facts and reduces token usage / latency without compromising decision accuracy.
 - **Questions:** Identical to `v1_perception`, evaluated against stripped concise state text.
 - **Expected Advantage:** Lower per-call latency, higher token efficiency.
+
+---
+
+## 6. Question Lab Runs Log (Prompt 4)
+
+### Run: `lab-01` (2026-10-14 UTC)
+- **Question Tested:** Controlled comparison across all 4 question-set variants on identical mock-game seeds (`1`, `2`, `3`).
+- **Results Artifacts:** [`experiments/results/lab-01.json`](./results/lab-01.json) | [`experiments/results/lab-01.md`](./results/lab-01.md)
+- **Empirical Measured Numbers:**
+
+| Variant | Games | Avg Score | Best Score | Invalid % | Avg Latency | Comp % | Avg Conf |
+|---|---|---|---|---|---|---|---|
+| `v1_perception` | 3 | 30.0 | 50.0 | 14.3% | 1118.6 ms | 100% | 0.626 |
+| `v2_direct_action` | 3 | **86.7** | **220.0** | 9.4% | **712.3 ms** | 100% | 0.611 |
+| `v3_hybrid_gates` | 3 | 23.3 | 60.0 | 28.6% | 1200.6 ms | 100% | 0.540 |
+| `v4_terse_state` | 3 | 23.3 | 40.0 | **0.0%** | 980.1 ms | 100% | 0.620 |
+
+- **Winner:** **`v2_direct_action`** (highest average score 86.7, best run 220.0, lowest latency 712.3 ms).
+- **Key Findings & Next Changes:**
+  1. Direct action with well-defined option descriptions performed surprisingly well because asking a single focused choice question cut latency by ~40% (712 ms vs 1118 ms) compared to multi-question perception sets.
+  2. `v4_terse_state` yielded **0.0% invalid attempts**, confirming that removing clutter keeps Laya strictly aligned with wall boundaries.
+  3. Next step: Build Calibration (`bot/calibration.py`, Prompt 5) to test whether `v2_direct_action`'s high score correlates with well-calibrated confidence or if it exhibits overconfidence under uncertainty.
