@@ -51,3 +51,26 @@ class Decision:
             "reason": self.reason,
             "raw": self.raw,
         }
+
+    def __getitem__(self, key: str) -> Any:
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            raise KeyError(key)
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return getattr(self, key, default)
+
+    def __contains__(self, key: str) -> bool:
+        return hasattr(self, key)
+
+    def keys(self) -> list[str]:
+        return [
+            "chosen_action",
+            "action_scores",
+            "questions",
+            "question_set",
+            "latency_ms",
+            "reason",
+            "raw",
+        ]
