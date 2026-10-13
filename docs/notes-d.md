@@ -32,6 +32,10 @@
 - [x] `scripts/log_stats.py` computing empirical latency (mean/p95), moves, and scores
 - [x] `scripts/check_every_move_logged.py` auditing move-to-Laya call traceability and contiguous steps
 - [x] Script test suite in `tests/lane_d/test_scripts.py` (all tests passing)
+- [x] Public repo `README.md` completely updated with architecture, USPs, Colab guide, and credits
+- [x] Hackathon write-up in `docs/writeup.md` with diagnostic sections and empirical `[TODO: number]` markers
+- [x] Pre-submission hygiene verification script `scripts/final_check.py` with secret scanner and compliance auditor
+- [x] Pre-submission tests in `tests/lane_d/test_final_check.py` (all tests passing)
 
 ## Team Announcements Log
 

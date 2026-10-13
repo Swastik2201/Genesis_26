@@ -1,241 +1,222 @@
 # Beat the Bot — Teach Laya to Play
 
-> Building a game-playing agent powered by Laya, with transparent decisions, reproducible experiments, and tools to analyse how and why it plays.
+> **A modular, transparent decision layer powering game-playing agents exclusively through Laya, featuring real-time telemetry, empirical Decision Autopsy, and tamper-proof run reproducibility.**
 
-## Overview
+---
 
-**Beat the Bot** is a game-playing and analysis platform designed to integrate Laya with an external game environment. It captures the game state, formulates questions for Laya, obtains predictions, validates proposed actions, and evaluates the results against actual game outcomes.
+## 1. Screenshots
 
-Beyond playing the game, the project focuses on understanding the decision-making process through four key features:
+<!-- Dashboard & HUD Preview Screenshots -->
+<div align="center">
+  <table>
+    <tr>
+      <td width="50%">
+        <img src="web/assets/live_run_preview.png" alt="Live Run Decision Viewer" onerror="this.src='https://placehold.co/600x360/0d1117/38bdf8?text=Live+Run+Decision+Viewer'" width="100%"/>
+        <p align="center"><b>Live Run: State &rarr; Laya Questions &rarr; Probabilities &rarr; Action</b></p>
+      </td>
+      <td width="50%">
+        <img src="web/assets/autopsy_preview.png" alt="Decision Autopsy Panel" onerror="this.src='https://placehold.co/600x360/0d1117/ef4444?text=Decision+Autopsy+Panel'" width="100%"/>
+        <p align="center"><b>Decision Autopsy: Isolating Misses & Framing Hypotheses</b></p>
+      </td>
+    </tr>
+    <tr>
+      <td width="50%">
+        <img src="web/assets/question_lab_preview.png" alt="Question Lab Experiments" onerror="this.src='https://placehold.co/600x360/0d1117/a855f7?text=Question+Lab+Benchmarking'" width="100%"/>
+        <p align="center"><b>Question Lab: Perception-First vs Direct Action Benchmarks</b></p>
+      </td>
+      <td width="50%">
+        <img src="web/assets/calibration_preview.png" alt="Confidence Reality Check" onerror="this.src='https://placehold.co/600x360/0d1117/10b981?text=Confidence+Reality+Check'" width="100%"/>
+        <p align="center"><b>Confidence Reality Check: Reliability Bins & ECE Curves</b></p>
+      </td>
+    </tr>
+  </table>
+</div>
 
-- **Decision Autopsy:** Compare a prediction or chosen action with the actual game outcome.
-- **Question Lab:** Experiment with different question formulations and compare their results.
-- **Reproducible Run Replay:** Reconstruct a game session using structured event logs.
-- **Confidence Reality Check:** Examine how predicted probabilities or confidence relate to observed outcomes, where the available data supports such analysis.
+---
 
-The project uses a modular architecture so the game integration, Laya engine, backend, logging system, and frontend can be developed and tested independently.
+## 2. Problem Statement
 
-## Key Features
+Autonomous game agents powered by language or multi-modal models often suffer from opacity: moves are made without clear causal attribution, hallucinations lead to illegal actions, and catastrophic failures are discovered only after an entire run terminates. 
 
-### 1. Decision Autopsy
-Inspect individual decisions and compare what the agent predicted with what happened after its action. Trace decisions back to the corresponding game state and recorded events.
+**Beat the Bot** solves this by establishing a modular, strictly auditable decision layer for hosted game challenges revealed on hackathon day. The bot consumes game states, asks **Laya** structured typed questions, transforms Laya's output probability distributions into legal moves, validates constraints, and immutably logs every single decision step for live streaming and post-run autopsy.
 
-### 2. Question Lab
-Test alternative question formulations against comparable game states. Record the resulting predictions and outcomes to evaluate which formulations perform better.
+---
 
-### 3. Reproducible Run Replay
-Replay a recorded session step by step using session IDs, timestamps, and structured event logs. Inspect the state, question, prediction, action, and game response at each stage.
+## 3. System Architecture & The 5-Stage Pipeline
 
-### 4. Confidence Reality Check
-Analyse the relationship between Laya's reported probabilities or confidence and observed outcomes. Metrics are calculated only when sufficient, appropriate data is available.
+The engine executes in a disciplined five-stage pipeline where Laya is the sole decision-maker:
 
-## System Architecture
+```mermaid
+flowchart TD
+    subgraph S1["Stage 1: Hosted / Mock Game API"]
+        G[Hosted Game / Mock Server] -->|Raw State & Legal Actions| A[Game Adapter]
+    end
 
-The project follows a modular pipeline:
+    subgraph S2["Stage 2: State Normaliser"]
+        A -->|Extract Structured Facts| N[State Normaliser]
+        N -->|Compact English Summary < 120 words| QB[Question Builder]
+    end
 
-```text
-                 ┌──────────────────────┐
-                 │ Game API / Mock Game │
-                 └──────────┬───────────┘
-                            │
-                            ▼
-                 ┌──────────────────────┐
-                 │ Game Adapter         │
-                 │ State Normalisation  │
-                 └──────────┬───────────┘
-                            │
-                            ▼
-                 ┌──────────────────────┐
-                 │ Question Builder     │
-                 │ Laya Decision Engine │
-                 └──────────┬───────────┘
-                            │
-                            ▼
-                 ┌──────────────────────┐
-                 │ Action Validation    │
-                 └──────────┬───────────┘
-                            │
-                            ▼
-                 ┌──────────────────────┐
-                 │ Submit Action        │
-                 │ Receive Game Outcome │
-                 └──────────────────────┘
+    subgraph S3["Stage 3: Laya Decision Engine"]
+        QB -->|Typed Prompt & Candidates| L[Laya Model Engine]
+        L -->|Raw Probabilities & Confidence| D[Decision Mapping & Scores]
+    end
 
-    All stages ───────► Event Logger ───────► Backend
-                                                │
-                                                ▼
-                                         Web Dashboard
+    subgraph S4["Stage 4: Action Validator"]
+        D -->|Selected Action| V{Validator}
+        V -->|Legal Action| S5
+        V -->|Illegal / Excluded| R[Retry with Candidate Excluded / Fallback]
+        R -.->|Re-query| L
+    end
+
+    subgraph S5["Stage 5: Move Submission"]
+        V -->|Final Action| SUB[Submit Action to Game]
+        SUB -->|Game Response & Next State| LOG[RunLogger]
+    end
+
+    LOG -->|Immutable JSONL Line| DISK[(logs/runs/*.jsonl)]
+    DISK -->|Live SSE Stream| SRV[FastAPI Server]
+    SRV -->|Real-time Telemetry| HUD[Live Gamer Dashboard]
 ```
 
-The game adapter isolates the external game API from the rest of the application. A mock game environment supports development and testing before the official game API is available.
+---
 
-Every decision should be traceable to the relevant Laya call and recorded game state. Invalid actions must be handled explicitly rather than silently submitted.
+## 4. Four Core Unique Selling Points (USPs)
 
-## Technology Stack
+1. **Decision Autopsy (USP 1):** Turns every failed move into an empirical investigation, classifying outcomes into six deterministic verdicts (`illegal_move`, `game_over`, `confident_miss`, `uncertain_miss`, `lucky_hit`, `as_predicted`) with testable explanatory hypotheses.
+2. **Question Lab (USP 2):** Benchmarks alternative prompt formulations (e.g. perception-first *"Which lane is blocked?"* vs direct-action control *"Which move to take?"*) across identical game seeds and evaluates measurable score and latency gains.
+3. **Reproducible Run Replay (USP 3):** Enables step-by-step forensic replay of any recorded run, backing up claims with SHA-256 hashes, exact line numbers in raw `.jsonl` files, and full move-to-Laya traceability.
+4. **Confidence Reality Check (USP 4):** Measures whether Laya's reported probabilities correlate with actual game success using Expected Calibration Error (ECE) and reliability diagrams, explicitly warning against small-sample overconfidence.
 
-The final stack depends on the official Laya interface and the hackathon's game API.
+---
 
-| Component | Planned technology |
-|---|---|
-| Frontend | React, JavaScript, CSS |
-| Backend | Python, FastAPI |
-| Decision engine | Laya integration through a verified interface |
-| Data exchange | JSON and JSON Schema |
-| Event logging | Append-only JSONL logs |
-| Testing | Python tests and frontend tests |
-| Version control | Git and GitHub |
+## 5. Non-Negotiable Rules & Audit Integrity
 
-These are planned implementation choices. The exact Laya dependency and game API details must be verified before integration.
+- **Laya is the Sole Move Arbiter**: No other model, heuristic policy, random chooser, hard-coded move, or browser automation is permitted to select a move.
+- **Traceability**: Every submitted move traces to a recorded Laya call in `logs/runs/<session_id>.jsonl`. The only exception is the highest-scoring still-legal action from Laya's previous scores if retries are exhausted (explicitly flagged as a fallback).
+- **No Data Fabrication**: Scores, latencies, probabilities, qualifying scores, and verification flags remain `null` or `"unknown"` unless verified by official sources. Demo data is prominently labeled `DEMO_UNVERIFIED`.
+- **Zero Secret Leakage**: Credentials, cookies, and tokens are recursively redacted before logs touch disk.
 
-## Project File Architecture
+---
+
+## 6. Installation & Quickstart
+
+### Prerequisites
+- Python 3.10+ (tested on Python 3.10, 3.11, 3.12, 3.13)
+- Git
+
+### Local Setup
+```bash
+# 1. Clone the repository
+git clone https://github.com/shelartanmay75-cyber/Genesis_26.git
+cd Genesis_26
+
+# 2. Create and activate a virtual environment
+python -m venv .venv
+# On Windows PowerShell:
+.venv\Scripts\Activate.ps1
+# On Linux/macOS:
+source .venv/bin/activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+```
+
+### Running Locally
+```bash
+# Terminal 1: Start the backend server & static web host
+python -m server --port 8000
+
+# Terminal 2: Run a mock game session with the bot loop
+python -m bot.loop --game mock --steps 20
+
+# Terminal 3 (Optional): Run the synthetic demo feeder for UI testing
+python -m server.demo_feeder --steps 15 --interval 1.0
+```
+Open **[http://127.0.0.1:8000](http://127.0.0.1:8000)** in your browser to view the Gamer HUD live dashboard.
+
+---
+
+## 7. Running on Google Colab
+
+To run headless training, Question Lab benchmarks, or Laya inference on Google Colab:
+1. Open a new notebook and install the environment:
+   ```bash
+   !git clone https://github.com/shelartanmay75-cyber/Genesis_26.git
+   %cd Genesis_26
+   !pip install -r requirements.txt
+   ```
+2. Execute bot runs or Question Lab benchmarks:
+   ```bash
+   !python -m experiments.run_lab --variants perception_first direct_control --games 10
+   ```
+3. To view the dashboard from Colab, launch the server with a tunnel (e.g. `localtunnel` or `ngrok`):
+   ```python
+   import subprocess
+   server_proc = subprocess.Popen(["python", "-m", "server", "--port", "8000"])
+   ```
+
+---
+
+## 8. How to Reproduce and Verify a Best Run
+
+All top-performing runs are archived in `logs/best/` with tamper-evident hashes documented in [`docs/best_runs.md`](file:///docs/best_runs.md).
+
+```bash
+# 1. Verify that every single move came from a logged Laya call
+python scripts/check_every_move_logged.py <session_id> --logs-dir logs/best
+
+# 2. Verify file SHA-256 integrity and step continuity
+curl http://127.0.0.1:8000/api/runs/<session_id>/verify
+
+# 3. Run Decision Autopsy on the run
+python -m bot.autopsy logs/best/<session_id>.jsonl
+
+# 4. View exact latency and move statistics
+python scripts/log_stats.py logs/best/<session_id>.jsonl
+```
+
+---
+
+## 9. Repository Layout & Team Lanes
 
 ```text
-beat-the-bot/
-│
-├── AGENTS.md
-├── STEPS.md
-├── README.md
-├── .gitignore
-├── .env.example
-├── requirements.txt
-├── pyproject.toml
-│
-├── contracts/
-│   ├── game_state.schema.json
-│   ├── laya_request.schema.json
-│   ├── laya_response.schema.json
-│   ├── action.schema.json
-│   └── event.schema.json
-│
+Genesis_26/
 ├── bot/
-│   ├── __init__.py
-│   ├── config.py
-│   ├── normaliser.py
-│   ├── validator.py
-│   ├── loop.py
-│   ├── calibration.py
-│   │
-│   ├── adapters/
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   └── game_adapter.py
-│   │
-│   ├── laya/
-│   │   ├── __init__.py
-│   │   ├── client.py
-│   │   └── decision.py
-│   │
-│   └── questions/
-│       ├── __init__.py
-│       ├── templates.py
-│       └── builder.py
-│
-├── server/
-│   ├── __init__.py
-│   ├── app.py
-│   ├── routes/
-│   │   ├── health.py
-│   │   ├── sessions.py
-│   │   ├── events.py
-│   │   └── analytics.py
-│   ├── services/
-│   │   ├── session_service.py
-│   │   ├── event_service.py
-│   │   └── analysis_service.py
-│   └── schemas/
-│       ├── session.py
-│       └── event.py
-│
-├── logger/
-│   ├── __init__.py
-│   ├── event_logger.py
-│   ├── jsonl_writer.py
-│   └── redaction.py
-│
-├── analysis/
-│   ├── decision_autopsy.py
-│   ├── question_comparison.py
-│   ├── run_replay.py
-│   └── confidence_analysis.py
-│
-├── experiments/
-│   ├── experiment_runner.py
-│   └── experiment_config.yaml
-│
-├── mock_game/
-│   ├── mock_api.py
-│   ├── scenarios.py
-│   └── sample_states/
-│
-├── web/
-│   ├── package.json
-│   ├── index.html
-│   └── src/
-│       ├── main.jsx
-│       ├── App.jsx
-│       ├── components/
-│       │   ├── Sidebar.jsx
-│       │   ├── StatusBar.jsx
-│       │   ├── MetricCard.jsx
-│       │   └── EventTimeline.jsx
-│       ├── pages/
-│       │   ├── Landing.jsx
-│       │   ├── Overview.jsx
-│       │   ├── DecisionAutopsy.jsx
-│       │   ├── QuestionLab.jsx
-│       │   ├── RunReplay.jsx
-│       │   └── ConfidenceAnalysis.jsx
-│       ├── services/
-│       │   └── api.js
-│       └── styles/
-│           └── global.css
-│
+│   ├── adapters/          # [Lane A] Game adapters (mock & game-day)
+│   ├── normaliser.py      # [Lane A] Plain-English state summariser
+│   ├── validator.py       # [Lane A] Constraint checking & retry policy
+│   ├── loop.py            # [Lane A] Main bot game loop
+│   ├── laya/              # [Lane B] Laya inference & model loader
+│   ├── questions/         # [Lane B] Question set formulation registry
+│   ├── calibration.py     # [Lane B] Confidence reality check (ECE & bins)
+│   ├── logger.py          # [Lane D] Atomic JSONL logging & secret redaction
+│   └── autopsy.py         # [Lane D] Decision Autopsy analyser (USP 1)
+├── contracts/             # [Lane D] JSON Schemas (Draft 2020-12), examples, and API spec
+├── server/                # [Lane D] FastAPI backend, SSE live stream, and demo feeder
+├── web/                   # [Lane C] Static HTML/CSS/Vanilla JS Gamer HUD dashboard
+├── experiments/           # [Lane B] Question Lab benchmarking suite
+├── mock_game/             # [Lane A] Deterministic local mock game server
 ├── logs/
-│   └── .gitkeep
-│
-├── scripts/
-│   ├── run_bot.py
-│   ├── run_mock.py
-│   └── validate_logs.py
-│
-└── tests/
-    ├── lane_a/
-    ├── lane_b/
-    ├── lane_c/
-    ├── lane_d/
-    └── integration/
+│   ├── runs/              # Runtime log storage (*.jsonl, *.summary.json)
+│   └── best/              # Preserved top-run evidence logs
+├── scripts/               # [Lane D] Lane check, best runs, stats, and audit tools
+├── docs/                  # [Lane D] Autopsy method, write-up, notes, best runs
+├── requirements/          # Lane-specific dependency manifests (a.txt, b.txt, d.txt)
+├── requirements.txt       # Root dependency aggregator
+└── lanes.json             # Boundary enforcement mapping
 ```
 
-## Directory Responsibilities
+### Lane Ownership
+- **Member A (`feat/game-integration`)**: Game adapters, mock game, normaliser, validator, game loop.
+- **Member B (`feat/laya-engine`)**: Laya model loading, question sets, Question Lab, calibration.
+- **Member C (`feat/frontend`)**: Gamer HUD dashboard (`web/`), live run viewer, autopsy & replay tabs.
+- **Member D (`feat/server-logs`)**: Contracts, logger, FastAPI server, SSE stream, autopsy, replay store, repo hygiene.
 
-| Directory | Purpose |
-|---|---|
-| `contracts/` | Shared schemas defining how components exchange data |
-| `bot/adapters/` | Communication with the external game environment |
-| `bot/laya/` | Laya client and decision-making integration |
-| `bot/questions/` | Question construction and alternative formulations |
-| `bot/` | State normalisation, action validation, orchestration, and calibration |
-| `server/` | API endpoints, session management, and backend services |
-| `logger/` | Structured event recording and log handling |
-| `analysis/` | Implementation of the four analysis features |
-| `experiments/` | Controlled experiments and question comparisons |
-| `mock_game/` | Local game simulation for development and testing |
-| `web/` | Landing page, dashboard, and analysis views |
-| `scripts/` | Development, execution, and validation commands |
-| `tests/` | Unit tests and end-to-end integration tests |
-| `logs/` | Generated session logs; real run data should not be committed |
+---
 
-## Team Responsibilities
+## 10. Credits & Licences
 
-The repository is organised into four development lanes to minimise merge conflicts.
-
-| Team member | Ownership | Primary responsibility |
-|---|---|---|
-| Member A — Game Integration | `bot/adapters/`, `bot/normaliser.py`, `bot/validator.py`, `bot/loop.py`, `mock_game/`, `tests/lane_a/` | Game API integration, state normalisation, legal-action validation, and game interaction |
-| Member B — Laya Engine | `bot/laya/`, `bot/questions/`, `bot/calibration.py`, `experiments/`, `tests/lane_b/` | Laya integration, question design, prediction handling, and experiments |
-| Member C — Frontend | `web/` | Landing page, dashboard, event timeline, and analysis visualisations |
-| Member D — Backend, Logging & Coordination | `contracts/`, `server/`, `logger/`, `analysis/`, `scripts/`, documentation, and integration coordination | Shared contracts, event logging, backend APIs, analysis support, and final integration |
-
-
-
-
+- **Laya Model**: Developed by **Nandakishor M** (Convai Innovations). Licensed under **Apache-2.0**.
+- **Visual Design & State-Questions-Probabilities Paradigm**: Inspired by **laya-playground** and [brainfunctioncollapse.com/laya](https://brainfunctioncollapse.com/laya) by **brain function collapse** (MIT License).
+- **Beat the Bot Platform**: MIT License &copy; 2026 Beat the Bot Team.
