@@ -51,13 +51,12 @@ def get_changed_files() -> set[str]:
     # 3. Uncommitted unstaged changes
     changed.update(run_git(["diff", "--name-only"]))
 
-    # 4. Untracked files from git status (-u lists individual files)
+    # 4. Untracked and working tree files from git status (-u lists individual files)
     status_lines = run_git(["status", "--porcelain", "-u"])
     for line in status_lines:
-        if line.startswith("?? "):
-            changed.add(line[3:].strip())
-        elif len(line) > 3:
-            changed.add(line[3:].strip())
+        parts = line.split(maxsplit=1)
+        if len(parts) == 2:
+            changed.add(parts[1].strip())
 
     return changed
 
