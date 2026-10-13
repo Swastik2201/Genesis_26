@@ -218,3 +218,43 @@ The following four question formulation strategies were implemented in [`bot/que
   1. Direct action with well-defined option descriptions performed surprisingly well because asking a single focused choice question cut latency by ~40% (712 ms vs 1118 ms) compared to multi-question perception sets.
   2. `v4_terse_state` yielded **0.0% invalid attempts**, confirming that removing clutter keeps Laya strictly aligned with wall boundaries.
   3. Next step: Build Calibration (`bot/calibration.py`, Prompt 5) to test whether `v2_direct_action`'s high score correlates with well-calibrated confidence or if it exhibits overconfidence under uncertainty.
+
+---
+
+## 7. Confidence Reality Check & Calibration Log (Prompt 5)
+
+### 7.1 What We Expect (Calibration Hypotheses)
+1. **Overconfidence in Multi-Choice:** In multi-choice perception questions (`v1_perception`, `v2_direct_action`), we expect raw model probabilities to be overconfident under ambiguous game situations (e.g. predicting $p \ge 0.75$ even when moving into risky corridors), leading to an uncalibrated ECE between $0.20$ and $0.35$.
+2. **Binary Gate Sharpness:** For binary noul gates (`v3_hybrid_gates`), we expect calibration error to be lower because binary questions have less entropy spread across alternative distractor choices.
+3. **Temperature Scaling:** Applying post-hoc temperature scaling ($T > 1.0$) by minimizing negative log-likelihood will soften overconfident extreme probabilities and reduce ECE. Per Laya guidance, this temperature is reported as an advisory diagnostic and never applied blindly to the live checkpoint.
+4. **Selective Prediction Gating:** Gating actions by confidence threshold $t \in [0.50, 0.95]$ should isolate higher-accuracy decisions, but requires a strict sample floor ($N \ge 20$) so early noisy runs do not cause false selective recommendations.
+
+### 7.2 What We Found (Empirical Calibration Runs)
+
+#### Run 1: Single Session Baseline
+- **Artifact:** [`experiments/results/calibration-mock-run-01.json`](./results/calibration-mock-run-01.json)
+- **Input File:** `logs/runs/20261013-190059-d8b2.jsonl`
+- **Evaluated Steps ($N$):** 3
+- **Overall Accuracy:** 66.7%
+- **Expected Calibration Error (ECE):** 0.3154
+- **Mean Confidence:** 0.6974
+- **Reliability Bins:**
+  - $[0.5, 0.6)$: $n=1$, mean confidence $0.573$, accuracy $100.0\%$
+  - $[0.7, 0.8)$: $n=2$, mean confidence $0.760$, accuracy $50.0\%$
+- **Recommended Threshold:** `null` (insufficient samples meeting target accuracy $\ge 0.90$ with $N \ge 20$).
+
+#### Run 2: Combined Multi-Session Baseline
+- **Artifact:** [`experiments/results/calibration-mock-combined.json`](./results/calibration-mock-combined.json)
+- **Input Files:** 5 mock-game run logs (`20261013-190059-d8b2.jsonl`, `20261013-190207-14b2.jsonl`, `20261013-190207-bf48.jsonl`, `20261013-190207-e143.jsonl`, `20261013-190207-e3f9.jsonl`)
+- **Evaluated Steps ($N$):** 15
+- **Overall Accuracy:** 93.3%
+- **Expected Calibration Error (ECE):** 0.5964
+- **Mean Confidence:** 0.406
+- **Breakdown by Question Type:**
+  - `choice`: $n=15$, accuracy $93.3\%$, mean confidence $0.406$, ECE $0.5964$
+- **Temperature Optimization ($T$):**
+  - Fitted $T$: $5.0000$ (upper bound)
+  - ECE Before: $0.5964$
+  - ECE After: $0.4523$
+- **Key Observation:** In early mock game loops with uncalibrated action probability spreads across 3 legal actions, chosen action confidence averaged ~0.33, while mock judge evaluation yielded 93.3% good outcomes. This produced underconfidence in lower bins, driving up initial ECE. As sample size grows across real competitive games, temperature optimization and threshold sweeps provide an empirical basis for deciding when to trust Laya's confidence score.
+
