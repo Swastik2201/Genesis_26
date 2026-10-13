@@ -19,3 +19,8 @@
 - [x] `RunLogger` implemented in `bot/logger.py` with validation, fsync, thread-safe locking, SHA-256 verification, and recursive secret redaction
 - [x] Helper functions `load_events`, `latest_session`, and `list_sessions` (derives unclosed runs)
 - [x] Logger unit tests in `tests/lane_d/test_logger.py` (all tests passing)
+- [x] FastAPI server built in `server/app.py` with REST endpoints, error handling, and CORS
+- [x] Real-time Server-Sent Events (SSE) live streaming (`/api/stream`) with backlog replay and 15s keep-alive
+- [x] CLI entrypoint `server/__main__.py` (`python -m server --port 8000`)
+- [x] Synthetic demo feeder `server/demo_feeder.py` for frontend live stream validation
+- [x] Full server test suite in `tests/lane_d/test_server.py` (all tests passing)
