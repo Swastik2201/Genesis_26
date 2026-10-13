@@ -139,7 +139,43 @@
 
 ---
 
+---
+
+## Prompt 5: Question Lab, Calibration, Logs, Overview, & About (USPs 2 & 4)
+- **Question Lab (`web/js/panels/lab.js` & `web/css/panels.css`):**
+  - **Scientific A/B Benchmark:** Leaderboard table comparing question formulations on identical game seeds with columns for average score, best score, invalid rate, average latency, completion rate, and average confidence.
+  - **Crown Winner:** Top-performing question variant highlighted with a gold crown badge (`👑 #1 OPTIMAL`).
+  - **Plain SVG Metric Charts:** Handcrafted inline `<svg>` horizontal bar charts for all 6 metrics without external charting libraries, featuring animated fill transitions and winner accents.
+  - **Explainer Banner:** *"Same game, same seeds, different wording"* contextual header explaining the perceptual vs direct prompting methodology.
+  - **Variant Inspection & Replay Links:** Interactive selection displaying the exact question prompt text, options, and list of linked sessions with one-click navigation to Replay (`#/replay?session=...`).
+- **Confidence Reality Check (`web/js/panels/calibration.js`):**
+  - **Plain SVG Reliability Diagram:** Plots predicted confidence ($x$) against empirical accuracy ($y$) with an ideal calibration diagonal ($y = x$) and bubble sizes scaled proportionally to bin sample counts.
+  - **Big HUD Stats Row:** Bold displays for Sample Count ($n$), Empirical Accuracy (%), and Expected Calibration Error (ECE).
+  - **Sample Size Guardrail:** Prominent warning banner and alert badge rendered whenever $n < 30$, warning judges that the evaluation is preliminary.
+  - **Computed Plain-Language Verdict:** Dynamically generated from empirical bin data (e.g. *"When Laya says 80%, it is right 61% of the time: overconfident"*).
+  - **Threshold Coverage Table:** Tabular breakdown of minimum confidence thresholds vs move coverage and accuracy, highlighting the recommended cutoff.
+- **Live-Tailing Monospace Run Logs (`web/js/panels/logs.js`):**
+  - **Terminal Telemetry Stream:** Monospace terminal displaying one row per event containing precise timestamp (`HH:MM:SS.mmm`), step number (`S00`), action tag, confidence percentage, and outcome message.
+  - **Outcome Filters & Live Search:** Quick filter chips for `ALL`, `GOOD (+PTS)`, `PENALTY / MISS`, `EXCLUSIONS`, and `GAME OVER`, paired with instant regex/text search across actions, notes, and states.
+  - **Auto-Tail & Scroll Lock:** Real-time tailing with pause/resume lock, status pulse indicator, manual scroll detection, and a floating *"Jump to latest event"* shortcut pill.
+  - **One-Click JSONL Export:** Direct client-side `.jsonl` generator and download export button (`${sessionId}.jsonl`).
+  - **Direct Replay Links:** Clicking any log line immediately opens that step in Replay.
+- **System Overview (`web/js/panels/overview.js`):**
+  - **5 Primary Mission Control KPI Cards:** Games Played, Best Score, Average Laya Latency, Invalid-Move Rate, and Calibration Score (ECE).
+  - **Hero Score-over-Steps SVG Trajectory:** Full-width glowing SVG chart tracing the active session's step-by-step score progression.
+  - **Historical Runs Leaderboard:** Table of past game runs with session IDs, game adapters, step counts, scores, and per-session inline SVG sparklines.
+  - **Reactive Telemetry:** Store subscription automatically updates live scores and step counters when events stream.
+- **About & Architecture (`web/js/panels/about.js`):**
+  - **Two-Line Problem Statement:** Clear summary of unknown hosted game APIs and the Laya typed decision layer.
+  - **The Five-Stage Pipeline Diagram:** Responsive cyber pipeline cards detailing Hosted Game API ➔ State Normaliser ➔ Laya Engine ➔ Action Validator ➔ Submit Move with animated connection arrows.
+  - **Formal Credits & Acknowledgements:** Crediting the Laya foundation model to Nandakishor M (Convai Innovations) and dashboard UX inspiration to `brainfunctioncollapse.com/laya`.
+  - **Non-Negotiable Integrity Rules:** Explicit checklist confirming Laya exclusive moves, one visible call per turn, zero fabricated data, and immutable SHA-256 sealed logs.
+  - **Team Lane Architecture:** Transparent breakdown of Members A, B, C, and D responsibilities.
+
+---
+
 ## Accessibility & Performance
 - **Reduced Motion Support:** `@media (prefers-reduced-motion: reduce)` globally disables scanning line overlays, cyber grid shifts, typewriter typing pauses, and glitch shakes.
 - **Responsive Range:** Fluidly tested and styled from 360px mobile viewports up to 1920px widescreen monitors.
 - **Focus Rings:** Explicit `:focus-visible` styling with high-contrast cyan outline and offset.
+
