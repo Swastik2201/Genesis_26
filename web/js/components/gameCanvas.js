@@ -186,8 +186,8 @@ export class GameViewport {
     if (!this.canvas) return;
     const rect = this.canvas.parentElement.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    const targetWidth = Math.max(480, Math.floor(rect.width));
-    const targetHeight = Math.floor(targetWidth * 0.48); // 2.08 aspect ratio for sleek HUD monitor
+    const targetWidth = Math.max(320, Math.floor(rect.width));
+    const targetHeight = Math.floor(targetWidth * 0.44); // 2.27:1 aspect ratio for sleek widescreen HUD
 
     this.canvas.width = targetWidth * dpr;
     this.canvas.height = targetHeight * dpr;

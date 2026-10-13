@@ -9,7 +9,7 @@
 import { store } from '../store.js';
 import * as api from '../api.js';
 import { typewriter, animateCounter, triggerGlitch } from '../fx.js';
-import { renderDecisionGrid } from '../components/decisionCard.js';
+import { renderDecisionGrid, renderSplitDecision } from '../components/decisionCard.js';
 import { GameViewport } from '../components/gameCanvas.js';
 import * as sound from '../sound.js';
 
@@ -161,12 +161,17 @@ function renderShell(container) {
         </div>
       </div>
 
-      <!-- 1b. Live Visual Game Viewport (Arcade Monitor) -->
-      <div id="live-game-viewport-mount"></div>
+      <!-- Live Split Arena: Visual Game Viewport (Left) + Laya Decisions (Right) -->
+      <div class="live-split-arena" id="live-split-arena">
+        <!-- LEFT COLUMN: Live Game Viewport + State Context -->
+        <div class="live-arena-left">
+          <div id="live-game-viewport-mount"></div>
+          <div id="live-state-mount"></div>
+        </div>
 
-      <!-- 2. Main 3-Column Decision Viewer Area -->
-      <div id="live-viewer-content" class="live-hero-grid">
-        <!-- Rendered dynamically by renderStep() -->
+        <!-- RIGHT COLUMN: Laya Decisions (Inference Questions + Chosen Move) -->
+        <div class="live-arena-right" id="live-decision-mount">
+        </div>
       </div>
 
       <!-- 3. Bottom Timeline Strip -->
@@ -272,9 +277,6 @@ function renderStep(stepNumber, shouldAnimate = true) {
   currentDisplayedStep = stepNumber;
   store.selectStep(stepNumber);
 
-  const viewer = document.getElementById('live-viewer-content');
-  if (!viewer) return;
-
   const isReduced = prefersReducedMotion() || !shouldAnimate;
   const isLatest = event.step === events[events.length - 1].step;
 
@@ -285,8 +287,12 @@ function renderStep(stepNumber, shouldAnimate = true) {
     if (!isLatest) indicator.textContent = `INSPECTING STEP ${event.step} (CLICK TIMELINE FOR OTHERS)`;
   }
 
-  // Render 3-column viewer using shared component
-  renderDecisionGrid(viewer, event, { isReduced, animate: shouldAnimate, replayMode: false });
+  // Render Side-by-Side: State on Left under canvas, Laya Decisions on Right!
+  const stateMount = document.getElementById('live-state-mount');
+  const decisionMount = document.getElementById('live-decision-mount');
+  if (stateMount && decisionMount) {
+    renderSplitDecision(stateMount, decisionMount, event, { isReduced, animate: shouldAnimate });
+  }
 
   // Feed step to visual game canvas viewport
   if (gameViewport) {
@@ -343,10 +349,16 @@ function updateTimelineStrip(events, activeStep) {
     });
   });
 
-  // Auto-scroll timeline to active pip
+  // Auto-scroll timeline to active pip HORIZONTALLY ONLY, WITHOUT scrolling the parent window!
   const currentPip = track.querySelector('.timeline-pip.is-current');
   if (currentPip) {
-    currentPip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    const pipLeft = currentPip.offsetLeft;
+    const pipWidth = currentPip.offsetWidth;
+    const trackWidth = track.clientWidth;
+    track.scrollTo({
+      left: pipLeft - trackWidth / 2 + pipWidth / 2,
+      behavior: 'smooth'
+    });
   }
 }
 
@@ -354,19 +366,19 @@ function updateTimelineStrip(events, activeStep) {
  * Renders an empty waiting state if no events have arrived yet.
  */
 function showWaitingState(container) {
-  const viewer = container.querySelector('#live-viewer-content');
-  if (!viewer) return;
+  const decisionMount = container.querySelector('#live-decision-mount');
+  if (!decisionMount) return;
 
-  viewer.innerHTML = `
-    <div class="empty-hero-state hud-card" style="grid-column: 1 / -1;">
-      <div style="font-size: 3rem; color: var(--neon-cyan); margin-bottom: var(--space-md); animation: pulseDot 1.6s infinite;">
+  decisionMount.innerHTML = `
+    <div class="empty-hero-state hud-card" style="padding: var(--space-xl);">
+      <div style="font-size: 2.5rem; color: var(--neon-cyan); margin-bottom: var(--space-sm); animation: pulseDot 1.6s infinite;">
         📡
       </div>
-      <h3 style="font-size: var(--text-2xl); color: #fff; margin-bottom: var(--space-xs);">
-        WAITING FOR THE FIRST MOVE...
+      <h3 style="font-size: var(--text-lg); color: #fff; margin-bottom: var(--space-xs);">
+        WAITING FOR LAYA DECISIONS...
       </h3>
-      <p style="color: var(--text-secondary); max-width: 520px; margin-bottom: var(--space-lg);">
-        The live decision viewer is listening for events from Laya. Start the game loop or replay mock events using the controls above.
+      <p style="color: var(--text-secondary); font-size: var(--text-sm); max-width: 440px; margin-bottom: var(--space-md);">
+        The live decision telemetry is listening for Laya model calls. Stream events with demo_feeder or replay a run above.
       </p>
       <div style="display: flex; gap: var(--space-sm);">
         <button id="btn-start-demo-stream" class="btn btn-primary btn-sm">
@@ -376,7 +388,7 @@ function showWaitingState(container) {
     </div>
   `;
 
-  const btn = viewer.querySelector('#btn-start-demo-stream');
+  const btn = decisionMount.querySelector('#btn-start-demo-stream');
   if (btn) {
     btn.addEventListener('click', () => {
       startStream();

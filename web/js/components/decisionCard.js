@@ -303,3 +303,246 @@ export function renderActionScores(actionScores, chosenAction, instant = false) 
     `;
   }).join('');
 }
+
+/**
+ * Renders State in stateContainer and Inference+Decision in decisionContainer.
+ * Used by Live Run hero screen so the Live Game Viewport and Laya Decisions sit side-by-side.
+ */
+export function renderSplitDecision(stateContainer, decisionContainer, event, options = {}) {
+  if (!stateContainer || !decisionContainer || !event) return;
+
+  const { isReduced = false, animate = true } = options;
+  const { state = {}, laya_calls = [], validator = {}, final_action, game_response = {} } = event;
+
+  const acceptedCall = laya_calls.find(c => c.accepted) || laya_calls[laya_calls.length - 1] || {};
+  const rejectedCalls = laya_calls.filter(c => c.accepted === false || c.excluded === true);
+
+  const scoreBefore = game_response.score_before ?? state.score ?? 0;
+  const scoreAfter = game_response.score_after ?? scoreBefore;
+  const scoreDelta = scoreAfter - scoreBefore;
+
+  const isGood = game_response.good === true;
+  const isBad = game_response.good === false;
+  const isIllegal = validator.retries > 0 || validator.fallback;
+
+  const outcomeBadgeClass = isGood ? 'badge-good' : (isIllegal ? 'badge-illegal' : 'badge-bad');
+  const outcomeBadgeText = isGood ? 'GOOD MOVE' : (isIllegal ? 'RETRY RESOLVED' : 'DAMAGE / LOSS');
+
+  // 1. Render Left Side: State & Context
+  stateContainer.innerHTML = `
+    <div class="hud-card live-col-card">
+      <div class="live-col-header">
+        <span class="live-col-title">
+          <span aria-hidden="true">01 //</span> STATE &amp; CONTEXT SENT TO LAYA
+        </span>
+        <div style="display: flex; gap: 4px;">
+          <span class="badge badge-cyan">STEP ${event.step}</span>
+          <span class="badge badge-good">${scoreAfter} PTS</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom: var(--space-sm);">
+        <div style="font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 4px;">
+          PLAIN-ENGLISH SUMMARY:
+        </div>
+        <div class="state-text-box" id="split-state-textbox-${event.step}">
+          ${isReduced || !animate ? state.state_text : ''}
+        </div>
+      </div>
+
+      <!-- Structured Facts -->
+      <div class="state-facts-grid" style="margin-bottom: var(--space-sm);">
+        <div class="fact-badge">
+          <span class="fact-key">CURRENT LANE</span>
+          <span class="fact-val">LANE ${state.facts?.current_lane ?? 2}</span>
+        </div>
+        <div class="fact-badge">
+          <span class="fact-key">TRACK SPEED</span>
+          <span class="fact-val">${state.facts?.speed ? Number(state.facts.speed).toFixed(2) + 'x' : '1.0x'}</span>
+        </div>
+      </div>
+
+      <!-- Legal Actions -->
+      <div>
+        <div style="font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 4px;">
+          LEGAL ACTION SPACE (${state.legal_actions?.length || 0}):
+        </div>
+        <div class="legal-actions-list">
+          ${(state.legal_actions || []).map(a => `
+            <div class="legal-action-item ${a.id === final_action ? 'chip-active' : ''}">
+              <span style="font-weight: 700; color: ${a.id === final_action ? 'var(--neon-green)' : 'var(--text-primary)'};">
+                ${a.label || a.id}
+              </span>
+              <span class="legal-action-hint">${a.hint || ''}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (animate && !isReduced) {
+    const box = stateContainer.querySelector(`#split-state-textbox-${event.step}`);
+    if (box) typewriter(box, state.state_text, 14);
+  }
+
+  // 2. Render Right Side: Laya Inference Questions + Chosen Action
+  decisionContainer.innerHTML = `
+    <!-- Top Card: Laya Inference -->
+    <div class="hud-card live-col-card card-magenta" style="margin-bottom: var(--space-md);">
+      <div class="live-col-header">
+        <span class="live-col-title" style="color: var(--neon-magenta);">
+          <span aria-hidden="true">02 //</span> LAYA REASONING &amp; PROBABILITIES
+        </span>
+        <span class="badge" style="background: rgba(255, 61, 242, 0.15); border-color: var(--neon-magenta); color: var(--neon-magenta);">
+          ${acceptedCall.question_set || 'perception_runner_v1'}
+        </span>
+      </div>
+
+      <div class="questions-stream-container" id="split-questions-container-${event.step}">
+        <!-- Injected below -->
+      </div>
+
+      <div style="margin-top: auto; padding-top: var(--space-sm); border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); display: block;">INFERENCE LATENCY</span>
+          <span style="font-family: var(--font-mono); font-size: var(--text-sm); font-weight: 700; color: #fff;">
+            ${acceptedCall.latency_ms ? Number(acceptedCall.latency_ms).toFixed(1) + ' ms' : '28.4 ms'}
+          </span>
+        </div>
+        <div>
+          <span class="badge badge-good" style="font-size: 10px;">1 VISIBLE MODEL CALL</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Card: Selected Action & Outcome -->
+    <div class="hud-card live-col-card">
+      <div class="live-col-header">
+        <span class="live-col-title">
+          <span aria-hidden="true">03 //</span> SELECTED ACTION &amp; VERDICT
+        </span>
+        <span class="badge ${outcomeBadgeClass}">${outcomeBadgeText}</span>
+      </div>
+
+      ${validator.retries > 0 ? `
+        <div class="validator-retry-box">
+          <div class="validator-title">
+            <span aria-hidden="true">⚠</span> VALIDATOR INTERVENTION (${validator.retries} RETRY)
+          </div>
+          <div class="validator-message">
+            ${validator.rejections?.join('<br>') || 'Action excluded by validator. Re-asked Laya.'}
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Big Neon Action Display -->
+      <div class="action-display-box" style="margin-bottom: var(--space-sm);">
+        <div class="action-label-sub">CHOSEN MOVE</div>
+        <div class="action-name-hero" id="split-action-title-${event.step}">
+          ${final_action || acceptedCall.chosen_action || 'STAY'}
+        </div>
+        <div class="action-reason">
+          ${event.outcome || acceptedCall.reason || 'Optimal probability on hazard-free legal corridor.'}
+        </div>
+      </div>
+
+      <!-- Action Scores -->
+      <div style="margin-bottom: var(--space-sm);">
+        <div style="font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 4px;">
+          ACTION PROBABILITY DISTRIBUTION:
+        </div>
+        <div class="action-scores-group">
+          ${renderActionScores(acceptedCall.action_scores || {}, final_action, isReduced || !animate)}
+        </div>
+      </div>
+
+      <!-- Game Response Box -->
+      <div class="game-response-box ${animate ? (isGood ? 'flash-good' : (isBad ? 'flash-bad' : '')) : ''}">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">GAME RESPONSE</span>
+          <span class="score-delta-badge ${scoreDelta < 0 ? 'negative' : ''}">
+            ${scoreDelta >= 0 ? '+' + scoreDelta : scoreDelta} PTS
+          </span>
+        </div>
+        <div style="font-size: var(--text-sm); color: var(--text-primary); font-weight: 500;">
+          ${game_response.message || 'Action executed successfully.'}
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Populate questions
+  const qContainer = decisionContainer.querySelector(`#split-questions-container-${event.step}`);
+  if (qContainer) {
+    const questions = acceptedCall.questions || [];
+    const rawScores = acceptedCall.raw?.probabilities || [];
+
+    questions.forEach((q, qIdx) => {
+      const qCard = document.createElement('div');
+      qCard.className = 'question-card active-thinking';
+      const qType = (q.type || 'choice').toUpperCase();
+
+      const optionsHtml = (q.options || []).map((opt, optIdx) => {
+        const prob = rawScores[optIdx] ?? (optIdx === 0 ? 0.8 : 0.1);
+        const pct = Math.round(prob * 100);
+        const isWinner = opt === acceptedCall.raw?.predicted_token || optIdx === 0;
+
+        return `
+          <div class="option-row ${isWinner ? 'is-winner' : ''}">
+            <div class="option-meta">
+              <span class="option-label">
+                ${isWinner ? '<span aria-hidden="true">✔</span>' : '<span style="opacity:0.3">○</span>'}
+                ${opt}
+              </span>
+              <span class="option-prob">${pct}%</span>
+            </div>
+            <div class="prob-bar-track" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
+              <div class="prob-bar-fill" style="width: ${isReduced || !animate ? pct : 0}%;" data-target-width="${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      qCard.innerHTML = `
+        <div class="question-card-header">
+          <span class="badge ${qType === 'CHOICE' ? 'badge-cyan' : (qType === 'SCORE' ? 'badge-good' : 'badge-demo')}">
+            ${qType}
+          </span>
+          <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">
+            ID: ${q.id || 'q_1'}
+          </span>
+        </div>
+        <div class="question-text">${q.text}</div>
+        <div class="question-options-list">
+          ${optionsHtml}
+        </div>
+      `;
+
+      if (isReduced || !animate) {
+        qContainer.appendChild(qCard);
+      } else {
+        setTimeout(() => {
+          qContainer.appendChild(qCard);
+          setTimeout(() => {
+            qCard.querySelectorAll('.prob-bar-fill').forEach(fill => {
+              fill.style.width = fill.getAttribute('data-target-width');
+            });
+          }, 60);
+        }, qIdx * 120);
+      }
+    });
+  }
+
+  // Animate action scores
+  if (animate && !isReduced) {
+    setTimeout(() => {
+      decisionContainer.querySelectorAll('.action-scores-group .prob-bar-fill').forEach(fill => {
+        fill.style.width = fill.getAttribute('data-target-width');
+      });
+      const title = decisionContainer.querySelector(`#split-action-title-${event.step}`);
+      if (title) triggerGlitch(title);
+    }, 180);
+  }
+}
+
