@@ -27,3 +27,13 @@
 - [x] Decision Autopsy built in `bot/autopsy.py` (`analyse`, `summary`, `worst`, CLI)
 - [x] Autopsy methodology documentation in `docs/autopsy.md`
 - [x] Full autopsy unit test suite in `tests/lane_d/test_autopsy.py` (all verdicts tested and schema-validated)
+- [x] Replay store and verification endpoints (`/api/runs/{id}/events/{step}`, `/api/runs/{id}/verify`)
+- [x] `scripts/best_runs.py` exporting top runs to `logs/best/` and generating `docs/best_runs.md`
+- [x] `scripts/log_stats.py` computing empirical latency (mean/p95), moves, and scores
+- [x] `scripts/check_every_move_logged.py` auditing move-to-Laya call traceability and contiguous steps
+- [x] Script test suite in `tests/lane_d/test_scripts.py` (all tests passing)
+
+## Team Announcements Log
+
+### Prompt 5 Announcement (Replay & Verification Tools)
+> *"Team update: Replay verification tools and best-runs exporter are live on `feat/server-logs`. Endpoints `GET /api/runs/{id}/events/{step}` (returns unmodified event with source file and line number) and `GET /api/runs/{id}/verify` (SHA-256 integrity check, step continuity, and move-to-Laya traceability) are active and verified. You can use `python scripts/check_every_move_logged.py <session>` to audit compliance and `python scripts/best_runs.py` to preserve top runs in `logs/best/`."*
