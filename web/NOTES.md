@@ -118,6 +118,27 @@
 
 ---
 
+## Prompt 4: Decision Autopsy & Reproducible Replay (USPs 1 & 3)
+- **Shared Decision Component (`web/js/components/decisionCard.js`):**
+  - Extracted shared rendering for State, Questions, Probability bars, and Decision cards into a modular reusable component shared across Live Run and Replay.
+- **Decision Autopsy Panel (`web/js/panels/autopsy.js` & `web/css/autopsy.css`):**
+  - **Worst 5 Decisions Banner:** High-priority hotlist spotlighting severe incidents (confident misses, illegal boundary violations).
+  - **Interactive Verdict Filters:** Clickable filter chips showing counts for `all`, `confident_miss`, `illegal_move`, `uncertain_miss`, `lucky_hit`, and `game_over`.
+  - **Forensic Comparison HUD Card:**
+    - *What Laya Predicted:* Exact question text, probability distribution bars, predicted winner, and expected outcome.
+    - *What Happened:* Actual chosen action, score delta, server response message, and game outcome.
+    - *Forensic Hypothesis & Audit Note:* Explanations framed strictly as testable scientific hypotheses.
+    - Direct shortcut button to open step in Replay.
+- **Reproducible Run Replay Panel (`web/js/panels/replay.js` & `web/css/replay.css`):**
+  - **Audit Proof Banner:** Explicit declaration *"Every move below was produced by a logged Laya call"*, displaying session ID, total Laya calls, and SHA-256 verification status.
+  - **Interactive Controls:** Big range scrubber across all steps, Play/Pause toggle with selectable speeds (`0.5x`, `1.0x`, `2.0x`), Prev/Next step buttons, and global keyboard arrow key navigation (`◀` / `▶`).
+  - **Deep Link Navigation:** Instant step and session restoration via URL hashes (`#/replay?session=...&step=N`).
+  - **Dual View Modes:**
+    1. *Interactive HUD View:* Full 3-column game view matching Live Run.
+    2. *Raw Event JSON View:* Monospace formatted JSON viewer, session ID, timestamp, copy-to-clipboard button with visual feedback, and `.jsonl` download.
+
+---
+
 ## Accessibility & Performance
 - **Reduced Motion Support:** `@media (prefers-reduced-motion: reduce)` globally disables scanning line overlays, cyber grid shifts, typewriter typing pauses, and glitch shakes.
 - **Responsive Range:** Fluidly tested and styled from 360px mobile viewports up to 1920px widescreen monitors.
