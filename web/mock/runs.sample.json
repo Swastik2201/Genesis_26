@@ -1,0 +1,55 @@
+{
+  "runs": [
+    {
+      "session_id": "demo-runner-20261013-001",
+      "game_id": "mock-runner-v1",
+      "started_at": "2026-10-13T10:00:00.000Z",
+      "ended_at": "2026-10-13T10:00:34.000Z",
+      "steps": 40,
+      "final_score": 1840,
+      "invalid_moves": 2,
+      "fallbacks": 0,
+      "average_laya_latency_ms": 30.8,
+      "laya_call_count": 42,
+      "completion_status": "completed",
+      "qualifying_score": null,
+      "verified": null,
+      "event_count": 40,
+      "sha256": "4b9e25d8863f6a25b180746e01a1d1d8ef35b6df926c89178adad319de8d98e1"
+    },
+    {
+      "session_id": "demo-runner-20261012-002",
+      "game_id": "mock-runner-v1",
+      "started_at": "2026-10-12T16:20:00.000Z",
+      "ended_at": "2026-10-12T16:20:28.000Z",
+      "steps": 32,
+      "final_score": 1420,
+      "invalid_moves": 1,
+      "fallbacks": 0,
+      "average_laya_latency_ms": 32.1,
+      "laya_call_count": 33,
+      "completion_status": "collision",
+      "qualifying_score": null,
+      "verified": null,
+      "event_count": 32,
+      "sha256": "8f1a23b49c7d8e9f0123456789abcdef0123456789abcdef0123456789abcdef"
+    },
+    {
+      "session_id": "demo-runner-20261012-001",
+      "game_id": "mock-runner-v1",
+      "started_at": "2026-10-12T14:05:00.000Z",
+      "ended_at": "2026-10-12T14:05:22.000Z",
+      "steps": 25,
+      "final_score": 980,
+      "invalid_moves": 0,
+      "fallbacks": 0,
+      "average_laya_latency_ms": 29.4,
+      "laya_call_count": 25,
+      "completion_status": "collision",
+      "qualifying_score": null,
+      "verified": null,
+      "event_count": 25,
+      "sha256": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+    }
+  ]
+}

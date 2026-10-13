@@ -1,0 +1,62 @@
+{
+  "experiments": [
+    {
+      "name": "mock_runner_perception_vs_direct_v1",
+      "created_at": "2026-10-13T09:00:00Z",
+      "adapter": "mock-runner-v1",
+      "variants": [
+        {
+          "question_set": "perception_runner_v1",
+          "games": 10,
+          "avg_score": 1640.0,
+          "best_score": 1950.0,
+          "invalid_rate": 0.05,
+          "avg_latency_ms": 30.5,
+          "completion_rate": 0.90,
+          "avg_confidence": 0.85,
+          "session_ids": ["demo-runner-20261013-001"]
+        },
+        {
+          "question_set": "direct_action_control",
+          "games": 10,
+          "avg_score": 1180.0,
+          "best_score": 1420.0,
+          "invalid_rate": 0.12,
+          "avg_latency_ms": 29.2,
+          "completion_rate": 0.60,
+          "avg_confidence": 0.71,
+          "session_ids": ["demo-runner-20261012-002"]
+        }
+      ]
+    },
+    {
+      "name": "question_framing_speed_scaling_v2",
+      "created_at": "2026-10-12T15:30:00Z",
+      "adapter": "mock-runner-v1",
+      "variants": [
+        {
+          "question_set": "speed_relative_perception",
+          "games": 5,
+          "avg_score": 1510.0,
+          "best_score": 1780.0,
+          "invalid_rate": 0.04,
+          "avg_latency_ms": 31.8,
+          "completion_rate": 0.80,
+          "avg_confidence": 0.82,
+          "session_ids": ["demo-runner-20261012-001"]
+        },
+        {
+          "question_set": "static_distance_perception",
+          "games": 5,
+          "avg_score": 1290.0,
+          "best_score": 1440.0,
+          "invalid_rate": 0.08,
+          "avg_latency_ms": 28.6,
+          "completion_rate": 0.60,
+          "avg_confidence": 0.76,
+          "session_ids": []
+        }
+      ]
+    }
+  ]
+}

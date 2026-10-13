@@ -1,0 +1,84 @@
+{
+  "session_id": "demo-runner-20261013-001",
+  "summary": {
+    "total_steps": 40,
+    "as_predicted": 34,
+    "confident_miss": 1,
+    "uncertain_miss": 1,
+    "lucky_hit": 1,
+    "illegal_move": 2,
+    "game_over": 1
+  },
+  "items": [
+    {
+      "step": 11,
+      "verdict": "illegal_move",
+      "expected": "Selected action must be within legal boundaries",
+      "actual": "Validator rejected 'move_left' (left boundary exceeded); retried and selected 'move_right'",
+      "note": "Perception question formulation did not explicitly incorporate track boundary constraints; validator successfully caught and reprompted Laya.",
+      "severity": 0.70,
+      "question_id": "q_step_11_1",
+      "probabilities": {
+        "move_left": 0.78,
+        "stay": 0.12,
+        "move_right": 0.10
+      }
+    },
+    {
+      "step": 27,
+      "verdict": "illegal_move",
+      "expected": "Selected action must adhere to Lane 3 right boundary limit",
+      "actual": "Validator rejected 'move_right'; retried with 'move_left' to Lane 2",
+      "note": "Model inferred open shoulder on right instead of physical wall. Validator exclusion forced lawful transition to Lane 2.",
+      "severity": 0.65,
+      "question_id": "q_step_27_1",
+      "probabilities": {
+        "move_right": 0.85,
+        "stay": 0.05,
+        "move_left": 0.10
+      }
+    },
+    {
+      "step": 18,
+      "verdict": "uncertain_miss",
+      "expected": "Smooth high-speed transit with clear corridor",
+      "actual": "Near miss friction penalty (-5 pts)",
+      "note": "Laya had split confidence (48% vs 46%) between holding Lane 2 or shifting right. Selected move caused grazing collision.",
+      "severity": 0.40,
+      "question_id": "q_step_18",
+      "probabilities": {
+        "stay": 0.48,
+        "move_right": 0.46,
+        "move_left": 0.06
+      }
+    },
+    {
+      "step": 32,
+      "verdict": "lucky_hit",
+      "expected": "Low confidence survival probability (35%)",
+      "actual": "Crystal pickup achieved (+25 pts)",
+      "note": "Low confidence choice between Lane 1 and 2 yielded unexpected crystal pickup when dynamic hazard shifted right.",
+      "severity": 0.25,
+      "question_id": "q_step_32",
+      "probabilities": {
+        "move_left": 0.35,
+        "stay": 0.33,
+        "move_right": 0.32
+      }
+    },
+    {
+      "step": 39,
+      "verdict": "game_over",
+      "expected": "Terminal qualification barrier reached",
+      "actual": "Run completed with terminal gauntlet score bonus (+100 pts)",
+      "note": "Gauntlet concluded as scheduled. Full 40 steps recorded with zero unlogged moves.",
+      "severity": 0.10,
+      "question_id": "q_step_39",
+      "probabilities": {
+        "stay": 0.60,
+        "move_left": 0.20,
+        "move_right": 0.20
+      }
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "n": 40,
+  "accuracy": 0.85,
+  "ece": 0.058,
+  "bins": [
+    {
+      "lo": 0.0,
+      "hi": 0.2,
+      "n": 2,
+      "mean_confidence": 0.14,
+      "accuracy": 0.00
+    },
+    {
+      "lo": 0.2,
+      "hi": 0.4,
+      "n": 4,
+      "mean_confidence": 0.33,
+      "accuracy": 0.25
+    },
+    {
+      "lo": 0.4,
+      "hi": 0.6,
+      "n": 6,
+      "mean_confidence": 0.52,
+      "accuracy": 0.50
+    },
+    {
+      "lo": 0.6,
+      "hi": 0.8,
+      "n": 12,
+      "mean_confidence": 0.72,
+      "accuracy": 0.75
+    },
+    {
+      "lo": 0.8,
+      "hi": 1.0,
+      "n": 16,
+      "mean_confidence": 0.89,
+      "accuracy": 0.94
+    }
+  ],
+  "thresholds": [
+    {
+      "threshold": 0.5,
+      "coverage": 0.85,
+      "accuracy": 0.88
+    },
+    {
+      "threshold": 0.7,
+      "coverage": 0.70,
+      "accuracy": 0.93
+    },
+    {
+      "threshold": 0.85,
+      "coverage": 0.40,
+      "accuracy": 0.96
+    }
+  ],
+  "by_question_type": {
+    "choice": {
+      "n": 20,
+      "accuracy": 0.88,
+      "ece": 0.045
+    },
+    "score": {
+      "n": 12,
+      "accuracy": 0.83,
+      "ece": 0.062
+    },
+    "noul": {
+      "n": 8,
+      "accuracy": 0.75,
+      "ece": 0.084
+    }
+  },
+  "recommended_threshold": 0.70
+}
