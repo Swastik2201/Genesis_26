@@ -379,9 +379,21 @@
 
   <!-- Script: fx.js micro-animations and simulation -->
   <script type="module">
-    import { initDecisionSimulator } from './js/fx.js';
+    import { initDecisionSimulator, initParticleBackground } from './js/fx.js';
+    import { gameConfig } from './config.js';
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Mount capped, rAF ambient particles
+      initParticleBackground('.bg-ambient');
+
+      // Update hero tagline if customized in web/config.js
+      if (gameConfig && gameConfig.gameTagline) {
+        const tagline = document.querySelector('.hero-tagline');
+        if (tagline && gameConfig.gameTagline) {
+          tagline.innerHTML = `${gameConfig.gameTagline}. <span class="highlight">Every decision visible.</span>`;
+        }
+      }
+
       initDecisionSimulator({
         stateEl: document.getElementById('sim-state-text'),
         questionEl: document.getElementById('sim-question-area'),

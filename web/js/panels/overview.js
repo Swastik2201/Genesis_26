@@ -11,6 +11,7 @@
 
 import { store } from '../store.js';
 import * as api from '../api.js';
+import { gameConfig } from '../../config.js';
 
 let unsubscribe = null;
 

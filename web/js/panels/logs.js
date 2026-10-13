@@ -15,6 +15,8 @@ let isTailPaused = false;
 let currentFilter = 'all'; // 'all' | 'good' | 'miss' | 'illegal' | 'over'
 let searchQuery = '';
 let terminalEl = null;
+let virtualScrollHandler = null;
+let currentFilteredEvents = [];
 
 export async function mount(container) {
   const state = store.getState();
@@ -140,7 +142,12 @@ export function unmount() {
     unsubscribe();
     unsubscribe = null;
   }
+  if (virtualScrollHandler && terminalEl) {
+    terminalEl.removeEventListener('scroll', virtualScrollHandler);
+    virtualScrollHandler = null;
+  }
   terminalEl = null;
+  currentFilteredEvents = [];
 }
 
 function setupEventListeners(container) {
@@ -284,72 +291,119 @@ function renderLogLines() {
     return;
   }
 
-  // Render log lines
-  const linesHtml = filtered.map(ev => {
-    // Extract timestamp
-    const tsStr = formatTime(ev.ts);
+  currentFilteredEvents = filtered;
 
-    // Extract step
-    const stepLabel = `S${String(ev.step).padStart(2, '0')}`;
+  if (filtered.length > 500) {
+    renderVirtualizedLogLines();
+  } else {
+    // Normal rendering for standard lengths
+    renderStandardLogLines(filtered);
+  }
+}
 
-    // Extract action
-    const actionLabel = ev.final_action || 'none';
-
-    // Extract probability / confidence
-    const primaryCall = ev.laya_calls?.[0];
-    let prob = null;
-    if (primaryCall) {
-      if (primaryCall.action_scores && primaryCall.action_scores[ev.final_action] !== undefined) {
-        prob = primaryCall.action_scores[ev.final_action];
-      } else if (primaryCall.raw?.probabilities) {
-        prob = Math.max(...primaryCall.raw.probabilities);
-      }
-    }
-    const probStr = prob !== null ? `${(prob * 100).toFixed(1)}%` : '--';
-
-    // Extract outcome badge / text
-    const hasRejection = (ev.validator?.rejections && ev.validator.rejections.length > 0) ||
-                         ev.laya_calls?.some(c => c.excluded);
-    const isGood = ev.game_response?.good === true;
-    const isGameOver = ev.state?.done || ev.game_response?.done;
-    
-    let outcomeClass = 'outcome-neutral';
-    let outcomePrefix = 'ℹ ';
-    if (isGameOver) {
-      outcomeClass = 'outcome-gameover';
-      outcomePrefix = '🏁 ';
-    } else if (hasRejection) {
-      outcomeClass = 'outcome-rejection';
-      outcomePrefix = '⚠ RETRIED: ';
-    } else if (isGood) {
-      outcomeClass = 'outcome-good';
-      outcomePrefix = '✓ ';
-    } else {
-      outcomeClass = 'outcome-miss';
-      outcomePrefix = '✗ ';
-    }
-
-    const outcomeText = ev.outcome || ev.game_response?.message || 'Action executed';
-
-    return `
-      <div class="log-line" data-step="${ev.step}" title="Click to inspect decision step ${ev.step} in Replay">
-        <span class="log-col-time log-time">${tsStr}</span>
-        <span class="log-col-step log-step">${stepLabel}</span>
-        <span class="log-col-action log-action">
-          <span class="action-tag">${actionLabel}</span>
-        </span>
-        <span class="log-col-prob log-prob">${probStr}</span>
-        <span class="log-col-outcome log-outcome ${outcomeClass}">
-          ${outcomePrefix}${outcomeText}
-        </span>
-      </div>
-    `;
-  }).join('');
-
+function renderStandardLogLines(filtered) {
+  const linesHtml = filtered.map(ev => renderSingleLogLineHtml(ev)).join('');
   terminalEl.innerHTML = linesHtml;
+  bindLogLineClickListeners(terminalEl);
+}
 
-  // Add click listener on log lines to deep link to Replay
-  terminalEl.querySelectorAll('.log-line').forEach(line => {
+function renderVirtualizedLogLines() {
+  const ROW_HEIGHT = 28;
+  const totalHeight = currentFilteredEvents.length * ROW_HEIGHT;
+  const scrollTop = terminalEl.scrollTop;
+  const viewportHeight = terminalEl.clientHeight || 500;
+  
+  const visibleCount = Math.ceil(viewportHeight / ROW_HEIGHT);
+  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 15);
+  const endIndex = Math.min(currentFilteredEvents.length, startIndex + visibleCount + 30);
+  
+  const slice = currentFilteredEvents.slice(startIndex, endIndex);
+  const sliceHtml = slice.map(ev => renderSingleLogLineHtml(ev)).join('');
+
+  terminalEl.innerHTML = `
+    <div class="virtual-scroll-spacer" style="height: ${totalHeight}px; position: relative;">
+      <div class="virtual-scroll-content" style="position: absolute; top: ${startIndex * ROW_HEIGHT}px; left: 0; right: 0;">
+        ${sliceHtml}
+      </div>
+    </div>
+  `;
+
+  bindLogLineClickListeners(terminalEl);
+
+  // Attach rAF-throttled scroll listener if not already attached
+  if (!virtualScrollHandler) {
+    let ticking = false;
+    virtualScrollHandler = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          if (currentFilteredEvents.length > 500 && terminalEl) {
+            renderVirtualizedLogLines();
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    terminalEl.addEventListener('scroll', virtualScrollHandler);
+  }
+}
+
+function renderSingleLogLineHtml(ev) {
+  const tsStr = formatTime(ev.ts);
+  const stepLabel = `S${String(ev.step).padStart(2, '0')}`;
+  const actionLabel = ev.final_action || 'none';
+
+  const primaryCall = ev.laya_calls?.[0];
+  let prob = null;
+  if (primaryCall) {
+    if (primaryCall.action_scores && primaryCall.action_scores[ev.final_action] !== undefined) {
+      prob = primaryCall.action_scores[ev.final_action];
+    } else if (primaryCall.raw?.probabilities) {
+      prob = Math.max(...primaryCall.raw.probabilities);
+    }
+  }
+  const probStr = prob !== null ? `${(prob * 100).toFixed(1)}%` : '--';
+
+  const hasRejection = (ev.validator?.rejections && ev.validator.rejections.length > 0) ||
+                       ev.laya_calls?.some(c => c.excluded);
+  const isGood = ev.game_response?.good === true;
+  const isGameOver = ev.state?.done || ev.game_response?.done;
+  
+  let outcomeClass = 'outcome-neutral';
+  let outcomePrefix = 'ℹ ';
+  if (isGameOver) {
+    outcomeClass = 'outcome-gameover';
+    outcomePrefix = '🏁 ';
+  } else if (hasRejection) {
+    outcomeClass = 'outcome-rejection';
+    outcomePrefix = '⚠ RETRIED: ';
+  } else if (isGood) {
+    outcomeClass = 'outcome-good';
+    outcomePrefix = '✓ ';
+  } else {
+    outcomeClass = 'outcome-miss';
+    outcomePrefix = '✗ ';
+  }
+
+  const outcomeText = ev.outcome || ev.game_response?.message || 'Action executed';
+
+  return `
+    <div class="log-line" data-step="${ev.step}" title="Click to inspect decision step ${ev.step} in Replay">
+      <span class="log-col-time log-time">${tsStr}</span>
+      <span class="log-col-step log-step">${stepLabel}</span>
+      <span class="log-col-action log-action">
+        <span class="action-tag">${actionLabel}</span>
+      </span>
+      <span class="log-col-prob log-prob">${probStr}</span>
+      <span class="log-col-outcome log-outcome ${outcomeClass}">
+        ${outcomePrefix}${outcomeText}
+      </span>
+    </div>
+  `;
+}
+
+function bindLogLineClickListeners(container) {
+  container.querySelectorAll('.log-line').forEach(line => {
     line.addEventListener('click', () => {
       const step = line.dataset.step;
       const state = store.getState();

@@ -7,6 +7,8 @@
  * ==========================================================================
  */
 
+import { gameConfig } from '../../config.js';
+
 export function mount(container) {
   container.innerHTML = `
     <div class="panel-about">
@@ -14,8 +16,8 @@ export function mount(container) {
       <div class="panel-header-row" style="margin-bottom: var(--space-md); display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: var(--space-md);">
         <div>
           <div class="section-tag">SPECIFICATION // MISSION ARCHITECTURE</div>
-          <h2 style="margin-bottom: 4px;">ABOUT BEAT THE BOT</h2>
-          <p style="color: var(--text-muted); margin-bottom: 0;">Autonomous game decision layer built around the Laya model for hackathon auditing.</p>
+          <h2 style="margin-bottom: 4px;">ABOUT ${gameConfig.gameName || 'BEAT THE BOT'}</h2>
+          <p style="color: var(--text-muted); margin-bottom: 0;">${gameConfig.gameTagline || 'Autonomous game decision layer built around the Laya model for hackathon auditing.'}</p>
         </div>
         <div style="display: flex; gap: var(--space-sm); align-items: center;">
           <span class="badge badge-good">HACKATHON AUDIT COMPLIANT</span>

@@ -226,6 +226,12 @@
 }
 
 /* Terminal Header & Columns */
+.log-terminal-wrapper {
+  position: relative;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .log-terminal-header {
   display: grid;
   grid-template-columns: 85px 65px 130px 100px 1fr;
@@ -240,12 +246,14 @@
   font-size: 11px;
   letter-spacing: 0.08em;
   color: var(--text-muted);
+  min-width: 560px;
 }
 
 .log-terminal {
   border-top: none;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
+  min-width: 560px;
 }
 
 .log-line {

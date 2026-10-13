@@ -174,8 +174,60 @@
 
 ---
 
-## Accessibility & Performance
-- **Reduced Motion Support:** `@media (prefers-reduced-motion: reduce)` globally disables scanning line overlays, cyber grid shifts, typewriter typing pauses, and glitch shakes.
-- **Responsive Range:** Fluidly tested and styled from 360px mobile viewports up to 1920px widescreen monitors.
-- **Focus Rings:** Explicit `:focus-visible` styling with high-contrast cyan outline and offset.
+## Prompt 6: Polish, Demo Mode, Game Config, Performance, Sound, & Accessibility
+- **Demo Mode Ribbon & URL Parameter Handling:**
+  - Standalone Offline Resilience: When backend server is unreachable or `?mock=1` is passed, system engages mock mode with zero console breaks or blank panels.
+  - Prominent Cyber Demo Ribbon: Displays a glowing hazard banner at the top of the dashboard: *"REPLAYING RECORDED RUN // Standalone demonstration fixtures active (Server unreachable)"* with a *"RETRY LIVE"* button and dismiss control.
+  - Deep Link Query Parameter `?run=<session>`: Automatically selects and loads the requested session and its associated logs, autopsy, and calibration records.
+- **Centralized Game Retheming (`web/config.js`):**
+  - Exported `gameConfig` holds `gameName`, `gameSubtitle`, `gameTagline`, `gameId`, `theme` colors, and `rules`.
+  - On game day, the entire frontend (Landing, Topbar, About, Overview) is rethemed simply by editing `web/config.js`.
+- **Performance & Virtualization:**
+  - DOM Virtualization for Logs: In `web/js/panels/logs.js`, lists exceeding 500 events automatically engage windowed virtualization, rendering only the visible viewport slice (~28px row height) via `requestAnimationFrame` with overscan buffers.
+  - Capped Ambient Particles: Ambient particle canvas capped to max 30 particles on desktop and 15 on mobile.
+  - Tab Visibility Pause: Listens to `visibilitychange` to immediately cancel `requestAnimationFrame` loops and pause simulation timers whenever the tab is hidden, reducing idle CPU usage to 0%.
+- **Synthesized Web Audio (`web/js/sound.js`):**
+  - Strictly OFF by default (`soundEnabled = false`).
+  - Interactive topbar toggle (`🔇 SOUND: OFF` / `🔊 SOUND: ON`) with `localStorage` persistence.
+  - 100% synthesized tones via `AudioContext` without external sound asset files:
+    * Good Move: Bright 2-tone rising chime (523Hz ➔ 784Hz).
+    * Bad Move / Miss: Descending sawtooth tone (220Hz ➔ 110Hz).
+    * Illegal Move: Double staccato square wave warning pulse (440Hz).
+    * Step Click: Subtle micro-blip (880Hz sine).
+- **Accessibility & Contrast:**
+  - Keyboard Navigation: Sidebar navigation links support `ArrowUp`, `ArrowDown`, `Home`, and `End` cycling with `tabindex="0"`.
+  - Throttled Live Announcer: Dedicated `#live-announcer` with `aria-live="polite"` announces telemetry step changes throttled to at most once per 1.5 seconds.
+  - Redundant Signals: Color is never the sole indicator—every status is accompanied by text badges and symbols (`✓` for good, `✗` for bad, `⚠` for illegal retries, `🏁` for game over).
+  - Reduced Motion: System queries `prefers-reduced-motion: reduce` across both CSS and JS to disable canvas particles, typewriter pauses, glitches, and transitions.
+
+---
+
+## Manual Multi-Viewport Responsive Testing Matrix
+
+| Viewport Width | Device Target | What Was Checked | Bugs Identified | Fix Implemented |
+|---|---|---|---|---|
+| **360 px** | Mobile (Small Phone) | Bottom navigation bar, stacked 3-column hero grid, topbar wrapping, log terminal scrolling, table overflows. | 1. Demo ribbon text caused horizontal scroll on narrow mobile screens.<br>2. Log terminal columns (`560px` min-width) clipped right-hand outcome text. | 1. Added `@media (max-width: 680px)` stacking demo ribbon vertically with padding adjustments.<br>2. Added `overflow-x: auto` with `-webkit-overflow-scrolling: touch` to `.log-terminal-wrapper`. |
+| **768 px** | Tablet (iPad Portrait) | 64px icon sidebar rail, topbar telemetry display, autopsy forensic cards, 2-column Question Lab charts. | Sidebar brand text expanded offscreen when sidebar width was collapsed to 64px. | Added `.sidebar-brand-text { display: none }` and `.nav-label { display: none }` at `< 1024px` breakpoint. |
+| **1280 px** | Laptop / Small Desktop | Full 260px fixed sidebar, complete 3-column Live Run HUD, Timeline pips track, SVG sparklines, audio toggle. | Tooltip on timeline pips was jittery on rapid hover during live stream. | Set `pointer-events: none` on pip pseudo-elements and throttled pip DOM updates. |
+| **1920 px** | Desktop Widescreen | Full HD layout, ambient particle density, 5-column Overview KPI grid, large monospace terminal view. | Particle canvas stretched on window resize without resetting internal buffer resolution. | Added debounced `resize` handler in `fx.js` updating `canvas.width = window.innerWidth`. |
+
+---
+
+## Lane Ownership Verification
+- Every file created or modified is strictly inside `web/`:
+  - `web/config.js`
+  - `web/dashboard.html`
+  - `web/index.html`
+  - `web/NOTES.md`
+  - `web/css/dashboard.css`
+  - `web/css/panels.css`
+  - `web/js/fx.js`
+  - `web/js/sound.js`
+  - `web/js/panels/live.js`
+  - `web/js/panels/logs.js`
+  - `web/js/panels/overview.js`
+  - `web/js/panels/about.js`
+  - `web/js/panels/replay.js`
+- Zero edits outside `web/`.
+
 

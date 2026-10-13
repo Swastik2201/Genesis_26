@@ -10,6 +10,7 @@ import { store } from '../store.js';
 import * as api from '../api.js';
 import { typewriter, animateCounter, triggerGlitch } from '../fx.js';
 import { renderDecisionGrid } from '../components/decisionCard.js';
+import * as sound from '../sound.js';
 
 let streamController = null;
 let storeUnsubscribe = null;
@@ -274,7 +275,17 @@ function renderStep(stepNumber, shouldAnimate = true) {
 
   // Update Bottom Timeline Track
   updateTimelineStrip(events, stepNumber);
-}
+
+  // Trigger synthesized sound if active and animating
+  if (shouldAnimate) {
+    if (event.validator?.retries > 0 || event.validator?.rejections?.length > 0) {
+      sound.playIllegalMoveSound();
+    } else if (event.game_response?.good === true) {
+      sound.playGoodMoveSound();
+    } else if (event.game_response?.good === false) {
+      sound.playBadMoveSound();
+    }
+  }
 }
 
 /**
