@@ -7,6 +7,8 @@
       "variants": [
         {
           "question_set": "perception_runner_v1",
+          "question_text": "Which lane has the clearest forward path with lowest hazard density?",
+          "description": "Perception-first: queries environmental state facts before mapping to action space.",
           "games": 10,
           "avg_score": 1640.0,
           "best_score": 1950.0,
@@ -18,6 +20,8 @@
         },
         {
           "question_set": "direct_action_control",
+          "question_text": "Which action should we take right now: move_left, stay, or move_right?",
+          "description": "Direct-action control: prompts Laya directly for a strategic move without perception framing.",
           "games": 10,
           "avg_score": 1180.0,
           "best_score": 1420.0,
@@ -36,6 +40,8 @@
       "variants": [
         {
           "question_set": "speed_relative_perception",
+          "question_text": "At current velocity {speed}x, which lane allows safe avoidance given collision time {distance/speed}s?",
+          "description": "Speed-scaled physics framing: explicitly supplies dynamic time-to-collision.",
           "games": 5,
           "avg_score": 1510.0,
           "best_score": 1780.0,
@@ -47,6 +53,8 @@
         },
         {
           "question_set": "static_distance_perception",
+          "question_text": "Obstacle is located at distance {distance}. Which lane has no obstacle?",
+          "description": "Static grid framing: reports obstacle distance without speed scaling.",
           "games": 5,
           "avg_score": 1290.0,
           "best_score": 1440.0,
