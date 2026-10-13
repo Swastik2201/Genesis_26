@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beat-the-bot.local/contracts/summary.schema.json",
+  "title": "RunSummary",
+  "description": "Run summary metadata stored separately as <session_id>.summary.json",
+  "type": "object",
+  "required": [
+    "session_id",
+    "game_id",
+    "started_at",
+    "ended_at",
+    "steps",
+    "final_score",
+    "invalid_moves",
+    "fallbacks",
+    "average_laya_latency_ms",
+    "laya_call_count",
+    "completion_status",
+    "qualifying_score",
+    "verified",
+    "event_count",
+    "sha256"
+  ],
+  "properties": {
+    "session_id": {
+      "type": "string"
+    },
+    "game_id": {
+      "type": "string"
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "ended_at": {
+      "type": "string"
+    },
+    "steps": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "final_score": {
+      "type": ["number", "null"]
+    },
+    "invalid_moves": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "fallbacks": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "average_laya_latency_ms": {
+      "type": "number",
+      "minimum": 0.0
+    },
+    "laya_call_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "completion_status": {
+      "type": "string"
+    },
+    "qualifying_score": {
+      "type": ["number", "null"]
+    },
+    "verified": {
+      "type": ["boolean", "string", "null"]
+    },
+    "event_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "sha256": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

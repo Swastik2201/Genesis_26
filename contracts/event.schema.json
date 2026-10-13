@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beat-the-bot.local/contracts/event.schema.json",
+  "title": "Event",
+  "description": "One immutable event logged per decision step in .jsonl log files",
+  "type": "object",
+  "required": [
+    "schema",
+    "session_id",
+    "game_id",
+    "ts",
+    "step",
+    "state",
+    "laya_calls",
+    "validator",
+    "final_action",
+    "game_response",
+    "outcome"
+  ],
+  "properties": {
+    "schema": {
+      "type": "integer",
+      "const": 1,
+      "description": "Event schema version (must be 1)"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Unique session identifier"
+    },
+    "game_id": {
+      "type": "string",
+      "description": "Identifier of the game played"
+    },
+    "ts": {
+      "type": "string",
+      "description": "UTC ISO-8601 timestamp"
+    },
+    "step": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Zero-indexed decision step"
+    },
+    "state": {
+      "$ref": "state.schema.json"
+    },
+    "laya_calls": {
+      "type": "array",
+      "description": "List of Laya model invocations for this step; non-empty for submitted steps",
+      "items": {
+        "type": "object",
+        "required": [
+          "question_set",
+          "questions",
+          "raw",
+          "action_scores",
+          "chosen_action",
+          "latency_ms",
+          "accepted"
+        ],
+        "properties": {
+          "question_set": {
+            "type": "string"
+          },
+          "questions": {
+            "type": ["array", "object"]
+          },
+          "raw": {
+            "description": "Unmodified output from Laya call"
+          },
+          "action_scores": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "chosen_action": {
+            "type": "string"
+          },
+          "latency_ms": {
+            "type": "number",
+            "minimum": 0.0
+          },
+          "accepted": {
+            "type": "boolean",
+            "description": "True if accepted by validator, false if excluded"
+          },
+          "excluded": {
+            "type": "boolean",
+            "description": "Optional convenience flag opposite of accepted"
+          },
+          "legal": {
+            "type": "boolean",
+            "description": "Optional convenience flag indicating whether action was legal"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "validator": {
+      "type": "object",
+      "required": ["retries", "fallback"],
+      "properties": {
+        "retries": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of retries attempted after rejection"
+        },
+        "fallback": {
+          "type": "boolean",
+          "description": "True if action was chosen from Laya fallback scores"
+        },
+        "rejections": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Rejection messages from validator or game engine"
+        },
+        "rejection_messages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "final_action": {
+      "type": ["string", "null"],
+      "description": "The submitted action ID, or null for dry-run/interrupted steps"
+    },
+    "game_response": {
+      "type": "object",
+      "required": ["good", "score_before", "score_after", "done", "message"],
+      "properties": {
+        "good": {
+          "type": ["boolean", "null"],
+          "description": "True if action yielded positive outcome, false if negative, null if unknown"
+        },
+        "score_before": {
+          "type": ["number", "null"],
+          "description": "Score before move"
+        },
+        "score_after": {
+          "type": ["number", "null"],
+          "description": "Score after move"
+        },
+        "done": {
+          "type": "boolean",
+          "description": "True if the game concluded"
+        },
+        "message": {
+          "type": ["string", "null"],
+          "description": "Message from game server"
+        }
+      },
+      "additionalProperties": true
+    },
+    "outcome": {
+      "type": ["string", "null"],
+      "description": "Human-readable summary of move outcome"
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,14 @@
+{
+  "step": 24,
+  "verdict": "confident_miss",
+  "expected": "Safe lane transition based on 88% confidence",
+  "actual": "Collision occurred, game ended",
+  "note": "Laya was 88% sure lane 2 was open; obstacle collision recorded. Hypothesis: question formulation overlooked high-speed obstacle approaching 2 steps ahead.",
+  "severity": 0.85,
+  "question_id": "q_safest_lane",
+  "probabilities": {
+    "move_left": 0.05,
+    "stay": 0.07,
+    "move_right": 0.88
+  }
+}

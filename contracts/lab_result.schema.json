@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beat-the-bot.local/contracts/lab_result.schema.json",
+  "title": "LabResult",
+  "description": "Question Lab experiment result comparing prompt variants on comparable seeds",
+  "type": "object",
+  "required": [
+    "name",
+    "created_at",
+    "adapter",
+    "variants"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Experiment identifier or name"
+    },
+    "created_at": {
+      "type": "string",
+      "description": "ISO-8601 creation timestamp"
+    },
+    "adapter": {
+      "type": "string",
+      "description": "Game adapter tested"
+    },
+    "variants": {
+      "type": "array",
+      "description": "Comparative evaluation results across question-set variants",
+      "items": {
+        "type": "object",
+        "required": [
+          "question_set",
+          "games",
+          "avg_score",
+          "best_score",
+          "invalid_rate",
+          "avg_latency_ms",
+          "completion_rate",
+          "avg_confidence",
+          "session_ids"
+        ],
+        "properties": {
+          "question_set": {
+            "type": "string"
+          },
+          "games": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "avg_score": {
+            "type": "number"
+          },
+          "best_score": {
+            "type": "number"
+          },
+          "invalid_rate": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "avg_latency_ms": {
+            "type": "number",
+            "minimum": 0.0
+          },
+          "completion_rate": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "avg_confidence": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "session_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

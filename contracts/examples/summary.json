@@ -1,0 +1,17 @@
+{
+  "session_id": "20261012-101500-ab12",
+  "game_id": "mock-v1",
+  "started_at": "2026-10-12T10:15:00.000Z",
+  "ended_at": "2026-10-12T10:15:35.000Z",
+  "steps": 25,
+  "final_score": 1420,
+  "invalid_moves": 0,
+  "fallbacks": 0,
+  "average_laya_latency_ms": 32.4,
+  "laya_call_count": 25,
+  "completion_status": "completed",
+  "qualifying_score": null,
+  "verified": null,
+  "event_count": 25,
+  "sha256": "4b9e25d8863f6a25b180746e01a1d1d8ef35b6df926c89178adad319de8d98e1"
+}

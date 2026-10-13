@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beat-the-bot.local/contracts/decision.schema.json",
+  "title": "Decision",
+  "description": "Decision returned by the Laya decision engine for a single step",
+  "type": "object",
+  "required": [
+    "chosen_action",
+    "action_scores",
+    "questions",
+    "question_set",
+    "latency_ms",
+    "reason",
+    "raw"
+  ],
+  "properties": {
+    "chosen_action": {
+      "type": "string",
+      "description": "Selected legal action identifier"
+    },
+    "action_scores": {
+      "type": "object",
+      "description": "Mapping from legal action IDs to probabilities/scores summing to 1 within float tolerance",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      }
+    },
+    "questions": {
+      "type": ["array", "object"],
+      "description": "Exact typed questions passed to Laya"
+    },
+    "question_set": {
+      "type": "string",
+      "description": "Identifier of the question formulation set used"
+    },
+    "latency_ms": {
+      "type": "number",
+      "minimum": 0.0,
+      "description": "Inference time for Laya call in milliseconds"
+    },
+    "reason": {
+      "type": "string",
+      "description": "One short, human-readable sentence explaining how answers were mapped"
+    },
+    "raw": {
+      "description": "Unmodified Laya result for audit/debugging"
+    }
+  },
+  "additionalProperties": false
+}

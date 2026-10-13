@@ -1,0 +1,29 @@
+{
+  "name": "mock_game_perception_vs_direct",
+  "created_at": "2026-10-12T12:00:00Z",
+  "adapter": "mock-v1",
+  "variants": [
+    {
+      "question_set": "perception_first_v1",
+      "games": 10,
+      "avg_score": 1250.0,
+      "best_score": 1600.0,
+      "invalid_rate": 0.0,
+      "avg_latency_ms": 31.5,
+      "completion_rate": 0.8,
+      "avg_confidence": 0.84,
+      "session_ids": ["20261012-101500-ab12"]
+    },
+    {
+      "question_set": "direct_action_control",
+      "games": 10,
+      "avg_score": 920.0,
+      "best_score": 1150.0,
+      "invalid_rate": 0.05,
+      "avg_latency_ms": 29.8,
+      "completion_rate": 0.5,
+      "avg_confidence": 0.72,
+      "session_ids": ["20261012-102500-cd34"]
+    }
+  ]
+}

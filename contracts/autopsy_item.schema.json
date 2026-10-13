@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beat-the-bot.local/contracts/autopsy_item.schema.json",
+  "title": "AutopsyItem",
+  "description": "Decision Autopsy record analysing an individual step decision vs outcome",
+  "type": "object",
+  "required": [
+    "step",
+    "verdict",
+    "expected",
+    "actual",
+    "note",
+    "severity",
+    "question_id",
+    "probabilities"
+  ],
+  "properties": {
+    "step": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Step number"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "as_predicted",
+        "confident_miss",
+        "uncertain_miss",
+        "lucky_hit",
+        "illegal_move",
+        "game_over"
+      ],
+      "description": "Verdict classification for the decision"
+    },
+    "expected": {
+      "type": "string",
+      "description": "Expected outcome or behavior based on Laya's prediction"
+    },
+    "actual": {
+      "type": "string",
+      "description": "Actual observed outcome from the game environment"
+    },
+    "note": {
+      "type": "string",
+      "description": "Concise plain-English explanation framed as a testable hypothesis"
+    },
+    "severity": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Normalized severity score from 0.0 (minor/normal) to 1.0 (critical failure)"
+    },
+    "question_id": {
+      "type": ["string", "null"],
+      "description": "The specific question whose answer was most influential"
+    },
+    "probabilities": {
+      "description": "Probability score for the chosen action or mapping of action probabilities"
+    }
+  },
+  "additionalProperties": true
+}

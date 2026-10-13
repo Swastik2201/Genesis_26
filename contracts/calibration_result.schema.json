@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beat-the-bot.local/contracts/calibration_result.schema.json",
+  "title": "CalibrationResult",
+  "description": "Confidence reality check calibration metrics comparing predicted confidence to actual outcomes",
+  "type": "object",
+  "required": [
+    "n",
+    "accuracy",
+    "ece",
+    "bins",
+    "thresholds"
+  ],
+  "properties": {
+    "n": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total number of evaluated samples"
+    },
+    "accuracy": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Overall accuracy across evaluated decisions"
+    },
+    "ece": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Expected Calibration Error"
+    },
+    "bins": {
+      "type": "array",
+      "description": "Reliability diagram calibration bins",
+      "items": {
+        "type": "object",
+        "required": ["lo", "hi", "n", "mean_confidence", "accuracy"],
+        "properties": {
+          "lo": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "hi": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "n": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "mean_confidence": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "accuracy": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "thresholds": {
+      "type": "array",
+      "description": "Selective classification thresholds",
+      "items": {
+        "type": "object",
+        "required": ["threshold", "coverage", "accuracy"],
+        "properties": {
+          "threshold": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "coverage": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "accuracy": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "by_question_type": {
+      "type": "object",
+      "description": "Optional breakdown of calibration by question type",
+      "additionalProperties": true
+    },
+    "recommended_threshold": {
+      "type": ["number", "null"],
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Recommended confidence threshold balancing accuracy and coverage"
+    }
+  },
+  "additionalProperties": true
+}

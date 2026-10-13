@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beat-the-bot.local/contracts/state.schema.json",
+  "title": "State",
+  "description": "Normalized game state passed to the Laya decision engine",
+  "type": "object",
+  "required": [
+    "game_id",
+    "session_id",
+    "step",
+    "state_text",
+    "facts",
+    "legal_actions",
+    "score",
+    "done"
+  ],
+  "properties": {
+    "game_id": {
+      "type": "string",
+      "description": "Unique identifier of the game (e.g. mock-v1, game-day-1)"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Unique identifier of the current play session"
+    },
+    "step": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Decision step number, 0-indexed"
+    },
+    "state_text": {
+      "type": "string",
+      "description": "Compact plain-English summary for Laya prompt (under ~120 words)"
+    },
+    "facts": {
+      "type": "object",
+      "description": "Structured facts extracted from raw game state"
+    },
+    "legal_actions": {
+      "type": "array",
+      "description": "List of currently legal actions",
+      "items": {
+        "type": "object",
+        "required": ["id", "label"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique action identifier"
+          },
+          "label": {
+            "type": "string",
+            "description": "Human-readable action description"
+          },
+          "hint": {
+            "type": ["string", "null"],
+            "description": "Optional strategic hint or context"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "score": {
+      "type": ["number", "null"],
+      "description": "Current cumulative game score, or null if unknown"
+    },
+    "done": {
+      "type": "boolean",
+      "description": "True if the game has ended"
+    }
+  },
+  "additionalProperties": false
+}
