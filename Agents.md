@@ -1,208 +1,246 @@
-# AGENTS.md — Beat the Bot (PS 02: Teach Laya to Play)
+# AGENTS.md — Beat the Bot: Teach Laya to Play
 
-> Every coding agent (Antigravity or otherwise) must read this file first, then `STEPS.md`, then its own `team/MEMBER_*.md`.
-> Owner of this file: Member D. It is frozen after Step 0. Changes go through a PR from D only.
+## 1. Project goal
 
-## 1. What we are building
+Build a modular decision layer for hosted games revealed on hackathon day. The project does not build the hosted games. It reads state and legal actions from a game's agent API, asks **Laya** typed questions, converts Laya's probabilities into a legal action, submits that action, and records enough evidence for a live viewer and post-run analysis.
 
-A modular Python bot that plays hosted online games through their agent APIs. **Laya makes every move decision**, every decision is a visible, logged Laya call, and a gamer-style web dashboard shows each decision live (state, typed questions, probabilities, chosen action, game response). The games are revealed on hackathon day, so the only game-specific code must live in two places: one **adapter + normaliser** (Member A) and one **question set** (Member B).
+The application must support these stages:
 
-Deliverables from the problem statement: working bot, live decision viewer, `.jsonl` decision log, session IDs of best runs, public GitHub repo with README, short write-up (what we asked Laya, why, what we changed after it failed).
+1. Hosted game API: read state and legal actions.
+2. State normaliser: produce a compact, plain-English state plus structured facts.
+3. Laya decision engine: make one visible, logged Laya call per decision step.
+4. Action validator: ensure the action is legal; if the game rejects it, exclude it and ask Laya again.
+5. Submit move: send the selected action and receive the next state.
 
-### Non-negotiable rules (from the problem statement)
-1. Every move comes from a logged Laya call. No other model chooses moves. No random or hand-coded fallback moves.
-2. No browser extensions or automation tools that play for us.
-3. The bot must be modular: swapping the game must not touch the engine, logger, server or UI.
-4. Python 3.10+ (3.12 recommended), `laya` installed via pip, `requests`, JSON Lines logs, Git/GitHub, a viewer that works live.
+**Do not assume the real game, URL, API shape, action names, scoring, or qualifying score before hackathon day.** Build and test against the deterministic local mock game first. On game day, implement a new adapter and normaliser without rewriting the engine, logger, server, or frontend.
 
-## 2. Pipeline (five stages) and who owns each
+## 2. Non-negotiable rules
 
-| # | Stage | Module | Owner |
-|---|-------|--------|-------|
-| 1 | Hosted game API: read state and available actions | `bot/adapters/` | A |
-| 2 | State normaliser: compact, plain-English state | `bot/normaliser.py` | A |
-| 3 | Laya decision engine: typed questions, probabilities | `bot/laya/`, `bot/questions/` | B |
-| 4 | Action validator: legal move check, ask Laya again if not | `bot/validator.py` | A |
-| 5 | Submit move, receive next state, log the event | `bot/loop.py`, `bot/logger.py` | A (loop), D (logger) |
+- Laya is the only model allowed to choose moves. No other model, chatbot, heuristic policy, random action, hard-coded move, browser extension, or browser automation may select a move.
+- Every submitted move must trace to a recorded Laya call. The only permitted fallback is the highest-scoring still-legal action from Laya's most recent recorded scores after retries are exhausted. Log that fallback explicitly.
+- Code may transform Laya's answers into scores over legal actions; code must not independently invent a strategic move.
+- Never fabricate scores, probabilities, latency, session IDs, verified status, or game outcomes. Missing values stay `null` / “unknown”.
+- A dry run may inspect state and call Laya but must not submit a move.
+- The real game is unknown until the organiser reveals it. Use adapter interfaces and the local mock game now.
+- Never log credentials, API keys, cookies, auth headers, or secrets.
+- The dashboard's mock/demo data must be visibly labelled as demo data. Never present it as a real or verified run.
 
-Around the pipeline: `server/` (D) streams logs to the dashboard, `web/` (C) is the UI, `experiments/` (B) is the Question Lab.
+## 3. Team lanes and file ownership
 
-## 3. Lanes, folders, branches
+Each member works on their own branch. Ownership is by path, not by personal preference. **Do not edit a file owned by another member to “quickly fix” it.** Open an issue or send the owner a concise request instead.
 
-| Member | Lane | Owns (only edit these) | Branch |
-|--------|------|------------------------|--------|
-| A | Game integration | `bot/adapters/`, `bot/normaliser.py`, `bot/validator.py`, `bot/loop.py`, `bot/config.py`, `mock_game/`, `tests/lane_a/`, `requirements/a.txt` | `feat/game-integration` |
-| B | Laya engine + Question Lab + calibration | `bot/laya/`, `bot/questions/`, `bot/calibration.py`, `experiments/`, `tests/lane_b/`, `requirements/b.txt` | `feat/laya-engine` |
-| C | Gamer frontend | `web/` only | `feat/frontend` |
-| D | Contracts, logger, server, autopsy, docs | `contracts/`, `server/`, `bot/logger.py`, `bot/autopsy.py`, `logs/`, `docs/`, `scripts/`, `.github/`, `lanes.json`, `README.md`, `AGENTS.md`, `STEPS.md`, `team/`, `requirements.txt`, `requirements/d.txt`, `tests/lane_d/` | `feat/server-logs` |
+### Member A — Game Integration
+Branch: `feat/game-integration`
 
-### Repo layout
+Owns:
+- `bot/adapters/`
+- `bot/normaliser.py`
+- `bot/validator.py`
+- `bot/loop.py`
+- `bot/config.py`
+- `mock_game/`
+- `tests/lane_a/`
+- `requirements/a.txt`
 
-```
-beat-the-bot/
-├── AGENTS.md  STEPS.md  README.md  lanes.json  requirements.txt      (D)
-├── team/                         member files with prompts            (D)
-├── contracts/                    schemas + api.md                     (D)
-├── bot/
-│   ├── adapters/  normaliser.py  validator.py  loop.py  config.py     (A)
-│   ├── laya/  questions/  calibration.py                              (B)
-│   └── logger.py  autopsy.py                                          (D)
-├── mock_game/                    local fake game for offline testing  (A)
-├── experiments/                  Question Lab scripts + results       (B)
-├── server/                       FastAPI: SSE stream + REST           (D)
-├── web/                          landing page + dashboard             (C)
-├── logs/                         runs/ (ignored)  best/ (committed)   (D)
-├── docs/  scripts/  .github/                                          (D)
-├── requirements/                 a.txt b.txt d.txt (one file per lane)
-└── tests/                        lane_a/ lane_b/ lane_d/
-```
+Delivers adapter interface/registry, mock game, normaliser, validator/retry logic, game loop, CLI and the game-day adapter.
 
-## 4. Rules that prevent merge conflicts
+### Member B — Laya Engine and Experiments
+Branch: `feat/laya-engine`
 
-1. **One owner per file.** Edit only your lane's paths. If you need a change elsewhere, ask the owner in the group chat. Never "quickly fix" someone else's file.
-2. **Contracts are frozen after Step 0** (tag `contracts-v1`). A change needs a small PR from D, announced to everyone; everyone then rebases.
-3. **Dependencies:** each lane adds packages only to its own `requirements/<lane>.txt`. D keeps the root `requirements.txt` as `-r` lines.
-4. **Branches:** work on your branch, small commits, `git pull --rebase origin main` before every push. Never force-push `main`.
-5. **Before every PR** run `python scripts/check_lane.py <a|b|c|d>`. It fails if your diff touches files outside your lane.
-6. **Merge order into `main`:** D, then A, then B, then C. `main` must always run `python -m bot.loop --adapter mock`.
-7. **Each lane keeps a `NOTES.md`** (`bot/adapters/NOTES.md`, `experiments/NOTES.md`, `web/NOTES.md`, `docs/notes-d.md`) listing every failure and what was changed. D turns these into the write-up.
-8. Never commit secrets, API keys, model weights, or `__pycache__`.
+Owns:
+- `bot/laya/`
+- `bot/questions/`
+- `bot/calibration.py`
+- `experiments/`
+- `tests/lane_b/`
+- `requirements/b.txt`
 
-## 5. Contracts (draft v0; D publishes the real JSON Schemas in `contracts/`)
+Delivers Laya loading/inference, question-set registry, Question Lab experiments and Confidence Reality Check.
 
-### 5.1 State (produced by A's normaliser)
-```json
-{
-  "game_id": "mock-runner",
-  "session_id": "20261012-101500-ab12",
-  "step": 12,
-  "state_text": "Plain English, short, most important facts first. Comparisons already computed in code.",
-  "facts": {"any": "structured raw facts for the UI"},
-  "legal_actions": [{"id": "left", "label": "Move left", "hint": "shifts one lane left"}],
-  "score": 120,
-  "done": false
-}
-```
+### Member C — Frontend
+Branch: `feat/frontend`
 
-### 5.2 Decision (returned by B's `LayaEngine.decide`)
-```python
-@dataclass
-class Decision:
-    chosen_action: str               # always one of the legal, non-excluded action ids
-    action_scores: dict[str, float]  # normalised over legal actions, sums to 1
-    questions: list[dict]            # [{"id","type","text","options","probabilities","confidence"}]
-    question_set: str                # e.g. "v1_perception"
-    latency_ms: float
-    reason: str                      # one line shown in the UI
-    raw: dict                        # the unmodified Laya result
-```
-`LayaEngine.decide(state: dict, legal_actions: list[dict], exclude: Sequence[str] = ()) -> Decision`
+Owns:
+- `web/` only
 
-### 5.3 Event (one JSONL line per step; written by the loop through D's logger)
-```json
-{
-  "schema": 1, "session_id": "...", "game_id": "...", "step": 12, "ts": "2026-10-12T10:15:00.123Z",
-  "state": { "...State..." },
-  "laya_calls": [
-    {"call": 0, "question_set": "v1_perception", "questions": [], "action_scores": {}, "chosen_action": "left",
-     "legal": true, "latency_ms": 31.2, "raw": {}}
-  ],
-  "validator": {"retries": 0, "fallback": false},
-  "final_action": "left",
-  "game_response": {"ok": true, "good": true, "score_before": 110, "score_after": 120, "done": false, "message": "", "raw": {}},
-  "outcome": "ok"
-}
-```
-- `outcome` is one of `ok`, `illegal`, `game_over`, `error`.
-- `game_response.good` is set by the adapter's `judge()` (true = the move helped or at least did no harm, null = unknown). It feeds the calibration check.
-- If a retry happens, `laya_calls` has several entries. **Every Laya call is logged.** `fallback: true` means retries ran out and the loop used the highest-scoring legal action from Laya's last scores (still Laya-derived, never random).
+Delivers landing page, responsive gamer-style dashboard, live decision viewer, autopsy/replay/lab/calibration/log panels, and clearly labelled demo mode. Use static HTML, CSS and vanilla JS; no build step unless the team explicitly changes this decision together.
 
-### 5.4 Logger API (D)
-```python
-from bot.logger import RunLogger
-log = RunLogger(game_id="mock-runner")   # new session_id, opens logs/runs/<session_id>.jsonl
-log.event(event_dict)                    # validates, appends one line, flushes immediately
-log.close(summary_dict)                  # writes logs/runs/<session_id>.summary.json
-```
+### Member D — Contracts, Logger, Server and Docs
+Branch: `feat/server-logs`
 
-### 5.5 Loop and adapter API (A)
-```python
-from bot.adapters import get_adapter
-from bot.loop import run_game
-summary = run_game(adapter, engine, logger, max_steps=None, seed=None)   # returns the summary dict
-```
-CLI: `python -m bot.loop --adapter mock --question-set v1_perception --games 3 --seed 7`
+Owns:
+- `contracts/`
+- `server/`
+- `bot/logger.py`
+- `bot/autopsy.py`
+- `logs/`
+- `docs/`
+- `scripts/`
+- `.github/`
+- `lanes.json`
+- `README.md`
+- `AGENTS.md`
+- `STEPS.md`
+- `team/`
+- `requirements.txt`
+- `requirements/d.txt`
+- `tests/lane_d/`
 
-### 5.6 Question set API (B)
-```python
-class QuestionSet:
-    id: str
-    def build_questions(self, state: dict) -> dict: ...                    # Laya typed questions
-    def map_answers(self, answers: dict, legal_actions: list[dict],
-                    exclude: Sequence[str]) -> tuple[dict, str]: ...       # (action_scores, reason)
-```
-Registry: `from bot.questions import get_question_set`.
+D publishes the first contracts before the other members implement against them. D is merge coordinator, not an owner of other members' code.
 
-### 5.7 HTTP API (D, served on port 8000, also serves `web/` at `/`)
-| Endpoint | Returns |
-|----------|---------|
-| `GET /api/health` | `{ok, laya_loaded, version}` |
-| `GET /api/runs` | list of sessions with summary |
-| `GET /api/runs/{id}/events?from=0&limit=200` | events |
-| `GET /api/runs/{id}/events/{step}` | one event (replay) |
-| `GET /api/stream?session_id=latest` | Server-Sent Events, one event per step |
-| `GET /api/runs/{id}/autopsy` | per-step autopsy verdicts |
-| `GET /api/runs/{id}/calibration` and `GET /api/calibration` | calibration result |
-| `GET /api/lab` | Question Lab results (B's JSON files, served as is) |
-| `GET /api/logs/{id}/download` | the raw `.jsonl` |
+### Shared/forbidden paths
 
-### 5.8 Result shapes shared between lanes
-Question Lab result (`experiments/results/<name>.json`, written by B):
-```json
-{"name": "lab-01", "created": "ISO", "game_id": "...", "seeds": [1,2,3],
- "variants": [{"question_set": "v1_perception", "games": 10, "avg_score": 0, "best_score": 0,
-   "invalid_rate": 0.0, "avg_latency_ms": 0, "completion_rate": 0.0, "avg_confidence": 0.0, "sessions": ["..."]}]}
-```
-Calibration result (from `bot.calibration.compute(events)`):
-```json
-{"n": 0, "accuracy": 0.0, "ece": 0.0,
- "bins": [{"lo": 0.0, "hi": 0.1, "n": 0, "mean_confidence": 0.0, "accuracy": 0.0}],
- "thresholds": [{"t": 0.7, "coverage": 0.0, "accuracy": 0.0}]}
-```
-Autopsy item (from `bot.autopsy`, written by D):
-```json
-{"step": 12, "verdict": "confident_miss", "expected": "left (0.82)", "actual": "game over", "note": "text"}
-```
-Verdicts: `as_predicted`, `confident_miss`, `uncertain_miss`, `lucky_hit`, `illegal_move`, `game_over`.
+- No one except D edits contracts after `contracts-v1` without announcing a versioned change.
+- No one except C edits `web/`.
+- No one except A edits the adapter, normaliser, validator or game-loop paths.
+- No one except B edits the Laya engine, question sets, experiments or calibration paths.
+- Generated runtime logs belong in `logs/runs/`; do not commit them. Selected evidence logs may be copied to `logs/best/` by the approved script.
+- Do not add dependencies to the root requirements file directly. Add them to the lane-specific requirements file and ask D to update the root aggregator if necessary.
 
-## 6. How we use Laya (rules for all agents)
+## 4. Git and merge protocol
 
-These come from Laya's own documentation and the laya-playground notes. Follow them in B's code and in every question set.
+1. D creates the skeleton, schemas, examples, `lanes.json`, and lane checker first. D merges this as `contracts-v1`.
+2. A, B and C then rebase on `main` and implement only their lane.
+3. Merge order after contracts: A, then B, then C. D handles integration fixes only in D-owned files.
+4. Before every PR, run the lane checker and your own tests. Include the exact commands and output in the PR description.
+5. Small commits, one purpose per commit. Do not force-push shared branches.
+6. Never have two people editing the same file. If a file must change across lanes, its owner makes the edit after receiving a request.
+7. Contract changes require: schema change, example update, tests, a short announcement listing affected lanes, and a version bump if the shape is incompatible.
+8. Suggested rebase command after `main` changes:
+   `git fetch origin && git checkout <your-branch> && git rebase origin/main`
+9. Before a merge, resolve conflicts locally and inspect the result. Do not accept “ours” or “theirs” blindly.
 
-- Install with `pip install laya`; load the model **once** with `laya.load("convaiinnovations/laya")` and reuse it. Loading takes roughly 30 s; a call takes milliseconds. Warm up with one throwaway `predict` at startup.
-- `agent.predict(state, questions)` takes a state (string, dict or list) and a dict of typed questions and returns probabilities for every option in **one forward pass**. Ask everything about a state in one call.
-- Question types: `choice` (options with descriptions), `score` (ordered levels), `noul` (yes/no, returns P(true)). Describe every option; keep option lists short.
-- **Ask what the state says, not what to do.** "Where is the obstacle relative to us?" works better than "Which way should we move?". Let code map the perception answer to an action. The Question Lab (USP 2) tests this claim against direct action questions.
-- **Put the state into words, not raw numbers.** Do comparisons and thresholds in code ("the obstacle is far to the left") and hand Laya the conclusion.
-- Keep the state short and front-loaded (the English checkpoint reads about 512 tokens; the rest is cut).
-- Probabilities are the product. Pick thresholds from our own data, not 0.5 by default. `confidence` is low whenever probability is spread out.
-- Guard `predict` with a lock; one GPU serves one forward pass at a time.
-- Download tips: `HF_HUB_DISABLE_XET=1` if the download hangs at 0 bytes; `USE_TF=0` if `transformers` stalls on import; `HF_HUB_OFFLINE=1` once cached.
-- Reference material: `https://github.com/wdobry/laya-playground` (see `static/demos/` for the way each game describes a situation in a sentence and asks one typed question) and `https://brainfunctioncollapse.com/laya` (the visual style we are borrowing: state, then generated questions, then probabilities). Adapt ideas, credit them in the README, do not copy wholesale.
+## 5. Contracts (version 1)
 
-## 7. Our four USPs and where they live
+The canonical schemas live in `contracts/*.schema.json`. The examples under `contracts/examples/` are the source of truth for valid v1 examples. Implementations must follow those files exactly. The definitions below are the human-readable agreement; if a mismatch is found, D updates the schema and announces it before others proceed.
 
-| USP | What the judge sees | Built by |
-|-----|---------------------|----------|
-| Decision Autopsy | After each move: state, question, probabilities, choice, game response, what it reveals | D (`bot/autopsy.py`, API), C (tab) |
-| Question Lab | Controlled comparison of question formulations: score, invalid moves, latency, completion | B (`experiments/`), C (tab) |
-| Reproducible Run Replay | Scrub a finished game and open the exact recorded event for any step | D (event store, API), C (tab) |
-| Confidence Reality Check | Calibration: does 80% confidence mean 80% good moves? | B (`bot/calibration.py`), C (tab); A supplies `game_response.good` |
+### 5.1 State object
 
-## 8. Definition of done for any task
+Required fields:
+- `game_id`: string
+- `session_id`: string
+- `step`: integer, zero or greater
+- `state_text`: string; compact plain-English summary for Laya
+- `facts`: object containing structured facts from the raw game state
+- `legal_actions`: array of objects, each with `id`, `label`, and optional `hint`
+- `score`: number or null
+- `done`: boolean
 
-- Runs on the mock game with `python -m bot.loop --adapter mock`.
-- Its output validates against the contracts.
-- Tests for the lane pass; `python scripts/check_lane.py <lane>` passes.
-- Failures and fixes are written in the lane's `NOTES.md`.
-- Nothing outside the lane was edited.
+`state_text` should lead with the most decision-relevant facts, use plain language, avoid dumping JSON, and normally stay under about 120 words. Structured numeric comparisons are computed in code before describing the conclusion in words.
+
+### 5.2 Decision object
+
+A decision returned by the engine contains:
+- `chosen_action`: string action ID
+- `action_scores`: object mapping legal action IDs to probabilities/scores that sum to 1 within floating-point tolerance
+- `questions`: the exact typed questions passed to Laya
+- `question_set`: string ID
+- `latency_ms`: non-negative number
+- `reason`: one short, human-readable sentence explaining how answers were mapped
+- `raw`: unmodified Laya result for audit/debugging
+
+The engine must never return an action outside the legal, non-excluded action set. Ties are resolved by the stable order of `legal_actions`, and that policy is documented.
+
+### 5.3 Event object
+
+One JSON object per decision step; one JSON object per line in the `.jsonl` file. Required fields:
+- `schema`: integer `1`
+- `session_id`: string
+- `game_id`: string
+- `ts`: UTC ISO-8601 timestamp
+- `step`: integer, zero or greater
+- `state`: State object
+- `laya_calls`: non-empty array for a submitted step; each item contains the exact question set/questions, raw Laya output, action scores, chosen action, latency, and whether the call was accepted or excluded
+- `validator`: object containing `retries`, `fallback`, and any rejection messages
+- `final_action`: string or null for dry-run/interrupted steps
+- `game_response`: object containing `good` (boolean or null), `score_before` (number or null), `score_after` (number or null), `done` (boolean), and `message` (string or null)
+- `outcome`: string or null
+
+The event must preserve the information required to audit the action. Never rewrite a stored event during replay. Any additional fields must be documented and validated by the schema.
+
+### 5.4 Run summary
+
+Stored separately as `<session_id>.summary.json`; never append a summary object to the event-only `.jsonl` file. Include:
+- `session_id`, `game_id`, `started_at`, `ended_at`
+- `steps`, `final_score`, `invalid_moves`, `fallbacks`
+- `average_laya_latency_ms`, `laya_call_count`
+- `completion_status`, `qualifying_score`, `verified` (unknown unless the game/provider confirms it)
+- `event_count`, `sha256`
+
+`verified` must not be inferred merely because the local script completed. Qualifying score is game-specific and must remain null until the organiser provides it.
+
+### 5.5 Logging rules
+
+- Append exactly one event per line to `logs/runs/<session_id>.jsonl`.
+- Flush and fsync after each event so the server can stream it.
+- Use a lock around writes.
+- Redact secrets recursively before writing.
+- Keep raw Laya outputs and probabilities unmodified where possible; if redaction is necessary, document what was removed.
+- Every submitted move must have a matching recorded Laya call in the same step. `check_every_move_logged.py` is the audit tool.
+
+### 5.6 Laya usage principles
+
+- Read Laya's official README/model card and verify actual installed API/output shape; do not guess from an example.
+- Load the model once per process, warm it up once, and guard inference with a lock.
+- Prefer testing perception-first questions (“Which lane is blocked?”) against a direct-action control (“Which action should we take?”). This is a hypothesis to test, not a guaranteed truth.
+- Describe every option in short option lists. Keep state concise and front-loaded.
+- Ask multiple typed questions in one `predict` call when supported by the verified API. Preserve the exact question text and result.
+- Convert answers into scores only over legal actions; document mapping and tie-breaking.
+- The highest probability is not automatically a calibrated probability of success. The calibration panel must show sample counts and uncertainty.
+
+### 5.7 HTTP API contract
+
+D implements these endpoints; C consumes them. Return JSON errors with clear messages.
+
+- `GET /api/health` — service status, log availability, last-event freshness.
+- `GET /api/runs` — available sessions and summaries.
+- `GET /api/runs/{id}/events?from=0&limit=100` — ordered event page.
+- `GET /api/runs/{id}/events/{step}` — exact event at a step, unchanged.
+- `GET /api/runs/{id}/verify` — event file SHA-256, summary hash match, event count, Laya call count.
+- `GET /api/stream?session_id=latest` — Server-Sent Events stream; send existing events then follow appended lines; support `Last-Event-ID` reconnect semantics.
+- `GET /api/runs/{id}/autopsy` — autopsy items plus enough event detail for inspection.
+- `GET /api/runs/{id}/calibration` — calibration for one run; return 501 with a clear message if not yet available.
+- `GET /api/calibration` — aggregate calibration if supported.
+- `GET /api/lab` — validated Question Lab result files.
+- `GET /api/logs/{id}/download` — download original `.jsonl`.
+- `GET /` and static assets — serve the contents of `web/`.
+
+Unknown session IDs return 404. The server reads log/result files and must not import or call the bot loop.
+
+### 5.8 USP result shapes
+
+**Autopsy item:** `step`, `verdict`, `expected`, `actual`, `note`, `severity`, `question_id`, `probabilities`. Verdict values: `as_predicted`, `confident_miss`, `uncertain_miss`, `lucky_hit`, `illegal_move`, `game_over`.
+
+**Question Lab result:** `name`, `created_at`, `adapter`, `variants` array. Each variant has `question_set`, `games`, `avg_score`, `best_score`, `invalid_rate`, `avg_latency_ms`, `completion_rate`, `avg_confidence`, and `session_ids`.
+
+**Calibration result:** `n`, `accuracy`, `ece`, `bins` (each has `lo`, `hi`, `n`, `mean_confidence`, `accuracy`), `thresholds` (each has `threshold`, `coverage`, `accuracy`), and optional `by_question_type` and `recommended_threshold`.
+
+## 6. Frontend requirements
+
+- Landing page and dashboard with a persistent left navigation on desktop.
+- Tabs: Overview, Live Run, Decision Autopsy, Question Lab, Replay, Calibration, Logs, About.
+- Gamer HUD visual language: dark panels, restrained neon cyan/magenta, green for good, amber for uncertainty/illegal, red for bad. Keep body text readable and effects secondary to data.
+- Live Run must show state → exact Laya questions → probabilities → selected action → validator/game response.
+- All demo values must be labelled `DEMO`; do not imply mock scores are verified.
+- If the server is unavailable, show an explicit demo ribbon and a retry/error state rather than a blank screen.
+- Respect `prefers-reduced-motion`, keyboard navigation, visible focus, and responsive widths.
+
+## 7. Required USPs
+
+1. **Decision Autopsy:** compare what Laya predicted with what actually happened; frame inferred explanations as hypotheses.
+2. **Question Lab:** compare question formulations on comparable states/seeds and report actual measured metrics.
+3. **Reproducible Run Replay:** inspect the exact recorded event and session ID; verify file hash and prove move-to-call traceability.
+4. **Confidence Reality Check:** compare confidence with outcomes, show sample count, accuracy and ECE; warn on small samples.
+
+Do not claim any USP is statistically conclusive until there is sufficient real data.
+
+## 8. Definition of done
+
+- A complete local mock game can be played end-to-end.
+- Each submitted move has a logged Laya call.
+- A live viewer can display incoming events; demo mode works without the server.
+- Raw events are replayable and hash-verifiable.
+- All lane tests pass; no secrets are committed.
+- The real adapter is implemented only after the game API is revealed.
+- README explains setup, architecture, limitations, how to reproduce a run, and how to identify demo vs real evidence.
+
