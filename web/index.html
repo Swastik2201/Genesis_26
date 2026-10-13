@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Beat the Bot: Teach Laya to play hosted games. Every move logged. Every decision visible. Deterministic audit layer for hackathon autonomous gaming.">
+  <title>BEAT THE BOT — Teach Laya to Play</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/landing.css">
+</head>
+<body>
+  <!-- Ambient Cyber Overlays -->
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-ambient" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <!-- Header / Navigation -->
+  <header class="site-header">
+    <div class="container nav-container">
+      <a href="index.html" class="brand-logo" aria-label="Beat the Bot Home">
+        <span class="brand-icon" aria-hidden="true">⚡</span>
+        <span class="brand-title">BEAT THE BOT</span>
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="#pipeline" class="nav-link">Architecture</a></li>
+          <li><a href="#preview" class="nav-link">Live Preview</a></li>
+          <li><a href="#usps" class="nav-link">Audit Features</a></li>
+          <li><a href="#integrity" class="nav-link">Rules</a></li>
+        </ul>
+      </nav>
+
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <span class="badge badge-live" aria-label="Status: Live Engine Ready">READY</span>
+        <a href="dashboard.html" class="btn btn-primary btn-sm" id="btn-header-arena">
+          <span>ENTER ARENA</span>
+          <span aria-hidden="true">➔</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero container" aria-labelledby="hero-heading">
+      <div class="hero-meta-badge">
+        <span class="badge badge-cyan">MODEL: LAYA</span>
+        <span class="badge badge-demo">HACKATHON EDITION</span>
+      </div>
+
+      <h1 id="hero-heading" class="hero-title glitch-text">BEAT THE BOT</h1>
+      <p class="hero-tagline">
+        Teach Laya to play. Every move logged. <span class="highlight">Every decision visible.</span>
+      </p>
+
+      <div class="hero-actions">
+        <a href="dashboard.html" class="btn btn-primary btn-lg" id="btn-hero-arena">
+          <span>ENTER ARENA</span>
+          <span aria-hidden="true">➔</span>
+        </a>
+        <a href="#preview" class="btn btn-secondary btn-lg" id="btn-hero-preview">
+          <span>SEE HOW IT THINKS</span>
+        </a>
+      </div>
+
+      <!-- Quick Stats Ticker -->
+      <div class="stats-strip" aria-label="System Guarantees">
+        <div class="stat-item">
+          <div class="stat-value">1 CALL</div>
+          <div class="stat-label">Per Decision Step</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">100%</div>
+          <div class="stat-label">Move-to-Call Traceability</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">0 RANDOM</div>
+          <div class="stat-label">Zero Hardcoded Moves</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">SHA-256</div>
+          <div class="stat-label">Cryptographic Replay</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pipeline Strip Section -->
+    <section id="pipeline" class="pipeline-section" aria-labelledby="pipeline-heading">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-tag">DETERMINISTIC DECISION PIPELINE</div>
+          <h2 id="pipeline-heading" class="section-title">5-STAGE DECISION FLOW</h2>
+          <p class="section-desc">
+            No game assumptions before game day. The modular layer isolates game mechanics from model reasoning.
+          </p>
+        </div>
+
+        <div class="pipeline-strip" role="list" aria-label="Pipeline Stages">
+          <!-- Stage 1 -->
+          <div class="pipeline-node hud-card" role="listitem">
+            <span class="pipeline-node-num">STAGE 01</span>
+            <h3 class="pipeline-node-title">Game API</h3>
+            <p class="pipeline-node-desc">Reads raw state &amp; legal actions from the hosted game server.</p>
+          </div>
+
+          <div class="pipeline-arrow" aria-hidden="true">➔</div>
+
+          <!-- Stage 2 -->
+          <div class="pipeline-node hud-card" role="listitem">
+            <span class="pipeline-node-num">STAGE 02</span>
+            <h3 class="pipeline-node-title">State Normaliser</h3>
+            <p class="pipeline-node-desc">Produces compact, plain-English summary (&lt;120 words) + structured facts.</p>
+          </div>
+
+          <div class="pipeline-arrow" aria-hidden="true">➔</div>
+
+          <!-- Stage 3 -->
+          <div class="pipeline-node hud-card card-magenta" role="listitem">
+            <span class="pipeline-node-num" style="color: var(--neon-magenta);">STAGE 03</span>
+            <h3 class="pipeline-node-title">Laya Engine</h3>
+            <p class="pipeline-node-desc">Asks typed questions in one call; maps probabilities to legal action scores.</p>
+          </div>
+
+          <div class="pipeline-arrow" aria-hidden="true">➔</div>
+
+          <!-- Stage 4 -->
+          <div class="pipeline-node hud-card" role="listitem">
+            <span class="pipeline-node-num">STAGE 04</span>
+            <h3 class="pipeline-node-title">Action Validator</h3>
+            <p class="pipeline-node-desc">Verifies action legality; if rejected, excludes action and asks Laya again.</p>
+          </div>
+
+          <div class="pipeline-arrow" aria-hidden="true">➔</div>
+
+          <!-- Stage 5 -->
+          <div class="pipeline-node hud-card" role="listitem">
+            <span class="pipeline-node-num">STAGE 05</span>
+            <h3 class="pipeline-node-title">Submit Move</h3>
+            <p class="pipeline-node-desc">Dispatches chosen move, records game response, and emits audited event.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- "How a Decision Looks" Preview Section -->
+    <section id="preview" class="preview-section container" aria-labelledby="preview-heading">
+      <div class="section-header">
+        <div class="section-tag">AUDIT TRANSPARENCY IN ACTION</div>
+        <h2 id="preview-heading" class="section-title">HOW A DECISION LOOKS</h2>
+        <p class="section-desc">
+          Watch Laya synthesize game state, generate questions, compute probabilities, and submit verified moves.
+        </p>
+      </div>
+
+      <div class="preview-console hud-card">
+        <!-- Top status bar -->
+        <div class="preview-topbar">
+          <div class="preview-indicators">
+            <div class="console-dots" aria-hidden="true">
+              <span class="console-dot red"></span>
+              <span class="console-dot amber"></span>
+              <span class="console-dot green"></span>
+            </div>
+            <span class="badge badge-live">LIVE SIMULATION</span>
+            <span class="badge badge-cyan" id="sim-score-counter">430 PTS</span>
+          </div>
+
+          <button id="sim-play-pause-btn" class="btn btn-ghost btn-sm" aria-label="Toggle simulation playback">
+            PAUSE SIM
+          </button>
+        </div>
+
+        <!-- 3-Column Decision Viewer -->
+        <div class="preview-grid">
+          <!-- Col 1: State -->
+          <div class="preview-col">
+            <div class="preview-col-title">
+              <span>01 // NORMALISED STATE</span>
+              <span class="badge badge-cyan">INPUT</span>
+            </div>
+            <div id="sim-state-text" class="preview-state-text">
+              Loading scenario facts...
+            </div>
+            <div style="margin-top: auto; padding-top: var(--space-xs); border-top: 1px solid var(--border-subtle);">
+              <span style="font-size: var(--text-xs); color: var(--text-muted); font-family: var(--font-mono);">
+                LEGAL ACTIONS: [MOVE_LANE_1, MOVE_LANE_2, MOVE_LANE_3]
+              </span>
+            </div>
+          </div>
+
+          <!-- Col 2: Questions & Probabilities -->
+          <div class="preview-col">
+            <div class="preview-col-title">
+              <span>02 // LAYA TYPED QUESTIONS</span>
+              <span class="badge" style="background: rgba(255, 61, 242, 0.15); color: var(--neon-magenta); border-color: var(--neon-magenta);">REASONING</span>
+            </div>
+            <div id="sim-question-area" class="preview-questions-area">
+              <div style="color: var(--text-secondary); font-size: var(--text-sm);">
+                Formulating typed query...
+              </div>
+            </div>
+            <div id="sim-options-container" style="display: flex; flex-direction: column; gap: var(--space-xs); margin-top: auto;">
+              <!-- Probability bars populated via fx.js -->
+            </div>
+          </div>
+
+          <!-- Col 3: Selected Action & Outcome -->
+          <div class="preview-col">
+            <div class="preview-col-title">
+              <span>03 // VALIDATED MOVE</span>
+              <span class="badge badge-good">OUTCOME</span>
+            </div>
+
+            <div class="preview-action-box">
+              <div style="font-size: var(--text-xs); color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 4px;">
+                SELECTED ACTION
+              </div>
+              <div id="sim-decision-name" class="preview-action-name">
+                THINKING...
+              </div>
+              <div id="sim-reason-text" class="preview-reason">
+                Awaiting model evaluation...
+              </div>
+            </div>
+
+            <div style="margin-top: auto; display: flex; flex-direction: column; gap: var(--space-xs);">
+              <div style="font-size: var(--text-xs); color: var(--text-muted); font-family: var(--font-mono);">
+                GAME SERVER AUDIT:
+              </div>
+              <div id="sim-response-box" class="preview-response-box">
+                <span class="badge badge-cyan">WAITING MOVE...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Required USPs Section (4 Distinct Cards) -->
+    <section id="usps" class="usp-section container" aria-labelledby="usps-heading">
+      <div class="section-header">
+        <div class="section-tag">CRITICAL AUDIT CAPABILITIES</div>
+        <h2 id="usps-heading" class="section-title">THE 4 FORENSIC SUPERPOWERS</h2>
+        <p class="section-desc">
+          Laya doesn't just play games. Every calculation is recorded, auditable, and scientifically evaluated.
+        </p>
+      </div>
+
+      <div class="usp-grid">
+        <!-- USP 1: Decision Autopsy -->
+        <article class="hud-card card-interactive usp-card">
+          <div class="usp-card-top">
+            <div class="usp-badge-row">
+              <span class="badge badge-bad">USP 01</span>
+              <span class="kbd">#/autopsy</span>
+            </div>
+            <h3 class="usp-title">Decision Autopsy</h3>
+            <p class="usp-sentence">
+              Compare what Laya predicted with what actually happened, turning failed moves into testable forensic hypotheses.
+            </p>
+          </div>
+          <div class="usp-card-footer">
+            <span aria-hidden="true">🔍</span>
+            <span>Investigates confident misses &amp; lucky hits</span>
+          </div>
+        </article>
+
+        <!-- USP 2: Question Lab -->
+        <article class="hud-card card-interactive usp-card card-magenta">
+          <div class="usp-card-top">
+            <div class="usp-badge-row">
+              <span class="badge" style="background: rgba(255, 61, 242, 0.15); color: var(--neon-magenta); border-color: var(--neon-magenta);">USP 02</span>
+              <span class="kbd">#/lab</span>
+            </div>
+            <h3 class="usp-title">Question Lab</h3>
+            <p class="usp-sentence">
+              A/B test perception-first formulations against direct-action controls on identical seeds to measure real gameplay metrics.
+            </p>
+          </div>
+          <div class="usp-card-footer">
+            <span aria-hidden="true">🧪</span>
+            <span>Rigorous offline seed benchmarks</span>
+          </div>
+        </article>
+
+        <!-- USP 3: Reproducible Run Replay -->
+        <article class="hud-card card-interactive usp-card">
+          <div class="usp-card-top">
+            <div class="usp-badge-row">
+              <span class="badge badge-cyan">USP 03</span>
+              <span class="kbd">#/replay</span>
+            </div>
+            <h3 class="usp-title">Reproducible Run Replay</h3>
+            <p class="usp-sentence">
+              Inspect unmodified recorded events with cryptographic SHA-256 verification and absolute move-to-Laya traceability.
+            </p>
+          </div>
+          <div class="usp-card-footer">
+            <span aria-hidden="true">📼</span>
+            <span>Step-by-step audit with zero rewriting</span>
+          </div>
+        </article>
+
+        <!-- USP 4: Confidence Reality Check -->
+        <article class="hud-card card-interactive usp-card">
+          <div class="usp-card-top">
+            <div class="usp-badge-row">
+              <span class="badge badge-good">USP 04</span>
+              <span class="kbd">#/calibration</span>
+            </div>
+            <h3 class="usp-title">Confidence Reality Check</h3>
+            <p class="usp-sentence">
+              Plot model confidence against empirical success rate to detect overconfidence and compute Expected Calibration Error (ECE).
+            </p>
+          </div>
+          <div class="usp-card-footer">
+            <span aria-hidden="true">📊</span>
+            <span>Sample size warnings &amp; reliability bins</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Integrity & Non-Negotiable Rules Banner -->
+    <section id="integrity" class="container">
+      <div class="trust-banner">
+        <div>
+          <div class="section-tag" style="color: var(--amber);">COMPLIANCE GUARANTEE</div>
+          <h2 style="font-size: var(--text-2xl); margin-bottom: var(--space-sm);">THE NON-NEGOTIABLE RULES</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 0;">
+            Our architecture is built specifically for strict hackathon auditing. We never fabricate data or employ hidden fallback policies.
+          </p>
+        </div>
+
+        <ul class="trust-list">
+          <li class="trust-item">
+            <span class="trust-item-icon" aria-hidden="true">✔</span>
+            <span><strong>Laya is the only decision maker:</strong> No chatbots, heuristic policies, or random actions choose moves.</span>
+          </li>
+          <li class="trust-item">
+            <span class="trust-item-icon" aria-hidden="true">✔</span>
+            <span><strong>100% Traceability:</strong> Every submitted action traces back to an immutable, logged Laya inference event.</span>
+          </li>
+          <li class="trust-item">
+            <span class="trust-item-icon" aria-hidden="true">✔</span>
+            <span><strong>Zero Hallucinated Metrics:</strong> Missing values remain null; demo values are visibly labeled <code>DEMO</code>.</span>
+          </li>
+          <li class="trust-item">
+            <span class="trust-item-icon" aria-hidden="true">✔</span>
+            <span><strong>Game Day Adaptability:</strong> Plug-and-play adapter interface ensures no engine rewrites on game day.</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div class="footer-credits">
+        <p style="margin-bottom: 4px; color: var(--text-primary); font-weight: 600;">
+          BEAT THE BOT — Teach Laya to Play
+        </p>
+        <p style="margin-bottom: 0;">
+          Decision layer powered by <strong>Laya</strong> (developed by Nandakishor M). 
+          UI visual architecture inspired by the <a href="https://brainfunctioncollapse.com/laya" target="_blank" rel="noopener noreferrer">Laya Playground</a>.
+        </p>
+      </div>
+
+      <div class="footer-links">
+        <a href="dashboard.html" class="btn btn-primary btn-sm">OPEN DASHBOARD</a>
+        <a href="#pipeline" class="btn btn-ghost btn-sm">VIEW PIPELINE</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Script: fx.js micro-animations and simulation -->
+  <script type="module">
+    import { initDecisionSimulator } from './js/fx.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initDecisionSimulator({
+        stateEl: document.getElementById('sim-state-text'),
+        questionEl: document.getElementById('sim-question-area'),
+        optionsContainer: document.getElementById('sim-options-container'),
+        decisionEl: document.getElementById('sim-decision-name'),
+        reasonEl: document.getElementById('sim-reason-text'),
+        responseEl: document.getElementById('sim-response-box'),
+        scoreEl: document.getElementById('sim-score-counter'),
+        playPauseBtn: document.getElementById('sim-play-pause-btn')
+      });
+    });
+  </script>
+</body>
+</html>
