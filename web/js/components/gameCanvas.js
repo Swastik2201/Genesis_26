@@ -1,14 +1,18 @@
 /**
  * ==========================================================================
  * BEAT THE BOT — LIVE VISUAL GAME VIEWPORT (components/gameCanvas.js)
- * Real-time graphical canvas simulation inspired by brainfunctioncollapse.com/laya.
+ * Real-time graphical canvas simulation inspired by Super Mario Bros 8-Bit
+ * & brainfunctioncollapse.com/laya.
  * Supports:
- *   1. "Cyber Runner" (3-Lane perspective tactical highway)
- *   2. "Flappy Laya" (Retro amber-dithered CRT arcade flappy mode)
- *   3. Autonomous "Laya Plays" (synced with SSE stream / replay)
- *   4. Interactive "You Play" (keyboard & touch controls: A/D/Arrows/Space)
+ *   1. "Mario World" (Authentic 8-Bit Super Mario World Runner — Default)
+ *   2. "Cyber Runner" (3-Lane perspective tactical highway)
+ *   3. "Flappy Laya" (Retro amber-dithered CRT arcade flappy mode)
+ *   4. Autonomous "Laya Plays" (synced with SSE stream / replay)
+ *   5. Interactive "You Play" (keyboard & touch controls: A/D/Arrows/Space)
  * ==========================================================================
  */
+
+import * as sound from '../sound.js';
 
 export class GameViewport {
   constructor(containerElement, options = {}) {
@@ -16,7 +20,7 @@ export class GameViewport {
     this.options = options;
 
     this.mode = 'laya'; // 'laya' | 'manual'
-    this.gameSkin = 'runner'; // 'runner' | 'flappy'
+    this.gameSkin = 'mario'; // 'mario' | 'runner' | 'flappy'
     this.isPaused = false;
 
     // Simulation state
@@ -34,6 +38,11 @@ export class GameViewport {
     this.floatingTexts = [];     // Floating popups (+10 PTS, DODGE, etc.)
     this.gridOffset = 0;
     this.screenShake = 0;
+
+    // Mario State
+    this.marioWalkFrame = 0;
+    this.marioJumpY = 0;
+    this.marioIsJumping = false;
 
     // Flappy State (Y position 0 to 1)
     this.flappyY = 0.5;
@@ -66,17 +75,20 @@ export class GameViewport {
         <div class="arcade-header">
           <div class="arcade-title-group">
             <span class="arcade-crt-dot" aria-hidden="true"></span>
-            <span class="arcade-title" id="arcade-title-label">CYBER RUNNER 2026 // LIVE VIEWPORT</span>
+            <span class="arcade-title" id="arcade-title-label">SUPER MARIO WORLD // 8-BIT ARENA</span>
           </div>
 
           <div class="arcade-header-controls">
             <!-- Skin Selector -->
             <div class="arcade-skin-toggle" role="group" aria-label="Game Visual Style">
-              <button class="skin-btn is-active" data-skin="runner" id="btn-skin-runner" title="3-Lane Perspective Runner">
-                🏎 3-LANE RUNNER
+              <button class="skin-btn is-active" data-skin="mario" id="btn-skin-mario" title="Super Mario 8-Bit World">
+                🍄 MARIO WORLD
               </button>
-              <button class="skin-btn" data-skin="flappy" id="btn-skin-flappy" title="Retro Flappy CRT Style (brainfunctioncollapse)">
-                🐤 FLAPPY RETRO
+              <button class="skin-btn" data-skin="runner" id="btn-skin-runner" title="3-Lane Perspective Runner">
+                🏎 CYBER RUNNER
+              </button>
+              <button class="skin-btn" data-skin="flappy" id="btn-skin-flappy" title="Retro Flappy CRT Style">
+                🐤 FLAPPY LAYA
               </button>
             </div>
 
@@ -86,14 +98,14 @@ export class GameViewport {
 
         <!-- Canvas Viewport Frame with Scanlines -->
         <div class="arcade-viewport-frame" id="arcade-frame">
-          <canvas id="live-game-canvas" width="760" height="380" aria-label="Live Game Visual Simulation"></canvas>
+          <canvas id="live-game-canvas" width="760" height="340" aria-label="Live Game Visual Simulation"></canvas>
           <div class="arcade-scanlines" aria-hidden="true"></div>
           <div class="arcade-vignette" aria-hidden="true"></div>
 
           <!-- On-screen Manual Play Touch Controls (Visible only in 'You Play' mode) -->
           <div class="arcade-touch-controls" id="arcade-touch-controls" style="display: none;">
             <button class="touch-btn" id="touch-left" aria-label="Steer Left">◀ SHIFT LEFT</button>
-            <button class="touch-btn" id="touch-action" aria-label="Hold or Flap">HOLD LANE / FLAP</button>
+            <button class="touch-btn" id="touch-action" aria-label="Hold or Jump">JUMP / ACTION ⬆</button>
             <button class="touch-btn" id="touch-right" aria-label="Steer Right">SHIFT RIGHT ▶</button>
           </div>
         </div>
@@ -117,7 +129,7 @@ export class GameViewport {
 
           <div class="arcade-telemetry-strip">
             <div class="arcade-stat-pill">
-              <span class="pill-label">SCORE:</span>
+              <span class="pill-label">COINS:</span>
               <span class="pill-val" id="arcade-val-score">0000</span>
             </div>
             <div class="arcade-stat-pill">
@@ -125,8 +137,8 @@ export class GameViewport {
               <span class="pill-val" id="arcade-val-lane">2 / 3</span>
             </div>
             <div class="arcade-stat-pill">
-              <span class="pill-label">CONTROLS:</span>
-              <span class="pill-val" style="color: var(--neon-cyan);">[A/D] or [◄/►]</span>
+              <span class="pill-label">KEYS:</span>
+              <span class="pill-val" style="color: var(--mario-yellow);">[A/D] or [◄/►]</span>
             </div>
           </div>
         </div>
@@ -145,6 +157,7 @@ export class GameViewport {
     const btnLaya = this.container.querySelector('#arcade-btn-laya');
     const btnHuman = this.container.querySelector('#arcade-btn-human');
     const btnPause = this.container.querySelector('#arcade-btn-pause');
+    const btnSkinMario = this.container.querySelector('#btn-skin-mario');
     const btnSkinRunner = this.container.querySelector('#btn-skin-runner');
     const btnSkinFlappy = this.container.querySelector('#btn-skin-flappy');
 
@@ -152,32 +165,20 @@ export class GameViewport {
     const touchRight = this.container.querySelector('#touch-right');
     const touchAction = this.container.querySelector('#touch-action');
 
-    if (btnLaya) {
-      btnLaya.addEventListener('click', () => this.setMode('laya'));
-    }
-    if (btnHuman) {
-      btnHuman.addEventListener('click', () => this.setMode('manual'));
-    }
-    if (btnPause) {
-      btnPause.addEventListener('click', () => this.togglePause());
-    }
+    if (btnLaya) btnLaya.addEventListener('click', () => this.setMode('laya'));
+    if (btnHuman) btnHuman.addEventListener('click', () => this.setMode('manual'));
+    if (btnPause) btnPause.addEventListener('click', () => this.togglePause());
 
-    if (btnSkinRunner) {
-      btnSkinRunner.addEventListener('click', () => this.setSkin('runner'));
-    }
-    if (btnSkinFlappy) {
-      btnSkinFlappy.addEventListener('click', () => this.setSkin('flappy'));
-    }
+    if (btnSkinMario) btnSkinMario.addEventListener('click', () => this.setSkin('mario'));
+    if (btnSkinRunner) btnSkinRunner.addEventListener('click', () => this.setSkin('runner'));
+    if (btnSkinFlappy) btnSkinFlappy.addEventListener('click', () => this.setSkin('flappy'));
 
-    if (touchLeft) {
-      touchLeft.addEventListener('click', () => this.steerManual(-1));
-    }
-    if (touchRight) {
-      touchRight.addEventListener('click', () => this.steerManual(1));
-    }
+    if (touchLeft) touchLeft.addEventListener('click', () => this.steerManual(-1));
+    if (touchRight) touchRight.addEventListener('click', () => this.steerManual(1));
     if (touchAction) {
       touchAction.addEventListener('click', () => {
-        if (this.gameSkin === 'flappy') this.flapManual();
+        if (this.gameSkin === 'mario') this.marioJump();
+        else if (this.gameSkin === 'flappy') this.flapManual();
       });
     }
   }
@@ -187,7 +188,7 @@ export class GameViewport {
     const rect = this.canvas.parentElement.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
     const targetWidth = Math.max(320, Math.floor(rect.width));
-    const targetHeight = Math.floor(targetWidth * 0.44); // 2.27:1 aspect ratio for sleek widescreen HUD
+    const targetHeight = Math.floor(targetWidth * 0.44); // 2.27:1 sleek HUD monitor
 
     this.canvas.width = targetWidth * dpr;
     this.canvas.height = targetHeight * dpr;
@@ -199,20 +200,29 @@ export class GameViewport {
 
   setSkin(skin) {
     this.gameSkin = skin;
+    const btnMario = this.container.querySelector('#btn-skin-mario');
     const btnRunner = this.container.querySelector('#btn-skin-runner');
     const btnFlappy = this.container.querySelector('#btn-skin-flappy');
     const titleLabel = this.container.querySelector('#arcade-title-label');
 
-    if (btnRunner && btnFlappy) {
+    if (btnMario && btnRunner && btnFlappy) {
+      btnMario.classList.toggle('is-active', skin === 'mario');
       btnRunner.classList.toggle('is-active', skin === 'runner');
       btnFlappy.classList.toggle('is-active', skin === 'flappy');
     }
 
     if (titleLabel) {
-      titleLabel.textContent = skin === 'runner' 
-        ? 'CYBER RUNNER 2026 // LIVE VIEWPORT' 
-        : 'FLAPPY LAYA RETRO // DITHERED CRT SIMULATION';
+      if (skin === 'mario') {
+        titleLabel.textContent = 'SUPER MARIO WORLD // 8-BIT ARENA';
+      } else if (skin === 'runner') {
+        titleLabel.textContent = 'CYBER RUNNER 2026 // LIVE VIEWPORT';
+      } else {
+        titleLabel.textContent = 'FLAPPY LAYA RETRO // DITHERED CRT SIMULATION';
+      }
     }
+
+    // Play pipe slide sound on theme change
+    sound.playMarioPipeSound();
 
     // Reset obstacles
     this.obstacles = [];
@@ -245,7 +255,8 @@ export class GameViewport {
       touchControls.style.display = mode === 'manual' ? 'flex' : 'none';
     }
 
-    this.addFloatingText(mode === 'laya' ? 'AUTONOMOUS MODE ENGAGED' : 'MANUAL CONTROL ACTIVE!', 2);
+    sound.playMarioJumpSound();
+    this.addFloatingText(mode === 'laya' ? 'AUTONOMOUS MODE' : 'MANUAL PILOT ENGAGED!', 2, '#fcd800');
   }
 
   togglePause() {
@@ -259,7 +270,6 @@ export class GameViewport {
   }
 
   handleKeyDown(e) {
-    // Only capture keys if focused on panel or in manual mode
     if (this.mode !== 'manual') return;
 
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
@@ -270,7 +280,8 @@ export class GameViewport {
       this.steerManual(1);
     } else if (e.key === ' ' || e.key === 'ArrowUp') {
       e.preventDefault();
-      if (this.gameSkin === 'flappy') this.flapManual();
+      if (this.gameSkin === 'mario') this.marioJump();
+      else if (this.gameSkin === 'flappy') this.flapManual();
     }
   }
 
@@ -279,13 +290,24 @@ export class GameViewport {
     if (nextLane !== this.targetLane) {
       this.targetLane = nextLane;
       this.shipTilt = direction * 0.45;
-      this.addParticles(this.playerLane, 8, '#22e6ff');
+      sound.playMarioJumpSound();
+      this.addParticles(this.playerLane, 8, '#fcd800');
+    }
+  }
+
+  marioJump() {
+    if (!this.marioIsJumping) {
+      this.marioIsJumping = true;
+      this.marioJumpY = -28;
+      sound.playMarioJumpSound();
+      this.addParticles(this.targetLane, 6, '#fcd800');
     }
   }
 
   flapManual() {
     this.flappyVy = -7.5;
-    this.addParticles(2, 6, '#ffb020');
+    sound.playMarioJumpSound();
+    this.addParticles(2, 6, '#fcd800');
   }
 
   /**
@@ -314,9 +336,11 @@ export class GameViewport {
       } else if (finalAction === 'move_left') {
         this.targetLane = Math.max(1, this.targetLane - 1);
         this.shipTilt = -0.4;
+        if (this.gameSkin === 'mario') this.marioJump();
       } else if (finalAction === 'move_right') {
         this.targetLane = Math.min(3, this.targetLane + 1);
         this.shipTilt = 0.4;
+        if (this.gameSkin === 'mario') this.marioJump();
       } else {
         this.shipTilt = 0;
       }
@@ -336,16 +360,19 @@ export class GameViewport {
 
     // Visual feedback for outcomes
     if (event.game_response?.good === true) {
-      this.addFloatingText('+10 PTS', this.targetLane, '#39ff88');
-      this.addParticles(this.targetLane, 12, '#39ff88');
+      sound.playMarioCoinSound();
+      this.addFloatingText('+10 PTS 🪙', this.targetLane, '#fcd800');
+      this.addParticles(this.targetLane, 12, '#fcd800');
     } else if (event.game_response?.good === false) {
       this.screenShake = 12;
-      this.addFloatingText('COLLISION!', this.targetLane, '#ff4d6d');
-      this.addParticles(this.targetLane, 20, '#ff4d6d');
+      sound.playMarioHitSound();
+      this.addFloatingText('OUCH! 💥', this.targetLane, '#e52521');
+      this.addParticles(this.targetLane, 20, '#e52521');
     } else if (event.validator?.retries > 0) {
       this.screenShake = 6;
-      this.addFloatingText('VALIDATOR RETRY', this.targetLane, '#ffb020');
-      this.addParticles(this.targetLane, 10, '#ffb020');
+      sound.playMarioPipeSound();
+      this.addFloatingText('PIPE RETRY ❓', this.targetLane, '#f87800');
+      this.addParticles(this.targetLane, 10, '#f87800');
     }
   }
 
@@ -358,7 +385,7 @@ export class GameViewport {
       lane: spawnLane,
       z: 1.0,
       width: 0.9,
-      type: Math.random() > 0.3 ? 'laser' : 'barrier',
+      type: Math.random() > 0.4 ? 'pipe' : 'goomba',
       passed: false
     });
 
@@ -380,29 +407,29 @@ export class GameViewport {
     const h = rect.height;
     const laneWidth = w / 3;
     const x = (lane - 0.5) * laneWidth;
-    const y = h * 0.75;
+    const y = h * 0.72;
 
     for (let i = 0; i < count; i++) {
       this.particles.push({
-        x: x + (Math.random() - 0.5) * 40,
+        x: x + (Math.random() - 0.5) * 36,
         y: y + (Math.random() - 0.5) * 20,
-        vx: (Math.random() - 0.5) * 6,
-        vy: -Math.random() * 5 - 2,
+        vx: (Math.random() - 0.5) * 5,
+        vy: -Math.random() * 4 - 2,
         life: 1.0,
-        decay: 0.02 + Math.random() * 0.03,
+        decay: 0.03 + Math.random() * 0.03,
         color: color,
         size: Math.random() * 4 + 2
       });
     }
   }
 
-  addFloatingText(text, lane, color = '#22e6ff') {
+  addFloatingText(text, lane, color = '#fcd800') {
     const rect = this.canvas.getBoundingClientRect();
     const w = rect.width;
     const h = rect.height;
     const laneWidth = w / 3;
     const x = (lane - 0.5) * laneWidth;
-    const y = h * 0.65;
+    const y = h * 0.60;
 
     this.floatingTexts.push({
       text,
@@ -436,30 +463,21 @@ export class GameViewport {
     }
 
     // Grid scrolling
-    this.gridOffset = (this.gridOffset + dt * 1.8 * this.speed) % 1.0;
+    this.gridOffset = (this.gridOffset + dt * 1.6 * this.speed) % 1.0;
+    this.marioWalkFrame += dt * 10;
+
+    // Mario Jump physics
+    if (this.marioIsJumping) {
+      this.marioJumpY += dt * 70; // gravity
+      if (this.marioJumpY >= 0) {
+        this.marioJumpY = 0;
+        this.marioIsJumping = false;
+      }
+    }
 
     // Smooth ship lane lerp
     this.playerLane += (this.targetLane - this.playerLane) * Math.min(1.0, dt * 10);
     this.shipTilt *= Math.max(0, 1.0 - dt * 6);
-
-    // Particle thruster generator
-    if (Math.random() > 0.2) {
-      const rect = this.canvas.getBoundingClientRect();
-      const laneWidth = rect.width / 3;
-      const shipX = (this.playerLane - 0.5) * laneWidth;
-      const shipY = rect.height * 0.78;
-
-      this.particles.push({
-        x: shipX + (Math.random() - 0.5) * 16,
-        y: shipY + 12,
-        vx: (Math.random() - 0.5) * 1.5,
-        vy: 3 + Math.random() * 3,
-        life: 1.0,
-        decay: 0.04,
-        color: Math.random() > 0.5 ? '#22e6ff' : '#ff3df2',
-        size: Math.random() * 3 + 1
-      });
-    }
 
     // Update particles
     for (let i = this.particles.length - 1; i >= 0; i--) {
@@ -474,30 +492,29 @@ export class GameViewport {
     for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
       const t = this.floatingTexts[i];
       t.y += t.vy;
-      t.alpha -= dt * 1.2;
+      t.alpha -= dt * 1.3;
       if (t.alpha <= 0) this.floatingTexts.splice(i, 1);
     }
 
-    // Update runner obstacles
-    if (this.gameSkin === 'runner') {
+    // Update obstacles
+    if (this.gameSkin === 'mario' || this.gameSkin === 'runner') {
       const advanceSpeed = dt * 0.65 * this.speed;
       for (let i = this.obstacles.length - 1; i >= 0; i--) {
         const obs = this.obstacles[i];
         obs.z -= advanceSpeed;
 
-        // Collision or pass check
         if (!obs.passed && obs.z <= 0.15 && obs.z >= 0.05) {
           const distToPlayer = Math.abs(obs.lane - this.playerLane);
-          if (distToPlayer < 0.5) {
-            // Collision
+          if (distToPlayer < 0.45 && !this.marioIsJumping) {
             obs.passed = true;
             this.screenShake = 10;
-            this.addFloatingText('CRASH!', obs.lane, '#ff4d6d');
-            this.addParticles(obs.lane, 15, '#ff4d6d');
+            sound.playMarioHitSound();
+            this.addFloatingText('BUMP!', obs.lane, '#e52521');
+            this.addParticles(obs.lane, 15, '#e52521');
           } else {
-            // Safe clearance
             obs.passed = true;
-            this.addFloatingText('+10', this.playerLane, '#39ff88');
+            sound.playMarioCoinSound();
+            this.addFloatingText('+10 🪙', this.playerLane, '#fcd800');
           }
         }
 
@@ -512,7 +529,7 @@ export class GameViewport {
         this.obstacles.push({
           lane,
           z: 1.0,
-          type: 'laser',
+          type: Math.random() > 0.5 ? 'pipe' : 'goomba',
           passed: false
         });
       }
@@ -520,7 +537,7 @@ export class GameViewport {
 
     // Flappy simulation update
     if (this.gameSkin === 'flappy') {
-      this.flappyVy += dt * 18; // gravity
+      this.flappyVy += dt * 18;
       this.flappyY += this.flappyVy * dt * 0.1;
       this.flappyY = Math.max(0.05, Math.min(0.95, this.flappyY));
       this.flappyWingCycle += dt * 12;
@@ -529,15 +546,6 @@ export class GameViewport {
         const pil = this.flappyPillars[i];
         pil.x -= dt * 0.45 * this.speed;
         if (pil.x < 0) this.flappyPillars.splice(i, 1);
-      }
-
-      if (this.mode === 'manual' && this.flappyPillars.length < 3 && Math.random() < 0.02) {
-        this.flappyPillars.push({
-          x: 1.0,
-          gapY: 0.25 + Math.random() * 0.5,
-          gapSize: 0.35,
-          passed: false
-        });
       }
     }
   }
@@ -550,18 +558,15 @@ export class GameViewport {
 
     ctx.save();
 
-    // Apply screen shake
     if (this.screenShake > 0) {
       const sx = (Math.random() - 0.5) * this.screenShake;
       const sy = (Math.random() - 0.5) * this.screenShake;
       ctx.translate(sx, sy);
     }
 
-    // Clear background
-    ctx.fillStyle = '#07060f';
-    ctx.fillRect(0, 0, w, h);
-
-    if (this.gameSkin === 'runner') {
+    if (this.gameSkin === 'mario') {
+      this.renderMarioScene(ctx, w, h);
+    } else if (this.gameSkin === 'runner') {
       this.renderRunnerScene(ctx, w, h);
     } else {
       this.renderFlappyScene(ctx, w, h);
@@ -572,11 +577,7 @@ export class GameViewport {
       ctx.save();
       ctx.globalAlpha = Math.max(0, p.life);
       ctx.fillStyle = p.color;
-      ctx.shadowColor = p.color;
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size); // Pixel squares
       ctx.restore();
     }
 
@@ -584,17 +585,276 @@ export class GameViewport {
     for (const t of this.floatingTexts) {
       ctx.save();
       ctx.globalAlpha = Math.max(0, t.alpha);
-      ctx.font = 'bold 16px "Orbitron", monospace';
+      ctx.font = 'bold 12px "Press Start 2P", monospace';
       ctx.fillStyle = t.color;
-      ctx.shadowColor = t.color;
-      ctx.shadowBlur = 10;
       ctx.textAlign = 'center';
+      // Pixel drop shadow
+      ctx.fillStyle = '#000';
+      ctx.fillText(t.text, t.x + 2, t.y + 2);
+      ctx.fillStyle = t.color;
       ctx.fillText(t.text, t.x, t.y);
       ctx.restore();
     }
 
-    // Draw CRT HUD overlay
+    // Draw NES HUD overlay
     this.renderArcadeOverlay(ctx, w, h);
+
+    ctx.restore();
+  }
+
+  /**
+   * Super Mario World 8-Bit Scene
+   */
+  renderMarioScene(ctx, w, h) {
+    const floorY = h - 46;
+
+    // 1. Classic Mario Sky Blue
+    ctx.fillStyle = '#5c94fc';
+    ctx.fillRect(0, 0, w, h);
+
+    // 2. Parallax Scrolling Pixel Clouds
+    const cloudOffset = (this.gridOffset * 180) % (w + 140);
+    this.drawPixelCloud(ctx, (w * 0.15 - cloudOffset + w + 140) % (w + 140) - 70, 24, 1.1);
+    this.drawPixelCloud(ctx, (w * 0.65 - cloudOffset * 0.7 + w + 140) % (w + 140) - 70, 36, 0.85);
+
+    // 3. Parallax Green Rolling Hills
+    const hillOffset = (this.gridOffset * 80) % 200;
+    for (let x = -hillOffset; x < w + 200; x += 180) {
+      this.drawPixelHill(ctx, x, floorY);
+      this.drawPixelBush(ctx, x + 90, floorY);
+    }
+
+    // 4. Ground Blocks (Green Grass Top + Brown Soil Bricks)
+    ctx.fillStyle = '#00a800';
+    ctx.fillRect(0, floorY, w, 8); // Lush grass line
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, floorY + 8, w, 2); // Black separation
+
+    ctx.fillStyle = '#885418';
+    ctx.fillRect(0, floorY + 10, w, 36); // Brown earth
+
+    // Checkerboard brick grid on earth
+    ctx.fillStyle = '#482c0c';
+    for (let x = 0; x < w; x += 20) {
+      ctx.fillRect(x, floorY + 12, 18, 14);
+      ctx.fillRect(x + 10, floorY + 28, 18, 14);
+    }
+
+    // 5. 3 Mario Lanes Markers
+    const laneX = [w * 0.20, w * 0.50, w * 0.80];
+
+    // Floating Question Mark & Brick Blocks
+    for (let i = 0; i < 3; i++) {
+      const bx = laneX[i] - 14;
+      const by = floorY - 76;
+      this.drawQuestionBlock(ctx, bx, by, i === 1);
+    }
+
+    // 6. Draw Approaching Obstacles (Warp Pipes & Goombas)
+    for (const obs of this.obstacles) {
+      const ox = laneX[obs.lane - 1] || w * 0.50;
+      const progress = 1.0 - obs.z;
+      const oy = floorY;
+
+      if (obs.type === 'pipe') {
+        this.drawWarpPipe(ctx, ox - 18, oy - 38, 36, 38);
+      } else {
+        this.drawGoomba(ctx, ox - 12, oy - 22, progress);
+      }
+    }
+
+    // 7. Draw 8-Bit Mario Hero
+    const playerX = laneX[Math.floor(this.playerLane - 1)] || w * 0.50;
+    const marioY = floorY - 32 + this.marioJumpY;
+    this.drawPixelMario(ctx, playerX, marioY, this.marioIsJumping);
+  }
+
+  drawPixelCloud(ctx, x, y, scale = 1.0) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+
+    ctx.fillStyle = '#ffffff';
+    // Stepped pixel cloud puffs
+    ctx.fillRect(10, 0, 40, 16);
+    ctx.fillRect(0, 8, 60, 14);
+    ctx.fillRect(16, -6, 26, 12);
+
+    ctx.restore();
+  }
+
+  drawPixelHill(ctx, x, y) {
+    ctx.save();
+    ctx.fillStyle = '#00a800';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.arc(x, y, 42, Math.PI, 0);
+    ctx.fill();
+    ctx.stroke();
+
+    // Dark green spot
+    ctx.fillStyle = '#006b00';
+    ctx.beginPath();
+    ctx.arc(x - 10, y - 20, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  drawPixelBush(ctx, x, y) {
+    ctx.save();
+    ctx.fillStyle = '#43b047';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.arc(x, y, 16, Math.PI, 0);
+    ctx.arc(x + 18, y, 22, Math.PI, 0);
+    ctx.arc(x + 36, y, 16, Math.PI, 0);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  drawQuestionBlock(ctx, x, y, isQuestion = true) {
+    ctx.save();
+    const size = 28;
+
+    // Block Body
+    ctx.fillStyle = isQuestion ? '#f87800' : '#b84418';
+    ctx.fillRect(x, y, size, size);
+
+    // Black pixel border
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, size, size);
+
+    // Bevel highlight
+    ctx.fillStyle = isQuestion ? '#fcd800' : '#f87800';
+    ctx.fillRect(x + 2, y + 2, size - 4, 3);
+    ctx.fillRect(x + 2, y + 2, 3, size - 4);
+
+    // Question Mark text
+    if (isQuestion) {
+      ctx.font = 'bold 13px "Press Start 2P", monospace';
+      ctx.fillStyle = '#000';
+      ctx.textAlign = 'center';
+      ctx.fillText('?', x + size / 2 + 1, y + size / 2 + 6);
+      ctx.fillStyle = '#fff';
+      ctx.fillText('?', x + size / 2, y + size / 2 + 5);
+    } else {
+      // Brick mortar lines
+      ctx.fillStyle = '#000';
+      ctx.fillRect(x, y + size / 2, size, 2);
+      ctx.fillRect(x + size / 2, y, 2, size / 2);
+      ctx.fillRect(x + size / 4, y + size / 2, 2, size / 2);
+      ctx.fillRect(x + (size * 3) / 4, y + size / 2, 2, size / 2);
+    }
+
+    ctx.restore();
+  }
+
+  drawWarpPipe(ctx, x, y, w, h) {
+    ctx.save();
+    ctx.fillStyle = '#00a800';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+
+    // Pipe Lip
+    ctx.fillRect(x - 3, y, w + 6, 12);
+    ctx.strokeRect(x - 3, y, w + 6, 12);
+
+    // Pipe Shaft
+    ctx.fillRect(x, y + 12, w, h - 12);
+    ctx.strokeRect(x, y + 12, w, h - 12);
+
+    // Pipe Green Highlight
+    ctx.fillStyle = '#43b047';
+    ctx.fillRect(x + 4, y + 2, 4, 8);
+    ctx.fillRect(x + 4, y + 14, 4, h - 16);
+
+    ctx.restore();
+  }
+
+  drawGoomba(ctx, x, y, progress) {
+    ctx.save();
+    ctx.fillStyle = '#885418';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+
+    // Body
+    ctx.fillRect(x, y, 24, 22);
+    ctx.strokeRect(x, y, 24, 22);
+
+    // White Eyes
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x + 3, y + 4, 6, 8);
+    ctx.fillRect(x + 15, y + 4, 6, 8);
+
+    // Black Pupils
+    ctx.fillStyle = '#000';
+    ctx.fillRect(x + 6, y + 6, 3, 5);
+    ctx.fillRect(x + 15, y + 6, 3, 5);
+
+    // Feet
+    const step = Math.floor(this.marioWalkFrame) % 2 === 0;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(x + (step ? 0 : 3), y + 20, 8, 4);
+    ctx.fillRect(x + (step ? 16 : 13), y + 20, 8, 4);
+
+    ctx.restore();
+  }
+
+  drawPixelMario(ctx, x, y, isJumping = false) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    const red = '#e52521';
+    const blue = '#0028a8';
+    const peach = '#fcb888';
+    const brown = '#703800';
+    const yellow = '#fcd800';
+
+    // 1. Red Cap
+    ctx.fillStyle = red;
+    ctx.fillRect(-10, -18, 20, 6);
+    ctx.fillRect(-6, -22, 16, 5);
+
+    // 2. Peach Face & Nose
+    ctx.fillStyle = peach;
+    ctx.fillRect(-8, -12, 16, 9);
+    ctx.fillRect(6, -11, 4, 4); // Nose
+
+    // 3. Brown Mustache & Hair
+    ctx.fillStyle = brown;
+    ctx.fillRect(-10, -13, 4, 7);
+    ctx.fillRect(-2, -6, 12, 4);
+
+    // 4. Red Shirt
+    ctx.fillStyle = red;
+    ctx.fillRect(-10, -3, 20, 9);
+
+    // 5. Blue Overalls
+    ctx.fillStyle = blue;
+    ctx.fillRect(-8, 3, 16, 9);
+
+    // 6. Yellow Button
+    ctx.fillStyle = yellow;
+    ctx.fillRect(-4, 5, 2, 2);
+    ctx.fillRect(2, 5, 2, 2);
+
+    // 7. Shoes (Walk cycle or jump)
+    ctx.fillStyle = brown;
+    if (isJumping) {
+      ctx.fillRect(-14, 12, 10, 5);
+      ctx.fillRect(4, 10, 10, 5);
+    } else {
+      const legFrame = Math.floor(this.marioWalkFrame) % 2 === 0;
+      ctx.fillRect(-10, 12, 8, 5);
+      ctx.fillRect(legFrame ? 2 : 4, 12, 8, 5);
+    }
 
     ctx.restore();
   }
@@ -604,7 +864,10 @@ export class GameViewport {
     const horizonW = w * 0.4;
     const horizonX = (w - horizonW) / 2;
 
-    // 1. Synthwave Horizon Neon Sun / Grid
+    ctx.fillStyle = '#07060f';
+    ctx.fillRect(0, 0, w, h);
+
+    // Synthwave Sun
     ctx.save();
     const sunGrad = ctx.createRadialGradient(w / 2, horizonY, 10, w / 2, horizonY, 120);
     sunGrad.addColorStop(0, 'rgba(255, 61, 242, 0.45)');
@@ -612,280 +875,89 @@ export class GameViewport {
     sunGrad.addColorStop(1, 'rgba(7, 6, 15, 0)');
     ctx.fillStyle = sunGrad;
     ctx.fillRect(0, 0, w, horizonY + 60);
-
-    // Sun lines
-    ctx.strokeStyle = 'rgba(255, 61, 242, 0.6)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(w / 2, horizonY - 10, 48, Math.PI, 0);
-    ctx.stroke();
     ctx.restore();
 
-    // 2. 3D Perspective Road Grid
+    // 3D Grid
     ctx.save();
-    ctx.strokeStyle = 'rgba(34, 230, 255, 0.25)';
+    ctx.strokeStyle = 'rgba(34, 230, 255, 0.35)';
     ctx.lineWidth = 1;
-
-    // Horizon line
     ctx.beginPath();
     ctx.moveTo(0, horizonY);
     ctx.lineTo(w, horizonY);
     ctx.stroke();
 
-    // Road 3 Lanes dividing lines
     const laneXBottom = [0, w * 0.33, w * 0.67, w];
     const laneXTop = [horizonX, horizonX + horizonW * 0.33, horizonX + horizonW * 0.67, horizonX + horizonW];
 
     for (let i = 0; i <= 3; i++) {
       ctx.beginPath();
       ctx.strokeStyle = (i === 1 || i === 2) ? 'rgba(34, 230, 255, 0.6)' : 'rgba(255, 61, 242, 0.8)';
-      ctx.lineWidth = (i === 1 || i === 2) ? 1.5 : 2.5;
+      ctx.lineWidth = 2;
       ctx.moveTo(laneXTop[i], horizonY);
       ctx.lineTo(laneXBottom[i], h);
       ctx.stroke();
     }
-
-    // Moving horizontal perspective grid lines
-    const numGridLines = 10;
-    for (let i = 0; i < numGridLines; i++) {
-      const progress = (i / numGridLines + this.gridOffset / numGridLines) % 1.0;
-      // Exponential curve for depth
-      const y = horizonY + Math.pow(progress, 2.2) * (h - horizonY);
-      const rowW = horizonW + (w - horizonW) * progress;
-      const rowX = (w - rowW) / 2;
-
-      ctx.beginPath();
-      ctx.strokeStyle = `rgba(34, 230, 255, ${0.1 + progress * 0.35})`;
-      ctx.moveTo(rowX, y);
-      ctx.lineTo(rowX + rowW, y);
-      ctx.stroke();
-    }
     ctx.restore();
 
-    // 3. Lane Number Markers on Road
-    ctx.save();
-    ctx.font = '11px "JetBrains Mono", monospace';
-    ctx.fillStyle = 'rgba(34, 230, 255, 0.5)';
-    ctx.textAlign = 'center';
-    ctx.fillText('LANE 1 // LEFT', w * 0.165, h - 14);
-    ctx.fillText('LANE 2 // CENTER', w * 0.5, h - 14);
-    ctx.fillText('LANE 3 // RIGHT', w * 0.835, h - 14);
-    ctx.restore();
-
-    // 4. Render Approaching Obstacles
-    for (const obs of this.obstacles) {
-      this.draw3DObstacle(ctx, obs, horizonY, horizonX, horizonW, w, h);
-    }
-
-    // 5. Render Player Cyber Ship
-    this.drawPlayerShip(ctx, w, h, horizonY);
-  }
-
-  draw3DObstacle(ctx, obs, horizonY, horizonX, horizonW, w, h) {
-    const p = Math.max(0, Math.min(1.0, 1.0 - obs.z)); // 0 at horizon, 1 at player
-    const y = horizonY + Math.pow(p, 2.2) * (h - horizonY);
-
-    const laneIndex = obs.lane - 1; // 0, 1, 2
-    const topLaneLeft = horizonX + horizonW * (laneIndex / 3);
-    const topLaneRight = horizonX + horizonW * ((laneIndex + 1) / 3);
-    const botLaneLeft = w * (laneIndex / 3);
-    const botLaneRight = w * ((laneIndex + 1) / 3);
-
-    const obsLeft = topLaneLeft + (botLaneLeft - topLaneLeft) * p;
-    const obsRight = topLaneRight + (botLaneRight - topLaneRight) * p;
-    const obsW = obsRight - obsLeft;
-    const obsH = Math.max(12, 38 * p);
-
-    ctx.save();
-    // Glowing Laser Hazard Barrier
-    const color = obs.type === 'laser' ? '#ff4d6d' : '#ffb020';
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 12 * p;
-
-    // Barrier frame
-    ctx.fillStyle = color;
-    ctx.globalAlpha = 0.85;
-    ctx.fillRect(obsLeft + 4, y - obsH, obsW - 8, obsH);
-
-    // Hazard stripes
-    ctx.strokeStyle = '#07060f';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    for (let x = obsLeft + 10; x < obsRight - 10; x += 14) {
-      ctx.moveTo(x, y);
-      ctx.lineTo(x + 10, y - obsH);
-    }
-    ctx.stroke();
-
-    // Distance Label tag
-    if (p < 0.85) {
-      ctx.font = `bold ${Math.max(9, 12 * p)}px "Orbitron", monospace`;
-      ctx.fillStyle = '#fff';
-      ctx.textAlign = 'center';
-      ctx.fillText(`BARRIER ${Math.floor(obs.z * 5)}`, (obsLeft + obsRight) / 2, y - obsH - 6);
-    }
-
-    ctx.restore();
-  }
-
-  drawPlayerShip(ctx, w, h, horizonY) {
+    // Ship
     const laneWidth = w / 3;
     const shipX = (this.playerLane - 0.5) * laneWidth;
-    const shipY = h * 0.76;
-    const shipW = 46;
-    const shipH = 34;
+    const shipY = h * 0.74;
 
     ctx.save();
     ctx.translate(shipX, shipY);
     ctx.rotate(this.shipTilt);
-
-    // Ship Shadow / Underglow
-    ctx.shadowColor = '#22e6ff';
-    ctx.shadowBlur = 20;
-
-    // Thruster Twin Flames
-    ctx.fillStyle = '#39ff88';
-    ctx.beginPath();
-    ctx.moveTo(-12, shipH / 2);
-    ctx.lineTo(-6, shipH / 2 + 16 + Math.random() * 8);
-    ctx.lineTo(0, shipH / 2);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(0, shipH / 2);
-    ctx.lineTo(6, shipH / 2 + 16 + Math.random() * 8);
-    ctx.lineTo(12, shipH / 2);
-    ctx.closePath();
-    ctx.fill();
-
-    // Fuselage Neon Craft
     ctx.fillStyle = '#0f0b1f';
     ctx.strokeStyle = '#22e6ff';
     ctx.lineWidth = 2.5;
-
     ctx.beginPath();
-    ctx.moveTo(0, -shipH / 2);         // Nose
-    ctx.lineTo(shipW / 2, shipH / 2);   // Right wing tip
-    ctx.lineTo(shipW / 4, shipH / 3);
-    ctx.lineTo(0, shipH / 2 - 2);       // Center tail
-    ctx.lineTo(-shipW / 4, shipH / 3);
-    ctx.lineTo(-shipW / 2, shipH / 2);  // Left wing tip
+    ctx.moveTo(0, -18);
+    ctx.lineTo(20, 18);
+    ctx.lineTo(0, 12);
+    ctx.lineTo(-20, 18);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
-
-    // Cockpit Glow
-    ctx.fillStyle = '#ff3df2';
-    ctx.shadowColor = '#ff3df2';
-    ctx.shadowBlur = 10;
-    ctx.beginPath();
-    ctx.moveTo(0, -shipH / 4);
-    ctx.lineTo(5, shipH / 6);
-    ctx.lineTo(-5, shipH / 6);
-    ctx.closePath();
-    ctx.fill();
-
-    // Pilot Badge Tag
-    ctx.font = '8px "JetBrains Mono", monospace';
-    ctx.fillStyle = '#22e6ff';
-    ctx.textAlign = 'center';
-    ctx.fillText('LAYA // MK.I', 0, -shipH / 2 - 8);
-
     ctx.restore();
   }
 
   renderFlappyScene(ctx, w, h) {
-    // Retro Amber CRT aesthetic inspired by brainfunctioncollapse.com/laya
     ctx.fillStyle = '#0f0b1f';
     ctx.fillRect(0, 0, w, h);
 
-    // Dithered city skyline backdrop
-    ctx.strokeStyle = 'rgba(255, 176, 32, 0.3)';
-    ctx.lineWidth = 1;
-    for (let x = 0; x < w; x += 16) {
-      const bH = 30 + ((x * 47) % 70);
-      ctx.strokeRect(x, h - bH - 30, 14, bH);
-    }
-
-    // Floor line
+    // Floor
     ctx.strokeStyle = '#ffb020';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(0, h - 30);
-    ctx.lineTo(w, h - 30);
+    ctx.moveTo(0, h - 28);
+    ctx.lineTo(w, h - 28);
     ctx.stroke();
 
-    // Render Flappy Pillars
-    for (const pil of this.flappyPillars) {
-      const pilX = pil.x * w;
-      const pilW = 54;
-      const gapY = pil.gapY * (h - 60);
-      const gapH = pil.gapSize * (h - 60);
-
-      ctx.fillStyle = '#16112e';
-      ctx.strokeStyle = '#ffb020';
-      ctx.lineWidth = 2;
-
-      // Top pillar
-      ctx.fillRect(pilX, 0, pilW, gapY);
-      ctx.strokeRect(pilX, 0, pilW, gapY);
-
-      // Bottom pillar
-      const bTop = gapY + gapH;
-      ctx.fillRect(pilX, bTop, pilW, h - 30 - bTop);
-      ctx.strokeRect(pilX, bTop, pilW, h - 30 - bTop);
-
-      // Pillar Dither Texture
-      ctx.fillStyle = 'rgba(255, 176, 32, 0.15)';
-      ctx.fillRect(pilX + 4, 4, pilW - 8, gapY - 8);
-      ctx.fillRect(pilX + 4, bTop + 4, pilW - 8, h - 30 - bTop - 8);
-    }
-
-    // Render Flappy Craft
+    // Flappy Craft
     const craftX = w * 0.28;
-    const craftY = this.flappyY * (h - 60);
-    const flap = Math.sin(this.flappyWingCycle) * 6;
+    const craftY = this.flappyY * (h - 50);
 
     ctx.save();
     ctx.translate(craftX, craftY);
     ctx.fillStyle = '#ffb020';
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 2;
-
-    // Body
     ctx.fillRect(-16, -10, 32, 20);
     ctx.strokeRect(-16, -10, 32, 20);
-
-    // Eye / Cockpit
-    ctx.fillStyle = '#07060f';
-    ctx.fillRect(6, -6, 6, 6);
-
-    // Wing
-    ctx.fillStyle = '#ffb020';
-    ctx.beginPath();
-    ctx.moveTo(-10, 0);
-    ctx.lineTo(-20, flap);
-    ctx.lineTo(-4, flap);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
     ctx.restore();
   }
 
   renderArcadeOverlay(ctx, w, h) {
-    // Top CRT Telemetry Readout
     ctx.save();
-    ctx.font = '10px "JetBrains Mono", monospace';
-    ctx.fillStyle = 'rgba(34, 230, 255, 0.8)';
+    ctx.font = '9px "Press Start 2P", monospace';
+    ctx.fillStyle = 'rgba(252, 216, 0, 0.9)';
     ctx.textAlign = 'left';
-    ctx.fillText(`SOURCE: LIVE LAYA STREAM`, 14, 20);
-    ctx.fillText(`FPS: 60  |  LATENCY: 28ms`, 14, 34);
+    ctx.fillText(`WORLD: 1-1`, 12, 18);
+    ctx.fillText(`TIME: 360`, 12, 32);
 
     ctx.textAlign = 'right';
-    ctx.fillText(`SCORE: ${String(this.score).padStart(4, '0')}`, w - 14, 20);
-    ctx.fillText(`BEST:  ${String(this.bestScore).padStart(4, '0')}`, w - 14, 34);
+    ctx.fillText(`COIN: ${String(this.score).padStart(4, '0')}`, w - 12, 18);
+    ctx.fillText(`BEST: ${String(this.bestScore).padStart(4, '0')}`, w - 12, 32);
     ctx.restore();
   }
 

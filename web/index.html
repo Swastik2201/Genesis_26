@@ -20,7 +20,7 @@
   <header class="site-header">
     <div class="container nav-container">
       <a href="index.html" class="brand-logo" aria-label="Beat the Bot Home">
-        <span class="brand-icon" aria-hidden="true">⚡</span>
+        <span class="brand-icon" aria-hidden="true">🍄</span>
         <span class="brand-title">BEAT THE BOT</span>
       </a>
 
@@ -34,7 +34,11 @@
       </nav>
 
       <div style="display: flex; align-items: center; gap: var(--space-sm);">
-        <span class="badge badge-live" aria-label="Status: Live Engine Ready">READY</span>
+        <button id="btn-sound-toggle-landing" class="btn btn-ghost btn-sm" aria-label="Toggle 8-bit sound" title="Toggle Mario 8-bit sound">
+          <span id="sound-landing-icon">🔇</span>
+          <span id="sound-landing-label">SFX</span>
+        </button>
+        <span class="badge badge-live" aria-label="Status: Live Engine Ready">★ READY</span>
         <a href="dashboard.html" class="btn btn-primary btn-sm" id="btn-header-arena">
           <span>ENTER ARENA</span>
           <span aria-hidden="true">➔</span>
@@ -47,22 +51,22 @@
     <!-- Hero Section -->
     <section class="hero container" aria-labelledby="hero-heading">
       <div class="hero-meta-badge">
-        <span class="badge badge-cyan">MODEL: LAYA</span>
-        <span class="badge badge-demo">HACKATHON EDITION</span>
+        <span class="badge badge-cyan">🍄 MODEL: LAYA</span>
+        <span class="badge badge-demo">★ 8-BIT ARENA</span>
       </div>
 
-      <h1 id="hero-heading" class="hero-title glitch-text">BEAT THE BOT</h1>
+      <h1 id="hero-heading" class="hero-title mario-hero-title">BEAT THE BOT</h1>
       <p class="hero-tagline">
         Teach Laya to play. Every move logged. <span class="highlight">Every decision visible.</span>
       </p>
 
       <div class="hero-actions">
         <a href="dashboard.html" class="btn btn-primary btn-lg" id="btn-hero-arena">
-          <span>ENTER ARENA</span>
+          <span>★ ENTER ARENA</span>
           <span aria-hidden="true">➔</span>
         </a>
         <a href="#preview" class="btn btn-secondary btn-lg" id="btn-hero-preview">
-          <span>SEE HOW IT THINKS</span>
+          <span>❓ SEE HOW IT THINKS</span>
         </a>
       </div>
 
@@ -91,7 +95,7 @@
     <section id="pipeline" class="pipeline-section" aria-labelledby="pipeline-heading">
       <div class="container">
         <div class="section-header">
-          <div class="section-tag">DETERMINISTIC DECISION PIPELINE</div>
+          <div class="section-tag">★ DETERMINISTIC DECISION PIPELINE ★</div>
           <h2 id="pipeline-heading" class="section-title">5-STAGE DECISION FLOW</h2>
           <p class="section-desc">
             No game assumptions before game day. The modular layer isolates game mechanics from model reasoning.
@@ -100,46 +104,46 @@
 
         <div class="pipeline-strip" role="list" aria-label="Pipeline Stages">
           <!-- Stage 1 -->
-          <div class="pipeline-node hud-card" role="listitem">
+          <div class="pipeline-node card-pipe" role="listitem">
             <span class="pipeline-node-num">STAGE 01</span>
-            <h3 class="pipeline-node-title">Game API</h3>
-            <p class="pipeline-node-desc">Reads raw state &amp; legal actions from the hosted game server.</p>
+            <h3 class="pipeline-node-title">🟢 Game API</h3>
+            <p class="pipeline-node-desc">Reads raw state &amp; legal actions from hosted game server.</p>
           </div>
 
-          <div class="pipeline-arrow" aria-hidden="true">➔</div>
+          <div class="pipeline-arrow" aria-hidden="true">▶▶</div>
 
           <!-- Stage 2 -->
-          <div class="pipeline-node hud-card" role="listitem">
+          <div class="pipeline-node" role="listitem">
             <span class="pipeline-node-num">STAGE 02</span>
-            <h3 class="pipeline-node-title">State Normaliser</h3>
-            <p class="pipeline-node-desc">Produces compact, plain-English summary (&lt;120 words) + structured facts.</p>
+            <h3 class="pipeline-node-title">❓ State Normaliser</h3>
+            <p class="pipeline-node-desc">Produces compact summary (&lt;120 words) + structured facts.</p>
           </div>
 
-          <div class="pipeline-arrow" aria-hidden="true">➔</div>
+          <div class="pipeline-arrow" aria-hidden="true">▶▶</div>
 
           <!-- Stage 3 -->
-          <div class="pipeline-node hud-card card-magenta" role="listitem">
-            <span class="pipeline-node-num" style="color: var(--neon-magenta);">STAGE 03</span>
-            <h3 class="pipeline-node-title">Laya Engine</h3>
-            <p class="pipeline-node-desc">Asks typed questions in one call; maps probabilities to legal action scores.</p>
+          <div class="pipeline-node hud-card" style="border-color: var(--mario-yellow);" role="listitem">
+            <span class="pipeline-node-num" style="color: var(--mario-yellow);">STAGE 03</span>
+            <h3 class="pipeline-node-title">🍄 Laya Engine</h3>
+            <p class="pipeline-node-desc">Asks typed questions in one call; maps probabilities to legal actions.</p>
           </div>
 
-          <div class="pipeline-arrow" aria-hidden="true">➔</div>
+          <div class="pipeline-arrow" aria-hidden="true">▶▶</div>
 
           <!-- Stage 4 -->
-          <div class="pipeline-node hud-card" role="listitem">
+          <div class="pipeline-node card-brick" role="listitem">
             <span class="pipeline-node-num">STAGE 04</span>
-            <h3 class="pipeline-node-title">Action Validator</h3>
-            <p class="pipeline-node-desc">Verifies action legality; if rejected, excludes action and asks Laya again.</p>
+            <h3 class="pipeline-node-title">🧱 Action Validator</h3>
+            <p class="pipeline-node-desc">Verifies legality; if rejected, excludes action and asks Laya again.</p>
           </div>
 
-          <div class="pipeline-arrow" aria-hidden="true">➔</div>
+          <div class="pipeline-arrow" aria-hidden="true">▶▶</div>
 
           <!-- Stage 5 -->
-          <div class="pipeline-node hud-card" role="listitem">
+          <div class="pipeline-node card-pipe" role="listitem">
             <span class="pipeline-node-num">STAGE 05</span>
-            <h3 class="pipeline-node-title">Submit Move</h3>
-            <p class="pipeline-node-desc">Dispatches chosen move, records game response, and emits audited event.</p>
+            <h3 class="pipeline-node-title">🏁 Submit Move</h3>
+            <p class="pipeline-node-desc">Dispatches chosen move, records game response, emits audited event.</p>
           </div>
         </div>
       </div>
@@ -379,7 +383,8 @@
 
   <!-- Script: fx.js micro-animations and simulation -->
   <script type="module">
-    import { initDecisionSimulator, initParticleBackground } from './js/fx.js';
+    import { initDecisionSimulator, initParticleBackground, triggerMarioCoinPop, triggerMarioBlockBump } from './js/fx.js';
+    import { toggleSound, isSoundEnabled, playMarioJumpSound, playMarioCoinSound } from './js/sound.js';
     import { gameConfig } from './config.js';
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -393,6 +398,50 @@
           tagline.innerHTML = `${gameConfig.gameTagline}. <span class="highlight">Every decision visible.</span>`;
         }
       }
+
+      // Landing Sound Toggle Button
+      const soundBtn = document.getElementById('btn-sound-toggle-landing');
+      const soundIcon = document.getElementById('sound-landing-icon');
+      const soundLabel = document.getElementById('sound-landing-label');
+
+      if (soundBtn) {
+        function updateLandingSoundUI() {
+          const enabled = isSoundEnabled();
+          if (soundIcon) soundIcon.textContent = enabled ? '🔊' : '🔇';
+          if (soundLabel) soundLabel.textContent = enabled ? 'SFX ON' : 'SFX';
+          if (enabled) soundBtn.classList.add('sound-active');
+          else soundBtn.classList.remove('sound-active');
+        }
+        updateLandingSoundUI();
+
+        soundBtn.addEventListener('click', () => {
+          const newState = toggleSound();
+          updateLandingSoundUI();
+          triggerMarioBlockBump(soundBtn);
+          if (newState) {
+            triggerMarioCoinPop(soundBtn, 'SFX ON!');
+          }
+        });
+      }
+
+      // Add Mario interactive effects on arena buttons
+      const arenaButtons = document.querySelectorAll('#btn-header-arena, #btn-hero-arena');
+      arenaButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          playMarioJumpSound();
+          triggerMarioCoinPop(btn, 'LET\'S A GO!');
+        });
+      });
+
+      // Interactive Mario Question & Brick Blocks
+      document.querySelectorAll('.stat-item, .pipeline-node').forEach(block => {
+        block.style.cursor = 'pointer';
+        block.addEventListener('click', () => {
+          triggerMarioBlockBump(block);
+          triggerMarioCoinPop(block, '+10');
+          playMarioCoinSound();
+        });
+      });
 
       initDecisionSimulator({
         stateEl: document.getElementById('sim-state-text'),

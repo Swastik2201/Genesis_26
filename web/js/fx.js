@@ -394,3 +394,106 @@ export function initParticleBackground(targetSelector = '.bg-ambient') {
   };
 }
 
+/**
+ * Spawns an animated gold pixel coin popping up with points (+10).
+ */
+export function triggerMarioCoinPop(targetEl, text = "+10") {
+  if (!targetEl || prefersReducedMotion()) return;
+
+  const rect = targetEl.getBoundingClientRect();
+  const coin = document.createElement('div');
+  coin.className = 'mario-coin-popup';
+  coin.style.position = 'fixed';
+  coin.style.left = `${rect.left + rect.width / 2}px`;
+  coin.style.top = `${rect.top}px`;
+  coin.style.transform = 'translate(-50%, -100%)';
+  coin.style.zIndex = '9999';
+  coin.style.pointerEvents = 'none';
+  coin.style.display = 'flex';
+  coin.style.flexDirection = 'column';
+  coin.style.alignItems = 'center';
+  coin.style.gap = '2px';
+  coin.style.animation = 'coinArcJump 0.65s steps(8) forwards';
+
+  coin.innerHTML = `
+    <span style="font-size: 1.4rem; filter: drop-shadow(2px 2px 0 #000);">🪙</span>
+    <span style="font-family: var(--font-heading); font-size: 11px; color: var(--mario-yellow); text-shadow: 2px 2px 0 #000;">${text}</span>
+  `;
+
+  document.body.appendChild(coin);
+  setTimeout(() => {
+    if (coin.parentElement) coin.parentElement.removeChild(coin);
+  }, 700);
+}
+
+/**
+ * Triggers a classic Super Mario Question block bump on an element.
+ */
+export function triggerMarioBlockBump(element) {
+  if (!element || prefersReducedMotion()) return;
+  element.classList.remove('mario-block-bump');
+  void element.offsetWidth; // trigger reflow
+  element.classList.add('mario-block-bump');
+  setTimeout(() => {
+    element.classList.remove('mario-block-bump');
+  }, 250);
+}
+
+/**
+ * Super Mario Warp Pipe wipe transition for route changes.
+ */
+export function triggerWarpPipeTransition(onMidpoint = null) {
+  if (prefersReducedMotion()) {
+    if (typeof onMidpoint === 'function') onMidpoint();
+    return;
+  }
+
+  const existingWipe = document.getElementById('mario-warp-pipe-transition');
+  if (existingWipe && existingWipe.parentElement) {
+    existingWipe.parentElement.removeChild(existingWipe);
+  }
+
+  const wipe = document.createElement('div');
+  wipe.id = 'mario-warp-pipe-transition';
+  wipe.style.position = 'fixed';
+  wipe.style.inset = '0';
+  wipe.style.background = 'linear-gradient(90deg, #004400 0%, #007700 8%, #00a800 20%, #88e000 35%, #00a800 60%, #004400 95%, #002200 100%)';
+  wipe.style.border = '8px solid #000';
+  wipe.style.zIndex = '99999';
+  wipe.style.pointerEvents = 'none';
+  wipe.style.transform = 'translateY(100%)';
+  wipe.style.transition = 'transform 0.22s cubic-bezier(0.1, 0.9, 0.2, 1)';
+  wipe.style.display = 'flex';
+  wipe.style.flexDirection = 'column';
+  wipe.style.alignItems = 'center';
+  wipe.style.justifyContent = 'center';
+  wipe.style.gap = '12px';
+  wipe.innerHTML = `
+    <div style="font-size: 2.5rem; filter: drop-shadow(4px 4px 0 #000);">🍄</div>
+    <div style="text-align: center; font-family: var(--font-heading); font-size: clamp(14px, 3vw, 22px); color: #fff; text-shadow: 3px 3px 0 #000; letter-spacing: 2px;">
+      WARP ZONE
+    </div>
+  `;
+
+  document.body.appendChild(wipe);
+
+  requestAnimationFrame(() => {
+    wipe.style.transform = 'translateY(0%)';
+  });
+
+  setTimeout(() => {
+    if (typeof onMidpoint === 'function') {
+      try {
+        onMidpoint();
+      } catch (err) {
+        console.error('[FX] Error in warp pipe midpoint:', err);
+      }
+    }
+    wipe.style.transform = 'translateY(-100%)';
+    setTimeout(() => {
+      if (wipe.parentElement) wipe.parentElement.removeChild(wipe);
+    }, 240);
+  }, 220);
+}
+
+

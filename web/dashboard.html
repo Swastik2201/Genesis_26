@@ -26,16 +26,16 @@
       <!-- Sidebar Header / Logo -->
       <div class="sidebar-header">
         <a href="index.html" class="sidebar-brand" aria-label="Return to Landing Page">
-          <span class="sidebar-brand-icon" aria-hidden="true">⚡</span>
+          <span class="sidebar-brand-icon" aria-hidden="true">🍄</span>
           <span class="sidebar-brand-text">BEAT THE BOT</span>
         </a>
       </div>
 
       <!-- Global Session Picker -->
       <div class="sidebar-session-picker">
-        <label for="session-select" class="session-select-label">ACTIVE SESSION</label>
+        <label for="session-select" class="session-select-label">WORLD / SESSION</label>
         <select id="session-select" class="session-select-input" aria-label="Select Game Run Session">
-          <option value="demo-runner-20261013-001">Loading sessions...</option>
+          <option value="demo-runner-20261013-001">Loading worlds...</option>
         </select>
       </div>
 
@@ -50,7 +50,7 @@
 
         <div class="nav-item">
           <a href="#/live" class="nav-link-btn" data-route="live" id="nav-live" aria-label="Live Run Tab">
-            <span class="nav-icon" aria-hidden="true">⚡</span>
+            <span class="nav-icon" aria-hidden="true">🍄</span>
             <span class="nav-label">Live Run</span>
           </a>
         </div>
@@ -64,7 +64,7 @@
 
         <div class="nav-item">
           <a href="#/lab" class="nav-link-btn" data-route="lab" id="nav-lab" aria-label="Question Lab Tab">
-            <span class="nav-icon" aria-hidden="true">🧪</span>
+            <span class="nav-icon" aria-hidden="true">❓</span>
             <span class="nav-label">Question Lab</span>
           </a>
         </div>
@@ -78,14 +78,14 @@
 
         <div class="nav-item">
           <a href="#/calibration" class="nav-link-btn" data-route="calibration" id="nav-calibration" aria-label="Calibration Tab">
-            <span class="nav-icon" aria-hidden="true">🎯</span>
+            <span class="nav-icon" aria-hidden="true">⭐</span>
             <span class="nav-label">Calibration</span>
           </a>
         </div>
 
         <div class="nav-item">
           <a href="#/logs" class="nav-link-btn" data-route="logs" id="nav-logs" aria-label="Logs Tab">
-            <span class="nav-icon" aria-hidden="true">📋</span>
+            <span class="nav-icon" aria-hidden="true">📜</span>
             <span class="nav-label">Logs</span>
           </a>
         </div>
@@ -101,11 +101,11 @@
       <!-- Sidebar Status Footer -->
       <div class="sidebar-footer">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="color: var(--text-muted); font-size: 11px;">SERVER:</span>
+          <span style="color: var(--text-muted); font-size: 10px;">SERVER:</span>
           <span id="server-status-badge" class="badge badge-cyan" style="font-size: 10px; padding: 2px 6px;">STANDBY</span>
         </div>
         <div id="demo-mode-badge" style="display: none;">
-          <span class="badge badge-demo" style="width: 100%; justify-content: center; font-size: 10px;">DEMO MODE ACTIVE</span>
+          <span class="badge badge-demo" style="width: 100%; justify-content: center; font-size: 10px;">DEMO ACTIVE</span>
         </div>
       </div>
     </aside>
@@ -115,14 +115,14 @@
       <div class="topbar-left">
         <!-- Session ID & Game ID -->
         <div class="topbar-item">
-          <span class="topbar-label">SESSION ID</span>
+          <span class="topbar-label">WORLD / SESSION</span>
           <span id="status-session" class="topbar-value" style="color: var(--neon-cyan); font-family: var(--font-mono); font-size: 13px;">
             demo-runner-20261013-001
           </span>
         </div>
 
         <div class="topbar-item">
-          <span class="topbar-label">GAME ADAPTER</span>
+          <span class="topbar-label">WORLD ADAPTER</span>
           <span id="status-game" class="topbar-value" style="font-family: var(--font-mono); font-size: 13px;">
             mock-runner-v1
           </span>
@@ -138,9 +138,9 @@
           </div>
 
           <div class="topbar-item">
-            <span class="topbar-label">SCORE</span>
-            <span id="status-score" class="topbar-value" style="color: var(--neon-green);">
-              0 PTS
+            <span class="topbar-label">🪙 COINS / PTS</span>
+            <span id="status-score" class="topbar-value" style="color: var(--mario-yellow);">
+              000000
             </span>
           </div>
 
@@ -153,15 +153,16 @@
         </div>
       </div>
 
+      <div class="topbar-right" style="display: flex; align-items: center; gap: var(--space-sm);">
         <!-- Sound Toggle Button (Pure Web Audio, OFF by default) -->
-        <button id="btn-sound-toggle" class="sound-toggle-btn btn btn-ghost btn-sm" aria-label="Toggle synthesized sound effects" title="Toggle synthesized Web Audio sound (OFF by default)">
+        <button id="btn-sound-toggle" class="sound-toggle-btn btn btn-ghost btn-sm" aria-label="Toggle Mario 8-bit sound effects" title="Toggle Mario synthesized Web Audio sound (OFF by default)">
           <span id="sound-icon" aria-hidden="true">🔇</span>
-          <span id="sound-label">SOUND: OFF</span>
+          <span id="sound-label">SFX: OFF</span>
         </button>
 
         <!-- LIVE Badge (pulses only when events are streaming) -->
         <span id="status-live-badge" class="badge badge-cyan" aria-live="polite">
-          STANDBY
+          ★ STANDBY
         </span>
 
         <a href="index.html" class="btn btn-ghost btn-sm" aria-label="Exit to landing page">
@@ -186,7 +187,7 @@
     import * as api from './js/api.js';
     import { gameConfig } from './config.js';
     import * as sound from './js/sound.js';
-    import { initParticleBackground } from './js/fx.js';
+    import { initParticleBackground, triggerMarioCoinPop, triggerMarioBlockBump } from './js/fx.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
       const panelContainer = document.getElementById('panel-container');
@@ -230,15 +231,19 @@
         function updateSoundUI() {
           const enabled = sound.isSoundEnabled();
           soundIcon.textContent = enabled ? '🔊' : '🔇';
-          soundLabel.textContent = enabled ? 'SOUND: ON' : 'SOUND: OFF';
+          soundLabel.textContent = enabled ? 'SFX: ON' : 'SFX: OFF';
           if (enabled) soundBtn.classList.add('sound-active');
           else soundBtn.classList.remove('sound-active');
         }
         updateSoundUI();
 
         soundBtn.addEventListener('click', () => {
-          sound.toggleSound();
+          const newState = sound.toggleSound();
           updateSoundUI();
+          triggerMarioBlockBump(soundBtn);
+          if (newState) {
+            triggerMarioCoinPop(soundBtn, 'SFX ON');
+          }
         });
       }
 
