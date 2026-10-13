@@ -10,6 +10,7 @@ import { store } from '../store.js';
 import * as api from '../api.js';
 import { typewriter, animateCounter, triggerGlitch } from '../fx.js';
 import { renderDecisionGrid } from '../components/decisionCard.js';
+import { GameViewport } from '../components/gameCanvas.js';
 import * as sound from '../sound.js';
 
 let streamController = null;
@@ -19,6 +20,7 @@ let isFollowLive = true;
 let isPaused = false;
 let playbackSpeed = 800; // ms per step
 let currentContainer = null;
+let gameViewport = null;
 
 const prefersReducedMotion = () => {
   return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -37,6 +39,12 @@ export async function mount(container) {
 
   renderShell(container);
   bindControls(container);
+
+  // Initialize visual game canvas viewport
+  const viewportMount = container.querySelector('#live-game-viewport-mount');
+  if (viewportMount) {
+    gameViewport = new GameViewport(viewportMount);
+  }
 
   // If we already have events in store, render the latest one or selected
   if (state.events.length > 0) {
@@ -79,6 +87,10 @@ export async function mount(container) {
  * Unmounts the Live Run panel and cleans up listeners and streams.
  */
 export function unmount() {
+  if (gameViewport) {
+    gameViewport.destroy();
+    gameViewport = null;
+  }
   if (storeUnsubscribe) {
     storeUnsubscribe();
     storeUnsubscribe = null;
@@ -148,6 +160,9 @@ function renderShell(container) {
           </button>
         </div>
       </div>
+
+      <!-- 1b. Live Visual Game Viewport (Arcade Monitor) -->
+      <div id="live-game-viewport-mount"></div>
 
       <!-- 2. Main 3-Column Decision Viewer Area -->
       <div id="live-viewer-content" class="live-hero-grid">
@@ -272,6 +287,11 @@ function renderStep(stepNumber, shouldAnimate = true) {
 
   // Render 3-column viewer using shared component
   renderDecisionGrid(viewer, event, { isReduced, animate: shouldAnimate, replayMode: false });
+
+  // Feed step to visual game canvas viewport
+  if (gameViewport) {
+    gameViewport.feedStep(event);
+  }
 
   // Update Bottom Timeline Track
   updateTimelineStrip(events, stepNumber);
