@@ -1,94 +1,108 @@
-# STEPS.md — Build order and game-day runbook
+# STEPS.md — Build and Integration Order
 
-Read `AGENTS.md` first. Owner of this file: Member D.
-Times are rough guides for a one- or two-day hackathon. Tick boxes in your own branch's notes, not in this file (it is frozen).
+This file is the team execution plan. Follow it in order to keep four members from creating merge conflicts.
 
-## Phase 0 — Setup (all four, about 45 min, before anyone codes)
+## Phase 0 — One person establishes the shared foundation
 
-- [ ] D creates the public GitHub repo `beat-the-bot`, adds `AGENTS.md`, `STEPS.md` and `team/` to `main`, and invites A, B and C.
-- [ ] Everyone clones, creates their branch (see `AGENTS.md` section 3) and opens their own `team/MEMBER_*.md`.
-- [ ] Everyone creates a virtual environment (Python 3.10+; 3.12 recommended) and runs `pip install laya`. Run one `laya.load("convaiinnovations/laya")` on each machine now. The first download is large; do not discover this on game day.
-- [ ] Decide **where the bot runs**: a laptop (best) or a free Colab GPU. If Colab, the dashboard needs the `.jsonl` log: either run `server/` inside Colab with a tunnel, or download the log and replay it locally. Pick one and write it in `docs/notes-d.md`.
-- [ ] D pushes the skeleton and contracts (D prompt 1), then tags `contracts-v1`. A, B and C **rebase onto it before writing code**.
+**Owner: Member D. Others wait for the contracts commit.**
 
-## Phase 1 — Parallel build against the mock game (about 3 hours)
+1. Create the skeleton folders and lane-specific requirement files.
+2. Create `AGENTS.md`, `STEPS.md`, `lanes.json`, `scripts/check_lane.py`, schema files, schema examples and contract tests.
+3. Ensure all schemas and examples agree. Commit and merge to `main`.
+4. Tag the commit `contracts-v1`.
+5. Send the group message: “Contracts v1 is on main. Please fetch and rebase your lane branch on origin/main before continuing. Do not change contract files; send D a request if a contract change is needed.”
+6. Only after this, all four members begin their lane prompts.
 
-Nobody waits for anybody; everyone codes against the contracts in `AGENTS.md`.
+## Phase 1 — Parallel development by lane
 
-| Member | Builds | Done when |
-|--------|--------|-----------|
-| A | `GameAdapter`, `mock_game/`, normaliser, validator, loop | `python -m bot.loop --adapter mock` plays a full mock game with a stub engine |
-| B | Laya smoke test, `LayaEngine`, question sets v1 to v3 | `decide()` returns a valid `Decision` for a canned state in under 100 ms |
-| C | Landing page, dashboard shell, Live Run tab, all tabs on mock JSON | Every tab renders from `web/mock/` with no server running |
-| D | Logger, FastAPI server, SSE stream, autopsy | `curl localhost:8000/api/stream` prints events while a mock run plays |
+### Member A: adapter and game loop
+1. Build adapter interface + mock server + mock adapter.
+2. Build normaliser + validator and retry behavior.
+3. Build loop/CLI and prove a complete mock run with stub engine/logger.
+4. Integrate B's engine and D's logger after they land.
+5. On hackathon day, read the official game API docs and implement `game1.py` as a new adapter. Do not rewrite the engine or dashboard to match the API.
 
-## Phase 2 — Vertical slice (about 1 hour, all four together)
+### Member B: Laya and experiment layer
+1. Verify the official Laya package/model API with a smoke test before building abstractions.
+2. Build the engine against the shared Decision shape and test with a fake agent.
+3. Implement question-set variants for the mock game.
+4. Build Question Lab with identical seeds / comparable states across variants.
+5. Build calibration from recorded events and document sample-size limitations.
+6. On game day, add game-specific question sets after A provides sample states and legal actions.
 
-Merge into `main` in this order: **D, A, B, C**. After each merge, the next person rebases.
+### Member C: dashboard
+1. Build the visual tokens and landing page.
+2. Build dashboard shell, sidebar, router, store, API client and mock data.
+3. Build Live Run before secondary tabs; it is the primary judge-facing experience.
+4. Build Autopsy and Replay, then Lab, Calibration, Logs, Overview and About.
+5. Confirm it works in demo mode with no server running and against D's API once available.
 
-- [ ] A's loop calls B's real engine and D's real logger (no stubs).
-- [ ] One mock game runs end to end with the dashboard showing it live.
-- [ ] Every event validates against `contracts/event.schema.json`.
-- [ ] Tag `slice-v1`. From now on `main` always runs `python -m bot.loop --adapter mock`.
+### Member D: infrastructure, logging and docs
+1. Publish contracts first; do not delay this for the final visual design.
+2. Build logger and test redaction, line writes and concurrency.
+3. Build server and SSE stream; use a demo feeder so C can integrate before A/B finish.
+4. Build autopsy, replay verification and evidence scripts.
+5. Finish README/write-up using measured numbers only.
 
-## Phase 3 — Make it good (about 3 hours, parallel again)
+## Phase 2 — Integration checkpoints
 
-- A: retry and timeout handling, session resume, a dry-run flag, a clean game-day adapter template.
-- B: Question Lab runner, calibration, a threshold sweep, variants v1 to v4 compared on fixed seeds.
-- C: Decision Autopsy, Question Lab, Replay, Calibration and Logs tabs wired to real endpoints, gamer polish, reduced-motion support.
-- D: autopsy verdicts, replay endpoint, best-runs export, README draft, write-up skeleton.
+### Checkpoint A: contracts-v1
+Must exist before A/B/C implement against event shapes.
 
-## Phase 4 — Game day (the games are revealed)
+### Checkpoint B: mock slice
+A mock game can run using a stub engine and stub logger. C's dashboard displays fixture data.
 
-Run this as a checklist the moment the first game link arrives. Do not improvise.
+### Checkpoint C: first end-to-end run
+- A's loop uses B's actual `LayaEngine`.
+- Every submitted move has a `laya_call` in the event.
+- D's logger validates and persists events.
+- D's server streams events to C.
+- C shows the same step, question text, probabilities, action and outcome.
 
-**Minute 0 to 10 — read and split**
-- [ ] One person reads the game's agent API docs aloud to everyone. Paste the docs into `docs/game-<n>.md` (D commits it).
-- [ ] Write down: how to start a session, how to read state, the list of legal actions, how a move is submitted, what a rejected move looks like, how the score is verified, and what score qualifies for the next stage.
+### Checkpoint D: audit features
+- Decision Autopsy shows failed decisions and explicitly labels explanations as hypotheses.
+- Replay can select a session and step, show the unmodified event and download the JSONL.
+- Verification script checks contiguous steps and action-to-Laya-call traceability.
+- Question Lab and Calibration panels show real values or an explicit empty/demo state.
 
-**Minute 10 to 60 — one adapter, one question set**
-- [ ] A uses A prompt 4 to write `bot/adapters/game<n>.py` and a normaliser for that game. First goal: a manual 5-step run (read state, submit one move) from the terminal.
-- [ ] B uses B prompt 5 to write `bot/questions/game<n>.py` with 2 or 3 candidate question sets, test them on 10 recorded states, and pick one.
-- [ ] D adds the game to the dashboard config via the contracts only (no engine change). C swaps the game name and theme in `web/` config.
-- [ ] First full run. Keep every `.jsonl` log and every session ID.
+### Checkpoint E: game-day adapter
+1. Copy the official game API docs and qualifying/verified score rules into a private team note or the relevant prompt; do not guess.
+2. A implements and probes the adapter with one safe test move. The probe is separate from normal bot gameplay and must never be used as a decision-making shortcut during scored runs.
+3. Save raw sample responses with secrets removed.
+4. B adds game-specific question sets and runs offline replay against recorded states.
+5. D updates only documentation/config/contracts if needed; announce any contract change before coding against it.
+6. C rethemes labels through `web/config.js`, without changing data semantics.
+7. Run a short smoke test, then a complete run. Preserve session IDs and logs for best runs.
 
-**Minute 60 onward — iterate with evidence**
-- [ ] After each run, open the Decision Autopsy tab. Find the worst decisions. Write what failed in `experiments/NOTES.md`.
-- [ ] B runs the Question Lab on fixed seeds to compare changes. Change one thing at a time (question wording, state wording, threshold, mapping).
-- [ ] Check the calibration tab: if 80% confidence is right only 55% of the time, raise the thresholds or rephrase.
-- [ ] When a run reaches the qualifying verified score, save its session ID in `docs/best_runs.md` (D) and copy its log to `logs/best/`.
-- [ ] Repeat for game 2 after it unlocks. The optional final stage only starts once game 2 is cleared.
+## Merge-conflict prevention rules
 
-**Rule for every change:** write down (1) what Laya got wrong, (2) what we changed, (3) the score or metric before and after. That is the write-up.
+- Never run multiple Antigravity agents against the same branch or shared files.
+- Each person opens the repo on their own branch and checks `git status` before work.
+- Before editing, run `git fetch origin` and rebase on `origin/main`.
+- Keep each Antigravity prompt scoped to one phase and one lane. Commit before pasting the next prompt.
+- Do not ask an agent to “fix the whole project”; ask it to report cross-lane issues instead.
+- D owns `AGENTS.md`, `STEPS.md`, contracts and the lane checker. Others must not regenerate or rewrite them.
+- A owns `bot/loop.py`; B owns `bot/laya/` and `bot/questions/`; D owns `bot/logger.py` and `server/`; C owns `web/`. These boundaries are strict.
+- If a needed file does not exist yet, use a test stub or a documented interface; do not create a competing implementation outside your lane.
+- Before PR, inspect `git diff --name-only` and run your lane checker. If it reports a file outside your lane, revert that edit or ask the owner to handle it.
+- No direct commits to `main` after contracts-v1. Use PRs.
 
-## Phase 5 — Submission (last 2 hours)
+## Suggested group timeline
 
-- [ ] D: public GitHub repo, final `README.md` with run instructions and credits (Laya by Nandakishor M, laya-playground by brain function collapse).
-- [ ] D: `docs/writeup.md` built from every lane's `NOTES.md`: what we asked Laya, why, what we changed after it failed.
-- [ ] D: `docs/best_runs.md` with session IDs, scores, links to `logs/best/*.jsonl`.
-- [ ] B: calibration and Question Lab numbers pasted into the write-up.
-- [ ] C: dashboard works from `logs/best/` with no model running (demo mode), so judges can inspect any decision.
-- [ ] A: one command to reproduce a run, documented in the README.
-- [ ] All: a final rehearsal of the 3-minute demo (below), then freeze `main`.
+1. D: contracts-v1.
+2. A/B/C: first working vertical slice in parallel.
+3. D → A → B → C merge sequence after contracts, resolving dependencies at each checkpoint.
+4. Full team: end-to-end smoke test.
+5. A/B: game-day adaptation; C: retheme; D: audit and submission evidence.
+6. Final: verify logs, session IDs, qualifying score evidence, public repo, README and write-up.
 
-## Demo script (3 minutes)
+## End-of-day status format
 
-1. Landing page: one sentence on the problem and our pipeline strip.
-2. Live Run: start a game; point at state, then the typed questions, then the probabilities, then the move.
-3. A bad move: open Decision Autopsy and show what Laya predicted vs what happened.
-4. Question Lab: "same game, same seeds, different wording": show the table.
-5. Calibration: "when Laya says 80%, it is right X% of the time".
-6. Replay: pick any step of a finished run and open the exact recorded event with its session ID.
+Each member posts:
+- Branch and latest commit
+- Files changed
+- Tests run and results
+- What is ready
+- What is blocked and which owner is needed
+- Any measured results (never estimates presented as measurements)
 
-## Troubleshooting
-
-| Problem | Fix |
-|---------|-----|
-| Model download hangs at 0 bytes | `export HF_HUB_DISABLE_XET=1` |
-| `transformers` stalls on import | `export USE_TF=0` |
-| Everything is slow after the first run | Set `HF_HUB_OFFLINE=1` once weights are cached |
-| First Laya call is slow | Normal: kernels compile. The engine warms up at startup |
-| Laya picks inverted or odd actions | Rephrase the question as a perception question and map it in code; test with the Question Lab |
-| Probabilities look extreme (0% or 100%) | Check the checkpoint: the multilingual one is uncalibrated; use the English one for English states |
-| Merge conflict | You edited a file outside your lane. Revert it, and ask the owner |
-| Dashboard empty | Check `GET /api/health`, then that `logs/runs/*.jsonl` is growing |
