@@ -520,20 +520,18 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
     # Static Assets & Frontend Mounting
     # -------------------------------------------------------------------------
 
-    @app.get("/")
-    async def index():
-        index_file = WEB_DIR / "index.html"
-        if index_file.exists():
-            return FileResponse(index_file)
-        return JSONResponse({
-            "service": "Beat the Bot API Server",
-            "status": "ready",
-            "docs": "/api/health",
-            "web": "web/index.html is awaiting Member C dashboard implementation",
-        })
-
     if WEB_DIR.exists():
         app.mount("/static", StaticFiles(directory=str(WEB_DIR)), name="web-static")
+        app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
+    else:
+        @app.get("/")
+        async def index():
+            return JSONResponse({
+                "service": "Beat the Bot API Server",
+                "status": "ready",
+                "docs": "/api/health",
+                "web": "web/ directory not found",
+            })
 
     return app
 
