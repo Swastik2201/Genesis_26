@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Beat the Bot Dashboard — Live Laya decision viewer, forensic decision autopsy, replay, question lab, and calibration.">
+  <title>BEAT THE BOT — Gamer HUD Dashboard</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <!-- Ambient Overlays -->
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-ambient" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <div class="dashboard-layout">
+    <!-- Fixed Left Navigation Bar -->
+    <aside class="dashboard-sidebar" aria-label="Dashboard Navigation">
+      <!-- Sidebar Header / Logo -->
+      <div class="sidebar-header">
+        <a href="index.html" class="sidebar-brand" aria-label="Return to Landing Page">
+          <span class="sidebar-brand-icon" aria-hidden="true">⚡</span>
+          <span class="sidebar-brand-text">BEAT THE BOT</span>
+        </a>
+      </div>
+
+      <!-- Global Session Picker -->
+      <div class="sidebar-session-picker">
+        <label for="session-select" class="session-select-label">ACTIVE SESSION</label>
+        <select id="session-select" class="session-select-input" aria-label="Select Game Run Session">
+          <option value="demo-runner-20261013-001">Loading sessions...</option>
+        </select>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="sidebar-nav" role="tablist">
+        <div class="nav-item">
+          <a href="#/overview" class="nav-link-btn" data-route="overview" id="nav-overview" aria-label="Overview Tab">
+            <span class="nav-icon" aria-hidden="true">📊</span>
+            <span class="nav-label">Overview</span>
+          </a>
+        </div>
+
+        <div class="nav-item">
+          <a href="#/live" class="nav-link-btn" data-route="live" id="nav-live" aria-label="Live Run Tab">
+            <span class="nav-icon" aria-hidden="true">⚡</span>
+            <span class="nav-label">Live Run</span>
+          </a>
+        </div>
+
+        <div class="nav-item">
+          <a href="#/autopsy" class="nav-link-btn" data-route="autopsy" id="nav-autopsy" aria-label="Decision Autopsy Tab">
+            <span class="nav-icon" aria-hidden="true">🔍</span>
+            <span class="nav-label">Autopsy</span>
+          </a>
+        </div>
+
+        <div class="nav-item">
+          <a href="#/lab" class="nav-link-btn" data-route="lab" id="nav-lab" aria-label="Question Lab Tab">
+            <span class="nav-icon" aria-hidden="true">🧪</span>
+            <span class="nav-label">Question Lab</span>
+          </a>
+        </div>
+
+        <div class="nav-item">
+          <a href="#/replay" class="nav-link-btn" data-route="replay" id="nav-replay" aria-label="Replay Tab">
+            <span class="nav-icon" aria-hidden="true">📼</span>
+            <span class="nav-label">Replay</span>
+          </a>
+        </div>
+
+        <div class="nav-item">
+          <a href="#/calibration" class="nav-link-btn" data-route="calibration" id="nav-calibration" aria-label="Calibration Tab">
+            <span class="nav-icon" aria-hidden="true">🎯</span>
+            <span class="nav-label">Calibration</span>
+          </a>
+        </div>
+
+        <div class="nav-item">
+          <a href="#/logs" class="nav-link-btn" data-route="logs" id="nav-logs" aria-label="Logs Tab">
+            <span class="nav-icon" aria-hidden="true">📋</span>
+            <span class="nav-label">Logs</span>
+          </a>
+        </div>
+
+        <div class="nav-item">
+          <a href="#/about" class="nav-link-btn" data-route="about" id="nav-about" aria-label="About Tab">
+            <span class="nav-icon" aria-hidden="true">ℹ️</span>
+            <span class="nav-label">About</span>
+          </a>
+        </div>
+      </nav>
+
+      <!-- Sidebar Status Footer -->
+      <div class="sidebar-footer">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--text-muted); font-size: 11px;">SERVER:</span>
+          <span id="server-status-badge" class="badge badge-cyan" style="font-size: 10px; padding: 2px 6px;">STANDBY</span>
+        </div>
+        <div id="demo-mode-badge" style="display: none;">
+          <span class="badge badge-demo" style="width: 100%; justify-content: center; font-size: 10px;">DEMO MODE ACTIVE</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Top Telemetry Status Bar -->
+    <header class="dashboard-topbar">
+      <div class="topbar-left">
+        <!-- Session ID & Game ID -->
+        <div class="topbar-item">
+          <span class="topbar-label">SESSION ID</span>
+          <span id="status-session" class="topbar-value" style="color: var(--neon-cyan); font-family: var(--font-mono); font-size: 13px;">
+            demo-runner-20261013-001
+          </span>
+        </div>
+
+        <div class="topbar-item">
+          <span class="topbar-label">GAME ADAPTER</span>
+          <span id="status-game" class="topbar-value" style="font-family: var(--font-mono); font-size: 13px;">
+            mock-runner-v1
+          </span>
+        </div>
+
+        <!-- Telemetry Items -->
+        <div class="topbar-telemetry-group">
+          <div class="topbar-item">
+            <span class="topbar-label">STEP</span>
+            <span id="status-step" class="topbar-value" style="color: var(--text-primary);">
+              0
+            </span>
+          </div>
+
+          <div class="topbar-item">
+            <span class="topbar-label">SCORE</span>
+            <span id="status-score" class="topbar-value" style="color: var(--neon-green);">
+              0 PTS
+            </span>
+          </div>
+
+          <div class="topbar-item">
+            <span class="topbar-label">LAYA LATENCY</span>
+            <span id="status-latency" class="topbar-value" style="font-family: var(--font-mono);">
+              -- ms
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <!-- Demo Ribbon -->
+        <span id="topbar-demo-ribbon" class="demo-ribbon" style="display: none;" title="Server unreachable or mock requested. Using deterministic fixture data.">
+          DEMO DATA
+        </span>
+
+        <!-- LIVE Badge (pulses only when events are streaming) -->
+        <span id="status-live-badge" class="badge badge-cyan" aria-live="polite">
+          STANDBY
+        </span>
+
+        <a href="index.html" class="btn btn-ghost btn-sm" aria-label="Exit to landing page">
+          <span>EXIT</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Content Panel Area (Swapped without page reload via router.js) -->
+    <main class="dashboard-main" id="panel-container" role="main" aria-live="polite">
+      <!-- Mounted active panel renders here -->
+    </main>
+  </div>
+
+  <!-- Dashboard Boot Script -->
+  <script type="module">
+    import { initRouter } from './js/router.js';
+    import { store } from './js/store.js';
+    import * as api from './js/api.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const panelContainer = document.getElementById('panel-container');
+      const sessionSelect = document.getElementById('session-select');
+      const statusSession = document.getElementById('status-session');
+      const statusGame = document.getElementById('status-game');
+      const statusStep = document.getElementById('status-step');
+      const statusScore = document.getElementById('status-score');
+      const statusLatency = document.getElementById('status-latency');
+      const statusLiveBadge = document.getElementById('status-live-badge');
+      const demoRibbon = document.getElementById('topbar-demo-ribbon');
+      const demoModeBadge = document.getElementById('demo-mode-badge');
+      const serverStatusBadge = document.getElementById('server-status-badge');
+
+      // 1. Initialize client-side hash router
+      initRouter(panelContainer);
+
+      // 2. Check health and determine mock status
+      try {
+        const healthData = await api.health();
+        if (serverStatusBadge) {
+          serverStatusBadge.textContent = healthData.mode === 'live' ? 'ONLINE' : 'MOCK / DEMO';
+          serverStatusBadge.className = `badge ${healthData.mode === 'live' ? 'badge-good' : 'badge-demo'}`;
+        }
+      } catch (err) {
+        console.warn('Health check failed; running in mock fallback mode.', err);
+      }
+
+      // 3. Load available runs and populate global session picker
+      try {
+        const sessionRuns = await api.runs();
+        if (Array.isArray(sessionRuns) && sessionRuns.length > 0) {
+          store.setSessions(sessionRuns);
+          sessionSelect.innerHTML = sessionRuns.map(r => `
+            <option value="${r.session_id}">${r.session_id} (${r.final_score ?? 0} pts)</option>
+          `).join('');
+
+          // Select first session if none set
+          if (!store.getState().currentSession) {
+            store.setSession(sessionRuns[0].session_id);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load runs:', err);
+      }
+
+      // Handle session dropdown changes
+      sessionSelect.addEventListener('change', (e) => {
+        const selectedId = e.target.value;
+        store.setSession(selectedId);
+      });
+
+      // 4. Subscribe to Store updates to reflect telemetry in Topbar
+      store.subscribe((state) => {
+        if (statusSession) statusSession.textContent = state.currentSession || 'latest';
+        if (statusGame) statusGame.textContent = state.gameId || 'mock-runner-v1';
+        if (statusStep) statusStep.textContent = state.stepCount;
+        if (statusScore) statusScore.textContent = `${state.score} PTS`;
+        if (statusLatency) {
+          statusLatency.textContent = state.latencyMs ? `${state.latencyMs.toFixed(1)} ms` : '-- ms';
+        }
+
+        // Pulsing LIVE badge only when actively streaming
+        if (statusLiveBadge) {
+          if (state.isStreaming) {
+            statusLiveBadge.className = 'badge badge-live';
+            statusLiveBadge.textContent = 'LIVE STREAM';
+          } else {
+            statusLiveBadge.className = 'badge badge-cyan';
+            statusLiveBadge.textContent = state.status === 'completed' ? 'COMPLETED' : 'STANDBY';
+          }
+        }
+
+        // Mock indicator visibility
+        const isMockActive = state.isMockMode || api.isMock();
+        if (demoRibbon) {
+          demoRibbon.style.display = isMockActive ? 'inline-flex' : 'none';
+        }
+        if (demoModeBadge) {
+          demoModeBadge.style.display = isMockActive ? 'block' : 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

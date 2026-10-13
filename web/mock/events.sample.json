@@ -1,0 +1,3375 @@
+[
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:00.000Z",
+    "step": 0,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 0,
+      "state_text": "Step 0: Runner in Lane 2. Speed 1.00x. Distance traveled: 0m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1,
+        "step": 0
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 0,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_0",
+            "type": "choice",
+            "text": "Which maneuver offers optimal energy yield at current speed?",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.125,
+            0.75,
+            0.125
+          ],
+          "predicted_token": "Stay (Lane 2)"
+        },
+        "action_scores": {
+          "move_left": 0.125,
+          "stay": 0.75,
+          "move_right": 0.125
+        },
+        "chosen_action": "stay",
+        "latency_ms": 27,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 0,
+      "score_after": 25,
+      "done": false,
+      "message": "Holding Lane 2 with steady velocity. Picked up energy crystal (+25)."
+    },
+    "outcome": "Executed stay in Lane 2 (+25 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:00.850Z",
+    "step": 1,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 1,
+      "state_text": "Step 1: Runner in Lane 2. Speed 1.03x. Distance traveled: 25m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.03,
+        "step": 1
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 25,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_1",
+            "type": "score",
+            "text": "Does maintaining lane 2 offer a high probability of avoiding impending obstacles?",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.77,
+            0.115,
+            0.115
+          ],
+          "predicted_token": "Shift Left (Lane 1)"
+        },
+        "action_scores": {
+          "move_left": 0.77,
+          "stay": 0.115,
+          "move_right": 0.115
+        },
+        "chosen_action": "move_left",
+        "latency_ms": 33.8,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_left",
+    "game_response": {
+      "good": true,
+      "score_before": 25,
+      "score_after": 35,
+      "done": false,
+      "message": "Shifted safely to Lane 1."
+    },
+    "outcome": "Executed move_left in Lane 1 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:01.700Z",
+    "step": 2,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 2,
+      "state_text": "Step 2: Runner in Lane 1. Speed 1.06x. Distance traveled: 50m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 1.06,
+        "step": 2
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 35,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_2",
+            "type": "noul",
+            "text": "Estimate clearance index for track progression:",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.78,
+            0.22
+          ],
+          "predicted_token": "Stay (Lane 1)"
+        },
+        "action_scores": {
+          "stay": 0.78,
+          "move_right": 0.22
+        },
+        "chosen_action": "stay",
+        "latency_ms": 40,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 35,
+      "score_after": 45,
+      "done": false,
+      "message": "Holding Lane 1 with steady velocity."
+    },
+    "outcome": "Executed stay in Lane 1 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:02.550Z",
+    "step": 3,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 3,
+      "state_text": "Step 3: Runner in Lane 1. Speed 1.09x. Distance traveled: 75m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 1.09,
+        "step": 3
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 45,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_3",
+            "type": "choice",
+            "text": "Which maneuver offers optimal energy yield at current speed?",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.2,
+            0.8
+          ],
+          "predicted_token": "Shift Right (Lane 2)"
+        },
+        "action_scores": {
+          "stay": 0.2,
+          "move_right": 0.8
+        },
+        "chosen_action": "move_right",
+        "latency_ms": 32,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_right",
+    "game_response": {
+      "good": true,
+      "score_before": 45,
+      "score_after": 55,
+      "done": false,
+      "message": "Shifted safely to Lane 2."
+    },
+    "outcome": "Executed move_right in Lane 2 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:03.400Z",
+    "step": 4,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 4,
+      "state_text": "Step 4: Runner in Lane 2. Speed 1.12x. Distance traveled: 100m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.12,
+        "step": 4
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 55,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_4",
+            "type": "score",
+            "text": "Does maintaining lane 2 offer a high probability of avoiding impending obstacles?",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.095,
+            0.81,
+            0.095
+          ],
+          "predicted_token": "Stay (Lane 2)"
+        },
+        "action_scores": {
+          "move_left": 0.095,
+          "stay": 0.81,
+          "move_right": 0.095
+        },
+        "chosen_action": "stay",
+        "latency_ms": 40.9,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 55,
+      "score_after": 65,
+      "done": false,
+      "message": "Holding Lane 2 with steady velocity."
+    },
+    "outcome": "Executed stay in Lane 2 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:04.250Z",
+    "step": 5,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 5,
+      "state_text": "Step 5: Runner in Lane 2. Speed 1.15x. Distance traveled: 125m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.15,
+        "step": 5
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 65,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_5",
+            "type": "noul",
+            "text": "Estimate clearance index for track progression:",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.82,
+            0.09,
+            0.09
+          ],
+          "predicted_token": "Shift Left (Lane 1)"
+        },
+        "action_scores": {
+          "move_left": 0.82,
+          "stay": 0.09,
+          "move_right": 0.09
+        },
+        "chosen_action": "move_left",
+        "latency_ms": 31.4,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_left",
+    "game_response": {
+      "good": true,
+      "score_before": 65,
+      "score_after": 90,
+      "done": false,
+      "message": "Shifted safely to Lane 1. Picked up energy crystal (+25)."
+    },
+    "outcome": "Executed move_left in Lane 1 (+25 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:05.100Z",
+    "step": 6,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 6,
+      "state_text": "Step 6: Runner in Lane 1. Speed 1.18x. Distance traveled: 150m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 1.18,
+        "step": 6
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 90,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_6",
+            "type": "choice",
+            "text": "Which maneuver offers optimal energy yield at current speed?",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.84,
+            0.16
+          ],
+          "predicted_token": "Stay (Lane 1)"
+        },
+        "action_scores": {
+          "stay": 0.84,
+          "move_right": 0.16
+        },
+        "chosen_action": "stay",
+        "latency_ms": 39.6,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 90,
+      "score_after": 100,
+      "done": false,
+      "message": "Holding Lane 1 with steady velocity."
+    },
+    "outcome": "Executed stay in Lane 1 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:05.950Z",
+    "step": 7,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 7,
+      "state_text": "Step 7: Runner in Lane 1. Speed 1.21x. Distance traveled: 175m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 1.21,
+        "step": 7
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 100,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_7",
+            "type": "score",
+            "text": "Does maintaining lane 1 offer a high probability of avoiding impending obstacles?",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.15,
+            0.85
+          ],
+          "predicted_token": "Shift Right (Lane 2)"
+        },
+        "action_scores": {
+          "stay": 0.15,
+          "move_right": 0.85
+        },
+        "chosen_action": "move_right",
+        "latency_ms": 30.4,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_right",
+    "game_response": {
+      "good": true,
+      "score_before": 100,
+      "score_after": 110,
+      "done": false,
+      "message": "Shifted safely to Lane 2."
+    },
+    "outcome": "Executed move_right in Lane 2 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:06.800Z",
+    "step": 8,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 8,
+      "state_text": "Step 8: Runner in Lane 2. Speed 1.24x. Distance traveled: 200m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.24,
+        "step": 8
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 110,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_8",
+            "type": "noul",
+            "text": "Estimate clearance index for track progression:",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.065,
+            0.87,
+            0.065
+          ],
+          "predicted_token": "Stay (Lane 2)"
+        },
+        "action_scores": {
+          "move_left": 0.065,
+          "stay": 0.87,
+          "move_right": 0.065
+        },
+        "chosen_action": "stay",
+        "latency_ms": 37.7,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 110,
+      "score_after": 120,
+      "done": false,
+      "message": "Holding Lane 2 with steady velocity."
+    },
+    "outcome": "Executed stay in Lane 2 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:07.650Z",
+    "step": 9,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 9,
+      "state_text": "Step 9: Runner in Lane 2. Speed 1.27x. Distance traveled: 225m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.27,
+        "step": 9
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 120,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_9",
+            "type": "choice",
+            "text": "Which maneuver offers optimal energy yield at current speed?",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.89,
+            0.055,
+            0.055
+          ],
+          "predicted_token": "Shift Left (Lane 1)"
+        },
+        "action_scores": {
+          "move_left": 0.89,
+          "stay": 0.055,
+          "move_right": 0.055
+        },
+        "chosen_action": "move_left",
+        "latency_ms": 30.9,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_left",
+    "game_response": {
+      "good": true,
+      "score_before": 120,
+      "score_after": 130,
+      "done": false,
+      "message": "Shifted safely to Lane 1."
+    },
+    "outcome": "Executed move_left in Lane 1 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:08.500Z",
+    "step": 10,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 10,
+      "state_text": "Step 10: Runner in Lane 1. Speed 1.30x. Distance traveled: 250m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 1.3,
+        "step": 10
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 130,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_10",
+            "type": "score",
+            "text": "Does maintaining lane 1 offer a high probability of avoiding impending obstacles?",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.9,
+            0.1
+          ],
+          "predicted_token": "Stay (Lane 1)"
+        },
+        "action_scores": {
+          "stay": 0.9,
+          "move_right": 0.1
+        },
+        "chosen_action": "stay",
+        "latency_ms": 37,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 130,
+      "score_after": 155,
+      "done": false,
+      "message": "Holding Lane 1 with steady velocity. Picked up energy crystal (+25)."
+    },
+    "outcome": "Executed stay in Lane 1 (+25 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:09.350Z",
+    "step": 11,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 11,
+      "state_text": "Step 11: Runner in Lane 1 approaching left barrier. Debris detected in Lane 1. Lane 2 is open.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 1.4,
+        "obstacles": [
+          {
+            "lane": 1,
+            "distance": 2
+          }
+        ]
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 155,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "perception_runner_v1",
+        "questions": [
+          {
+            "id": "q_step_11_1",
+            "type": "choice",
+            "text": "Which direction offers open clearance?",
+            "options": [
+              "Shift Left",
+              "Stay Lane 1",
+              "Shift Right"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.78,
+            0.12,
+            0.1
+          ],
+          "predicted_token": "Shift Left"
+        },
+        "action_scores": {
+          "move_left": 0.78,
+          "stay": 0.12,
+          "move_right": 0.1
+        },
+        "chosen_action": "move_left",
+        "latency_ms": 32.1,
+        "accepted": false,
+        "excluded": true,
+        "legal": false
+      },
+      {
+        "question_set": "perception_runner_v1",
+        "questions": [
+          {
+            "id": "q_step_11_2",
+            "type": "choice",
+            "text": "Given left is blocked by wall, choose between Lane 1 stay or Lane 2 shift:",
+            "options": [
+              "Stay Lane 1",
+              "Shift Right"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.08,
+            0.92
+          ],
+          "predicted_token": "Shift Right"
+        },
+        "action_scores": {
+          "stay": 0.08,
+          "move_right": 0.92
+        },
+        "chosen_action": "move_right",
+        "latency_ms": 29.4,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 1,
+      "fallback": false,
+      "rejections": [
+        "Action 'move_left' is illegal: player is already at leftmost boundary (Lane 1)."
+      ]
+    },
+    "final_action": "move_right",
+    "game_response": {
+      "good": true,
+      "score_before": 155,
+      "score_after": 165,
+      "done": false,
+      "message": "Validator retry accepted: shifted safely to Lane 2 after initial out-of-bounds rejection."
+    },
+    "outcome": "Recovered from illegal move; transitioned to Lane 2 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:10.200Z",
+    "step": 12,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 12,
+      "state_text": "Step 12: Runner in Lane 2. Speed 1.36x. Distance traveled: 300m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.36,
+        "step": 12
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 165,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_12",
+            "type": "choice",
+            "text": "Which maneuver offers optimal energy yield at current speed?",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.035,
+            0.93,
+            0.035
+          ],
+          "predicted_token": "Stay (Lane 2)"
+        },
+        "action_scores": {
+          "move_left": 0.035,
+          "stay": 0.93,
+          "move_right": 0.035
+        },
+        "chosen_action": "stay",
+        "latency_ms": 36.3,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 165,
+      "score_after": 175,
+      "done": false,
+      "message": "Holding Lane 2 with steady velocity."
+    },
+    "outcome": "Executed stay in Lane 2 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:11.050Z",
+    "step": 13,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 13,
+      "state_text": "Step 13: Runner in Lane 2. Speed 1.39x. Distance traveled: 325m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.39,
+        "step": 13
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 175,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_13",
+            "type": "score",
+            "text": "Does maintaining lane 2 offer a high probability of avoiding impending obstacles?",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.94,
+            0.03,
+            0.03
+          ],
+          "predicted_token": "Shift Left (Lane 1)"
+        },
+        "action_scores": {
+          "move_left": 0.94,
+          "stay": 0.03,
+          "move_right": 0.03
+        },
+        "chosen_action": "move_left",
+        "latency_ms": 29,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_left",
+    "game_response": {
+      "good": true,
+      "score_before": 175,
+      "score_after": 185,
+      "done": false,
+      "message": "Shifted safely to Lane 1."
+    },
+    "outcome": "Executed move_left in Lane 1 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:11.900Z",
+    "step": 14,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 14,
+      "state_text": "Step 14: Runner in Lane 1. Speed 1.42x. Distance traveled: 350m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 1.42,
+        "step": 14
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 185,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_14",
+            "type": "noul",
+            "text": "Estimate clearance index for track progression:",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.94,
+            0.06
+          ],
+          "predicted_token": "Stay (Lane 1)"
+        },
+        "action_scores": {
+          "stay": 0.94,
+          "move_right": 0.06
+        },
+        "chosen_action": "stay",
+        "latency_ms": 34.5,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 185,
+      "score_after": 195,
+      "done": false,
+      "message": "Holding Lane 1 with steady velocity."
+    },
+    "outcome": "Executed stay in Lane 1 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:12.750Z",
+    "step": 15,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 15,
+      "state_text": "Step 15: Runner in Lane 1. Speed 1.45x. Distance traveled: 375m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 1.45,
+        "step": 15
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 195,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_15",
+            "type": "choice",
+            "text": "Which maneuver offers optimal energy yield at current speed?",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.25,
+            0.75
+          ],
+          "predicted_token": "Shift Right (Lane 2)"
+        },
+        "action_scores": {
+          "stay": 0.25,
+          "move_right": 0.75
+        },
+        "chosen_action": "move_right",
+        "latency_ms": 26.8,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_right",
+    "game_response": {
+      "good": true,
+      "score_before": 195,
+      "score_after": 220,
+      "done": false,
+      "message": "Shifted safely to Lane 2. Picked up energy crystal (+25)."
+    },
+    "outcome": "Executed move_right in Lane 2 (+25 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:13.600Z",
+    "step": 16,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 16,
+      "state_text": "Step 16: Runner in Lane 2. Speed 1.48x. Distance traveled: 400m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.48,
+        "step": 16
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 220,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_16",
+            "type": "score",
+            "text": "Does maintaining lane 2 offer a high probability of avoiding impending obstacles?",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.115,
+            0.77,
+            0.115
+          ],
+          "predicted_token": "Stay (Lane 2)"
+        },
+        "action_scores": {
+          "move_left": 0.115,
+          "stay": 0.77,
+          "move_right": 0.115
+        },
+        "chosen_action": "stay",
+        "latency_ms": 33,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 220,
+      "score_after": 230,
+      "done": false,
+      "message": "Holding Lane 2 with steady velocity."
+    },
+    "outcome": "Executed stay in Lane 2 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:14.450Z",
+    "step": 17,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 17,
+      "state_text": "Step 17: Runner in Lane 2. Speed 1.51x. Distance traveled: 425m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.51,
+        "step": 17
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 230,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_17",
+            "type": "noul",
+            "text": "Estimate clearance index for track progression:",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.78,
+            0.11,
+            0.11
+          ],
+          "predicted_token": "Shift Left (Lane 1)"
+        },
+        "action_scores": {
+          "move_left": 0.78,
+          "stay": 0.11,
+          "move_right": 0.11
+        },
+        "chosen_action": "move_left",
+        "latency_ms": 41.8,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_left",
+    "game_response": {
+      "good": true,
+      "score_before": 230,
+      "score_after": 240,
+      "done": false,
+      "message": "Shifted safely to Lane 1."
+    },
+    "outcome": "Executed move_left in Lane 1 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:15.300Z",
+    "step": 18,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 18,
+      "state_text": "Step 18: Runner in Lane 1. Speed 1.54x. Distance traveled: 450m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 1.54,
+        "step": 18
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 240,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_18",
+            "type": "choice",
+            "text": "Which maneuver offers optimal energy yield at current speed?",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.8,
+            0.2
+          ],
+          "predicted_token": "Stay (Lane 1)"
+        },
+        "action_scores": {
+          "stay": 0.8,
+          "move_right": 0.2
+        },
+        "chosen_action": "stay",
+        "latency_ms": 32.9,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 240,
+      "score_after": 250,
+      "done": false,
+      "message": "Holding Lane 1 with steady velocity."
+    },
+    "outcome": "Executed stay in Lane 1 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:16.150Z",
+    "step": 19,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 19,
+      "state_text": "Step 19: Runner in Lane 1. Speed 1.57x. Distance traveled: 475m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 1.57,
+        "step": 19
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 250,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_19",
+            "type": "score",
+            "text": "Does maintaining lane 1 offer a high probability of avoiding impending obstacles?",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.19,
+            0.81
+          ],
+          "predicted_token": "Shift Right (Lane 2)"
+        },
+        "action_scores": {
+          "stay": 0.19,
+          "move_right": 0.81
+        },
+        "chosen_action": "move_right",
+        "latency_ms": 40.8,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_right",
+    "game_response": {
+      "good": true,
+      "score_before": 250,
+      "score_after": 260,
+      "done": false,
+      "message": "Shifted safely to Lane 2."
+    },
+    "outcome": "Executed move_right in Lane 2 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:17.000Z",
+    "step": 20,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 20,
+      "state_text": "Step 20: Runner in Lane 2. Speed 1.60x. Distance traveled: 500m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.6,
+        "step": 20
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 260,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_20",
+            "type": "noul",
+            "text": "Estimate clearance index for track progression:",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.09,
+            0.82,
+            0.09
+          ],
+          "predicted_token": "Stay (Lane 2)"
+        },
+        "action_scores": {
+          "move_left": 0.09,
+          "stay": 0.82,
+          "move_right": 0.09
+        },
+        "chosen_action": "stay",
+        "latency_ms": 31.6,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 260,
+      "score_after": 285,
+      "done": false,
+      "message": "Holding Lane 2 with steady velocity. Picked up energy crystal (+25)."
+    },
+    "outcome": "Executed stay in Lane 2 (+25 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:17.850Z",
+    "step": 21,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 21,
+      "state_text": "Step 21: Runner in Lane 2. Speed 1.63x. Distance traveled: 525m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.63,
+        "step": 21
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 285,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_21",
+            "type": "choice",
+            "text": "Which maneuver offers optimal energy yield at current speed?",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.84,
+            0.08,
+            0.08
+          ],
+          "predicted_token": "Shift Left (Lane 1)"
+        },
+        "action_scores": {
+          "move_left": 0.84,
+          "stay": 0.08,
+          "move_right": 0.08
+        },
+        "chosen_action": "move_left",
+        "latency_ms": 39.9,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_left",
+    "game_response": {
+      "good": true,
+      "score_before": 285,
+      "score_after": 295,
+      "done": false,
+      "message": "Shifted safely to Lane 1."
+    },
+    "outcome": "Executed move_left in Lane 1 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:18.700Z",
+    "step": 22,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 22,
+      "state_text": "Step 22: Runner in Lane 1. Speed 1.66x. Distance traveled: 550m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 1.66,
+        "step": 22
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 295,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_22",
+            "type": "score",
+            "text": "Does maintaining lane 1 offer a high probability of avoiding impending obstacles?",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.85,
+            0.15
+          ],
+          "predicted_token": "Stay (Lane 1)"
+        },
+        "action_scores": {
+          "stay": 0.85,
+          "move_right": 0.15
+        },
+        "chosen_action": "stay",
+        "latency_ms": 30.3,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 295,
+      "score_after": 305,
+      "done": false,
+      "message": "Holding Lane 1 with steady velocity."
+    },
+    "outcome": "Executed stay in Lane 1 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:19.550Z",
+    "step": 23,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 23,
+      "state_text": "Step 23: Runner in Lane 1. Speed 1.69x. Distance traveled: 575m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 1.69,
+        "step": 23
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 305,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_23",
+            "type": "noul",
+            "text": "Estimate clearance index for track progression:",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.13,
+            0.87
+          ],
+          "predicted_token": "Shift Right (Lane 2)"
+        },
+        "action_scores": {
+          "stay": 0.13,
+          "move_right": 0.87
+        },
+        "chosen_action": "move_right",
+        "latency_ms": 38.9,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_right",
+    "game_response": {
+      "good": true,
+      "score_before": 305,
+      "score_after": 315,
+      "done": false,
+      "message": "Shifted safely to Lane 2."
+    },
+    "outcome": "Executed move_right in Lane 2 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:20.400Z",
+    "step": 24,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 24,
+      "state_text": "Step 24: Runner in Lane 2. Speed 1.72x. Distance traveled: 600m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.72,
+        "step": 24
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 315,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_24",
+            "type": "choice",
+            "text": "Which maneuver offers optimal energy yield at current speed?",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.055,
+            0.89,
+            0.055
+          ],
+          "predicted_token": "Stay (Lane 2)"
+        },
+        "action_scores": {
+          "move_left": 0.055,
+          "stay": 0.89,
+          "move_right": 0.055
+        },
+        "chosen_action": "stay",
+        "latency_ms": 29.1,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 315,
+      "score_after": 325,
+      "done": false,
+      "message": "Holding Lane 2 with steady velocity."
+    },
+    "outcome": "Executed stay in Lane 2 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:21.250Z",
+    "step": 25,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 25,
+      "state_text": "Step 25: Runner in Lane 2. Speed 1.75x. Distance traveled: 625m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.75,
+        "step": 25
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 325,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_25",
+            "type": "score",
+            "text": "Does maintaining lane 2 offer a high probability of avoiding impending obstacles?",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.9,
+            0.05,
+            0.05
+          ],
+          "predicted_token": "Shift Left (Lane 1)"
+        },
+        "action_scores": {
+          "move_left": 0.9,
+          "stay": 0.05,
+          "move_right": 0.05
+        },
+        "chosen_action": "move_left",
+        "latency_ms": 36.5,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_left",
+    "game_response": {
+      "good": true,
+      "score_before": 325,
+      "score_after": 350,
+      "done": false,
+      "message": "Shifted safely to Lane 1. Picked up energy crystal (+25)."
+    },
+    "outcome": "Executed move_left in Lane 1 (+25 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:22.100Z",
+    "step": 26,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 26,
+      "state_text": "Step 26: Runner in Lane 1. Speed 1.78x. Distance traveled: 650m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 1.78,
+        "step": 26
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 350,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_26",
+            "type": "noul",
+            "text": "Estimate clearance index for track progression:",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.92,
+            0.08
+          ],
+          "predicted_token": "Stay (Lane 1)"
+        },
+        "action_scores": {
+          "stay": 0.92,
+          "move_right": 0.08
+        },
+        "chosen_action": "stay",
+        "latency_ms": 28.9,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 350,
+      "score_after": 360,
+      "done": false,
+      "message": "Holding Lane 1 with steady velocity."
+    },
+    "outcome": "Executed stay in Lane 1 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:22.950Z",
+    "step": 27,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 27,
+      "state_text": "Step 27: Runner in Lane 3 near boundary wall. Heavy debris in Lane 3 at distance 1. Lane 2 is clear.",
+      "facts": {
+        "current_lane": 3,
+        "speed": 1.8,
+        "obstacles": [
+          {
+            "lane": 3,
+            "distance": 1
+          }
+        ]
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 360,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "perception_runner_v1",
+        "questions": [
+          {
+            "id": "q_step_27_1",
+            "type": "noul",
+            "text": "Estimate safety margin for right shoulder shift vs center return:",
+            "options": [
+              "Right shoulder",
+              "Hold Lane 3",
+              "Left to Lane 2"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.85,
+            0.05,
+            0.1
+          ],
+          "predicted_token": "Right shoulder"
+        },
+        "action_scores": {
+          "move_right": 0.85,
+          "stay": 0.05,
+          "move_left": 0.1
+        },
+        "chosen_action": "move_right",
+        "latency_ms": 34,
+        "accepted": false,
+        "excluded": true,
+        "legal": false
+      },
+      {
+        "question_set": "perception_runner_v1",
+        "questions": [
+          {
+            "id": "q_step_27_2",
+            "type": "noul",
+            "text": "Right shoulder illegal. Re-evaluating legal actions:",
+            "options": [
+              "Hold Lane 3 (Crash in 1)",
+              "Left to Lane 2 (Clear)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.03,
+            0.97
+          ],
+          "predicted_token": "Left to Lane 2 (Clear)"
+        },
+        "action_scores": {
+          "stay": 0.03,
+          "move_left": 0.97
+        },
+        "chosen_action": "move_left",
+        "latency_ms": 27.8,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 1,
+      "fallback": false,
+      "rejections": [
+        "Action 'move_right' is illegal: player is already at rightmost track limit (Lane 3)."
+      ]
+    },
+    "final_action": "move_left",
+    "game_response": {
+      "good": true,
+      "score_before": 360,
+      "score_after": 375,
+      "done": false,
+      "message": "Validator corrected boundary excursion: moved to Lane 2."
+    },
+    "outcome": "Validator retry successful: dodged Lane 3 obstacle into Lane 2 (+15 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:23.800Z",
+    "step": 28,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 28,
+      "state_text": "Step 28: Runner in Lane 2. Speed 1.84x. Distance traveled: 700m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.84,
+        "step": 28
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 375,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_28",
+            "type": "score",
+            "text": "Does maintaining lane 2 offer a high probability of avoiding impending obstacles?",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.03,
+            0.94,
+            0.03
+          ],
+          "predicted_token": "Stay (Lane 2)"
+        },
+        "action_scores": {
+          "move_left": 0.03,
+          "stay": 0.94,
+          "move_right": 0.03
+        },
+        "chosen_action": "stay",
+        "latency_ms": 28,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 375,
+      "score_after": 385,
+      "done": false,
+      "message": "Holding Lane 2 with steady velocity."
+    },
+    "outcome": "Executed stay in Lane 2 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:24.650Z",
+    "step": 29,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 29,
+      "state_text": "Step 29: Runner in Lane 2. Speed 1.87x. Distance traveled: 725m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.87,
+        "step": 29
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 385,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_29",
+            "type": "noul",
+            "text": "Estimate clearance index for track progression:",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.94,
+            0.03,
+            0.03
+          ],
+          "predicted_token": "Shift Left (Lane 1)"
+        },
+        "action_scores": {
+          "move_left": 0.94,
+          "stay": 0.03,
+          "move_right": 0.03
+        },
+        "chosen_action": "move_left",
+        "latency_ms": 34.3,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_left",
+    "game_response": {
+      "good": true,
+      "score_before": 385,
+      "score_after": 395,
+      "done": false,
+      "message": "Shifted safely to Lane 1."
+    },
+    "outcome": "Executed move_left in Lane 1 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:25.500Z",
+    "step": 30,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 30,
+      "state_text": "Step 30: Runner in Lane 1. Speed 1.90x. Distance traveled: 750m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 1.9,
+        "step": 30
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 395,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_30",
+            "type": "choice",
+            "text": "Which maneuver offers optimal energy yield at current speed?",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.75,
+            0.25
+          ],
+          "predicted_token": "Stay (Lane 1)"
+        },
+        "action_scores": {
+          "stay": 0.75,
+          "move_right": 0.25
+        },
+        "chosen_action": "stay",
+        "latency_ms": 26.8,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 395,
+      "score_after": 420,
+      "done": false,
+      "message": "Holding Lane 1 with steady velocity. Picked up energy crystal (+25)."
+    },
+    "outcome": "Executed stay in Lane 1 (+25 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:26.350Z",
+    "step": 31,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 31,
+      "state_text": "Step 31: Runner in Lane 1. Speed 1.93x. Distance traveled: 775m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 1.93,
+        "step": 31
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 420,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_31",
+            "type": "score",
+            "text": "Does maintaining lane 1 offer a high probability of avoiding impending obstacles?",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.23,
+            0.77
+          ],
+          "predicted_token": "Shift Right (Lane 2)"
+        },
+        "action_scores": {
+          "stay": 0.23,
+          "move_right": 0.77
+        },
+        "chosen_action": "move_right",
+        "latency_ms": 33.1,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_right",
+    "game_response": {
+      "good": true,
+      "score_before": 420,
+      "score_after": 430,
+      "done": false,
+      "message": "Shifted safely to Lane 2."
+    },
+    "outcome": "Executed move_right in Lane 2 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:27.200Z",
+    "step": 32,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 32,
+      "state_text": "Step 32: Runner in Lane 2. Speed 1.96x. Distance traveled: 800m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.96,
+        "step": 32
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 430,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_32",
+            "type": "noul",
+            "text": "Estimate clearance index for track progression:",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.11,
+            0.78,
+            0.11
+          ],
+          "predicted_token": "Stay (Lane 2)"
+        },
+        "action_scores": {
+          "move_left": 0.11,
+          "stay": 0.78,
+          "move_right": 0.11
+        },
+        "chosen_action": "stay",
+        "latency_ms": 41.1,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 430,
+      "score_after": 440,
+      "done": false,
+      "message": "Holding Lane 2 with steady velocity."
+    },
+    "outcome": "Executed stay in Lane 2 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:28.050Z",
+    "step": 33,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 33,
+      "state_text": "Step 33: Runner in Lane 2. Speed 1.99x. Distance traveled: 825m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 1.99,
+        "step": 33
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 440,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_33",
+            "type": "choice",
+            "text": "Which maneuver offers optimal energy yield at current speed?",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.8,
+            0.1,
+            0.1
+          ],
+          "predicted_token": "Shift Left (Lane 1)"
+        },
+        "action_scores": {
+          "move_left": 0.8,
+          "stay": 0.1,
+          "move_right": 0.1
+        },
+        "chosen_action": "move_left",
+        "latency_ms": 33,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_left",
+    "game_response": {
+      "good": true,
+      "score_before": 440,
+      "score_after": 450,
+      "done": false,
+      "message": "Shifted safely to Lane 1."
+    },
+    "outcome": "Executed move_left in Lane 1 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:28.900Z",
+    "step": 34,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 34,
+      "state_text": "Step 34: Runner in Lane 1. Speed 2.02x. Distance traveled: 850m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 2.02,
+        "step": 34
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 450,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_34",
+            "type": "score",
+            "text": "Does maintaining lane 1 offer a high probability of avoiding impending obstacles?",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.81,
+            0.19
+          ],
+          "predicted_token": "Stay (Lane 1)"
+        },
+        "action_scores": {
+          "stay": 0.81,
+          "move_right": 0.19
+        },
+        "chosen_action": "stay",
+        "latency_ms": 40.6,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 450,
+      "score_after": 460,
+      "done": false,
+      "message": "Holding Lane 1 with steady velocity."
+    },
+    "outcome": "Executed stay in Lane 1 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:29.750Z",
+    "step": 35,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 35,
+      "state_text": "Step 35: Runner in Lane 1. Speed 2.05x. Distance traveled: 875m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 2.05,
+        "step": 35
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 460,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_35",
+            "type": "noul",
+            "text": "Estimate clearance index for track progression:",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.18,
+            0.82
+          ],
+          "predicted_token": "Shift Right (Lane 2)"
+        },
+        "action_scores": {
+          "stay": 0.18,
+          "move_right": 0.82
+        },
+        "chosen_action": "move_right",
+        "latency_ms": 32.6,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_right",
+    "game_response": {
+      "good": true,
+      "score_before": 460,
+      "score_after": 485,
+      "done": false,
+      "message": "Shifted safely to Lane 2. Picked up energy crystal (+25)."
+    },
+    "outcome": "Executed move_right in Lane 2 (+25 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:30.600Z",
+    "step": 36,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 36,
+      "state_text": "Step 36: Runner in Lane 2. Speed 2.08x. Distance traveled: 900m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 2.08,
+        "step": 36
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 485,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_36",
+            "type": "choice",
+            "text": "Which maneuver offers optimal energy yield at current speed?",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.08,
+            0.84,
+            0.08
+          ],
+          "predicted_token": "Stay (Lane 2)"
+        },
+        "action_scores": {
+          "move_left": 0.08,
+          "stay": 0.84,
+          "move_right": 0.08
+        },
+        "chosen_action": "stay",
+        "latency_ms": 39,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 485,
+      "score_after": 495,
+      "done": false,
+      "message": "Holding Lane 2 with steady velocity."
+    },
+    "outcome": "Executed stay in Lane 2 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:31.450Z",
+    "step": 37,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 37,
+      "state_text": "Step 37: Runner in Lane 2. Speed 2.11x. Distance traveled: 925m.",
+      "facts": {
+        "current_lane": 2,
+        "speed": 2.11,
+        "step": 37
+      },
+      "legal_actions": [
+        {
+          "id": "move_left",
+          "label": "Shift Left (Lane 1)",
+          "hint": "Transition to left lane"
+        },
+        {
+          "id": "stay",
+          "label": "Stay (Lane 2)",
+          "hint": "Hold center corridor"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 3)",
+          "hint": "Transition to right lane"
+        }
+      ],
+      "score": 495,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_37",
+            "type": "score",
+            "text": "Does maintaining lane 2 offer a high probability of avoiding impending obstacles?",
+            "options": [
+              "Shift Left (Lane 1)",
+              "Stay (Lane 2)",
+              "Shift Right (Lane 3)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.85,
+            0.075,
+            0.075
+          ],
+          "predicted_token": "Shift Left (Lane 1)"
+        },
+        "action_scores": {
+          "move_left": 0.85,
+          "stay": 0.075,
+          "move_right": 0.075
+        },
+        "chosen_action": "move_left",
+        "latency_ms": 31.2,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "move_left",
+    "game_response": {
+      "good": true,
+      "score_before": 495,
+      "score_after": 505,
+      "done": false,
+      "message": "Shifted safely to Lane 1."
+    },
+    "outcome": "Executed move_left in Lane 1 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:32.300Z",
+    "step": 38,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 38,
+      "state_text": "Step 38: Runner in Lane 1. Speed 2.14x. Distance traveled: 950m.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 2.14,
+        "step": 38
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 505,
+      "done": false
+    },
+    "laya_calls": [
+      {
+        "question_set": "runner_tactical_v1",
+        "questions": [
+          {
+            "id": "q_step_38",
+            "type": "noul",
+            "text": "Estimate clearance index for track progression:",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.87,
+            0.13
+          ],
+          "predicted_token": "Stay (Lane 1)"
+        },
+        "action_scores": {
+          "stay": 0.87,
+          "move_right": 0.13
+        },
+        "chosen_action": "stay",
+        "latency_ms": 38.8,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 505,
+      "score_after": 515,
+      "done": false,
+      "message": "Holding Lane 1 with steady velocity."
+    },
+    "outcome": "Executed stay in Lane 1 (+10 pts)"
+  },
+  {
+    "schema": 1,
+    "session_id": "demo-runner-20261013-001",
+    "game_id": "mock-runner-v1",
+    "ts": "2026-10-13T10:00:33.150Z",
+    "step": 39,
+    "state": {
+      "game_id": "mock-runner-v1",
+      "session_id": "demo-runner-20261013-001",
+      "step": 39,
+      "state_text": "Step 39: Runner in Lane 1. Final gauntlet reached! High speed kinetic barrier across all sectors. Run concludes.",
+      "facts": {
+        "current_lane": 1,
+        "speed": 2.2,
+        "obstacles": [
+          {
+            "lane": 1,
+            "distance": 1
+          },
+          {
+            "lane": 2,
+            "distance": 1
+          },
+          {
+            "lane": 3,
+            "distance": 1
+          }
+        ]
+      },
+      "legal_actions": [
+        {
+          "id": "stay",
+          "label": "Stay (Lane 1)",
+          "hint": "Remain in left lane"
+        },
+        {
+          "id": "move_right",
+          "label": "Shift Right (Lane 2)",
+          "hint": "Transition to center"
+        }
+      ],
+      "score": 515,
+      "done": true
+    },
+    "laya_calls": [
+      {
+        "question_set": "gauntlet_end_v1",
+        "questions": [
+          {
+            "id": "q_step_39",
+            "type": "choice",
+            "text": "All lanes blocked by terminal gate. Which action minimizes terminal deceleration?",
+            "options": [
+              "Stay (Lane 1)",
+              "Shift Right (Lane 2)"
+            ]
+          }
+        ],
+        "raw": {
+          "probabilities": [
+            0.6,
+            0.4
+          ],
+          "predicted_token": "Stay (Lane 1)"
+        },
+        "action_scores": {
+          "stay": 0.6,
+          "move_right": 0.4
+        },
+        "chosen_action": "stay",
+        "latency_ms": 36.2,
+        "accepted": true,
+        "excluded": false,
+        "legal": true
+      }
+    ],
+    "validator": {
+      "retries": 0,
+      "fallback": false,
+      "rejections": []
+    },
+    "final_action": "stay",
+    "game_response": {
+      "good": true,
+      "score_before": 515,
+      "score_after": 615,
+      "done": true,
+      "message": "Run complete! Terminal qualification checkpoint logged. Final score: 615"
+    },
+    "outcome": "Completed 40 steps. Terminal gate reached. Final score: 615"
+  }
+]
