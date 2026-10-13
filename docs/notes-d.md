@@ -24,3 +24,6 @@
 - [x] CLI entrypoint `server/__main__.py` (`python -m server --port 8000`)
 - [x] Synthetic demo feeder `server/demo_feeder.py` for frontend live stream validation
 - [x] Full server test suite in `tests/lane_d/test_server.py` (all tests passing)
+- [x] Decision Autopsy built in `bot/autopsy.py` (`analyse`, `summary`, `worst`, CLI)
+- [x] Autopsy methodology documentation in `docs/autopsy.md`
+- [x] Full autopsy unit test suite in `tests/lane_d/test_autopsy.py` (all verdicts tested and schema-validated)
