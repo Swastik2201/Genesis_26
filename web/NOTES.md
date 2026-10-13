@@ -88,6 +88,36 @@
 
 ---
 
+## Prompt 3: Live Run Hero Screen (`web/js/panels/live.js`)
+- **Visual Design & Sequence (Inspired by laya-playground):**
+  - Three-column layout showing the full decision lifecycle:
+    1. **STATE Column:**
+       - Typewriter effect for normalized text summary.
+       - Step number and current score badges.
+       - Structured facts readout (current lane, track speed).
+       - Legal actions list with status chips.
+    2. **QUESTIONS Column (Laya Reasoning):**
+       - Staggered animation for typed questions in `laya_calls`.
+       - Type badges (`CHOICE`, `SCORE`, `NOUL`) and exact question IDs.
+       - Animated probability bars with percentage values and winner glow.
+       - Single visible model call guarantee and latency readout.
+    3. **DECISION Column (Action & Game Response):**
+       - Giant neon chosen action title with cyber glitch micro-animation.
+       - Action scores distribution across legal moves.
+       - One-line human-readable reasoning summary.
+       - **Validator Retries Alert:** Amber banner highlighting rejected actions, reason for exclusion, and the subsequent lawful Laya call.
+       - Game server response flash (green for good, red for bad) with floating score delta (`+10`, `+25`, `-5`).
+- **Interactive Bottom Timeline Strip:**
+  - Color-coded pips for every recorded step: green (good), amber (retried / illegal), red (bad / collision).
+  - Actively pulsing ring on current step.
+  - Clicking any pip allows inspecting that historical frame; includes shortcut button to inspect the step in the Replay tab (`#/replay?step=N`).
+- **Playback & Stream Controls Toolbar:**
+  - Play / Pause toggle, Step forward button, Speed selector (`0.5x`, `1.0x`, `2.0x`).
+  - Follow Live switch that automatically tracks the latest event or stays on historic frames.
+  - Clear empty waiting state with demo launcher and error state with reconnect button.
+
+---
+
 ## Accessibility & Performance
 - **Reduced Motion Support:** `@media (prefers-reduced-motion: reduce)` globally disables scanning line overlays, cyber grid shifts, typewriter typing pauses, and glitch shakes.
 - **Responsive Range:** Fluidly tested and styled from 360px mobile viewports up to 1920px widescreen monitors.
