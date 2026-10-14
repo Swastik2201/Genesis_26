@@ -181,7 +181,7 @@
   gap: 6px;
 }
 
-/* --- Sidebar Collapse & Toggle Buttons (HD 8-Bit Retro Arcade Style) --- */
+/* --- Sidebar Collapse & Restore Buttons (HD 8-Bit Retro Arcade Style) --- */
 .sidebar-collapse-btn {
   background: #0d122b;
   border: 2px solid #000;
@@ -212,9 +212,9 @@
   box-shadow: 1px 1px 0 #000;
 }
 
-/* Sidebar Toggle Button in Topbar (Tactile 3D Arcade Button) */
-.sidebar-toggle-btn {
-  display: inline-flex;
+/* Sidebar Restore Button (Displayed ONLY when sidebar is hidden) */
+.sidebar-restore-btn {
+  display: none;
   align-items: center;
   gap: 6px;
   background: #ffd000;
@@ -241,7 +241,11 @@
   user-select: none;
 }
 
-.sidebar-toggle-btn:hover {
+.dashboard-layout.sidebar-collapsed .sidebar-restore-btn {
+  display: inline-flex !important;
+}
+
+.sidebar-restore-btn:hover {
   background: #ffffff;
   background-image: none;
   color: #000 !important;
@@ -249,27 +253,9 @@
   transform: translate(-1px, -1px);
 }
 
-.sidebar-toggle-btn:active {
+.sidebar-restore-btn:active {
   transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 #000;
-}
-
-/* When collapsed, pulse the toggle button so the user knows where to click to restore */
-.sidebar-toggle-btn.nav-is-collapsed {
-  background: #ffea75;
-  box-shadow: 4px 4px 0 #000, 0 0 10px rgba(255, 234, 117, 0.7);
-  animation: navPulse 1.8s infinite ease-in-out;
-}
-
-@keyframes navPulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 3px 3px 0 #000, 0 0 0 rgba(255, 234, 117, 0);
-  }
-  50% {
-    transform: scale(1.04);
-    box-shadow: 4px 4px 0 #000, 0 0 12px rgba(255, 234, 117, 0.8);
-  }
 }
 
 /* --- Top Telemetry Status Bar (NES HUD Header) --- */
