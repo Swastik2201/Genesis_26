@@ -179,7 +179,19 @@ export function initDecisionSimulator(config) {
     decisionEl.style.color = "var(--text-muted)";
     reasonEl.textContent = "Synthesizing legal action space...";
     responseEl.innerHTML = `<span class="badge badge-cyan">WAITING MOVE...</span>`;
-    optionsContainer.innerHTML = '';
+    
+    // Maintain stable skeleton bars to prevent layout height collapse & jumpy auto-scrolling
+    optionsContainer.innerHTML = data.options.map((opt, idx) => `
+      <div class="prob-bar" id="sim-opt-${idx}" style="opacity: 0.35; transition: opacity 0.3s ease;">
+        <div class="prob-bar-header">
+          <span class="prob-bar-label">${opt.label}</span>
+          <span class="prob-bar-val">--</span>
+        </div>
+        <div class="prob-bar-track">
+          <div class="prob-bar-fill" style="width: 0%"></div>
+        </div>
+      </div>
+    `).join('');
 
     // Step 1: Typewriter State
     typewriter(stateEl, data.state, 18, () => {
@@ -191,18 +203,15 @@ export function initDecisionSimulator(config) {
         <span style="color: var(--text-primary); font-weight: 600;">${data.question}</span>
       `;
 
-      // Render option skeleton bars
-      optionsContainer.innerHTML = data.options.map((opt, idx) => `
-        <div class="prob-bar" id="sim-opt-${idx}">
-          <div class="prob-bar-header">
-            <span class="prob-bar-label">${opt.label}</span>
-            <span class="prob-bar-val">0%</span>
-          </div>
-          <div class="prob-bar-track">
-            <div class="prob-bar-fill" style="width: 0%"></div>
-          </div>
-        </div>
-      `).join('');
+      // Restore bars to full visibility with 0%
+      data.options.forEach((opt, idx) => {
+        const optEl = document.getElementById(`sim-opt-${idx}`);
+        if (optEl) {
+          optEl.style.opacity = '1';
+          const val = optEl.querySelector('.prob-bar-val');
+          if (val) val.textContent = '0%';
+        }
+      });
 
       // Step 3: Animate probabilities filling
       timerId = setTimeout(() => {
@@ -306,8 +315,7 @@ export function initParticleBackground(targetSelector = '.bg-ambient') {
   if (!canvas) {
     canvas = document.createElement('canvas');
     canvas.id = 'ambient-particle-canvas';
-    canvas.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.6;';
-    targetContainer.style.position = 'relative';
+    canvas.style.cssText = 'position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; opacity: 0.6; display: block;';
     targetContainer.appendChild(canvas);
   }
 
