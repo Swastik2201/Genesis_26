@@ -7,6 +7,7 @@
  *   2. "Flappy Bird" (Tree logs with wood grain, gap navigation, instant death)
  *   3. Autonomous Laya model steering & flight
  *   4. Interactive "You Play" mode with smooth keyboard/touch controls
+ *   5. Full Pause/Resume controls synced with Live toolbar
  * ==========================================================================
  */
 
@@ -123,6 +124,9 @@ export class GameViewport {
           </div>
 
           <div class="arcade-actions-row">
+            <button id="btn-pause-game" class="btn btn-ghost btn-xs" aria-label="Pause or resume simulation">
+              <span>⏸ PAUSE</span>
+            </button>
             <button id="btn-toggle-manual-play" class="btn btn-ghost btn-xs" aria-label="Switch between Laya driving and manual player control">
               <span>🎮 TAKE OVER</span>
             </button>
@@ -148,6 +152,14 @@ export class GameViewport {
     const btnFlappy = this.container.querySelector('#btn-skin-flappy');
     if (btnRunner) btnRunner.addEventListener('click', () => this.setSkin('runner'));
     if (btnFlappy) btnFlappy.addEventListener('click', () => this.setSkin('flappy'));
+
+    // Pause Button
+    const btnPause = this.container.querySelector('#btn-pause-game');
+    if (btnPause) {
+      btnPause.addEventListener('click', () => {
+        this.togglePause();
+      });
+    }
 
     // Mode Toggle (Laya vs You Play)
     const btnToggle = this.container.querySelector('#btn-toggle-manual-play');
@@ -228,15 +240,16 @@ export class GameViewport {
       this.shipTilt = 0;
       this.obstacles = [
         { lane: 1, z: 0.90, passed: false },
-        { lane: 3, z: 0.45, passed: false }
+        { lane: 3, z: 0.42, passed: false }
       ];
     } else {
       this.flappyY = 0.48;
       this.flappyVy = 0;
       this.birdAngle = 0;
+      // Initial tree logs widely spaced (0.70 gap)
       this.flappyPillars = [
-        { x: 0.92, gapY: 0.46, gapSize: 0.36, passed: false },
-        { x: 1.52, gapY: 0.54, gapSize: 0.36, passed: false }
+        { x: 0.95, gapY: 0.48, gapSize: 0.38, passed: false },
+        { x: 1.65, gapY: 0.52, gapSize: 0.38, passed: false }
       ];
     }
   }
@@ -264,6 +277,26 @@ export class GameViewport {
     }
   }
 
+  setPaused(isPaused) {
+    this.isPaused = Boolean(isPaused);
+    if (!this.isPaused) {
+      this.lastTime = performance.now();
+    }
+    const btnPause = this.container.querySelector('#btn-pause-game');
+    if (btnPause) {
+      btnPause.innerHTML = this.isPaused ? '<span>▶ RESUME</span>' : '<span>⏸ PAUSE</span>';
+    }
+    const livePlayBtn = document.getElementById('live-btn-play');
+    if (livePlayBtn) {
+      livePlayBtn.innerHTML = this.isPaused ? '<span>▶ PLAY LIVE</span>' : '<span>⏸ PAUSE</span>';
+    }
+  }
+
+  togglePause() {
+    this.setPaused(!this.isPaused);
+    return this.isPaused;
+  }
+
   handleResize() {
     if (!this.canvas) return;
     const rect = this.canvas.parentElement.getBoundingClientRect();
@@ -279,6 +312,12 @@ export class GameViewport {
   }
 
   handleKeyDown(e) {
+    if (e.key === 'p' || e.key === 'P') {
+      e.preventDefault();
+      this.togglePause();
+      return;
+    }
+
     if (this.gameSkin === 'flappy' && this.isBirdDead && (e.key === ' ' || e.key === 'Enter')) {
       e.preventDefault();
       this.resetSkin('flappy');
@@ -322,6 +361,44 @@ export class GameViewport {
   }
 
   /**
+   * Spawns a tree log ONLY if the previous log is far enough ahead (maintains generous gap).
+   */
+  trySpawnFlappyLog() {
+    const maxX = this.flappyPillars.length > 0 ? Math.max(...this.flappyPillars.map(p => p.x)) : 0;
+    // Strict spacing: never spawn if previous log is closer than 0.62 screen width
+    if (maxX > 0.62) return;
+
+    const gapY = 0.35 + Math.random() * 0.30;
+    this.flappyPillars.push({
+      x: Math.max(1.22, maxX + 0.65),
+      gapY,
+      gapSize: 0.38,
+      passed: false
+    });
+  }
+
+  /**
+   * Spawns a cyber runner hurdle with clean spacing (at least 0.45 distance in z).
+   */
+  trySpawnRunnerHurdle() {
+    const maxZ = this.obstacles.length > 0 ? Math.max(...this.obstacles.map(o => o.z)) : 0;
+    if (maxZ > 0.55) return;
+
+    // Never block all lanes
+    const nearLanes = this.obstacles.filter(o => o.z > 0.65).map(o => o.lane);
+    const freeLanes = [1, 2, 3].filter(l => !nearLanes.includes(l));
+    const spawnLane = freeLanes.length > 0
+      ? freeLanes[Math.floor(Math.random() * freeLanes.length)]
+      : Math.floor(Math.random() * 3) + 1;
+
+    this.obstacles.push({
+      lane: spawnLane,
+      z: Math.max(1.0, maxZ + 0.48),
+      passed: false
+    });
+  }
+
+  /**
    * Fed real-time or replay step events from the backend Laya model.
    */
   feedStep(event) {
@@ -341,29 +418,34 @@ export class GameViewport {
     // Laya Autonomous Action Steering
     if (this.mode === 'laya') {
       if (this.gameSkin === 'runner') {
-        if (facts.current_lane) {
-          this.targetLane = Number(facts.current_lane);
+        if (facts.player_lane !== undefined) {
+          // 0-indexed player_lane (0, 1, 2) mapped to 1, 2, 3
+          this.targetLane = Math.max(1, Math.min(3, Number(facts.player_lane) + 1));
+        } else if (facts.current_lane) {
+          this.targetLane = Math.max(1, Math.min(3, Number(facts.current_lane)));
         } else if (finalAction.includes('lane_1')) {
           this.targetLane = 1;
         } else if (finalAction.includes('lane_2')) {
           this.targetLane = 2;
         } else if (finalAction.includes('lane_3')) {
           this.targetLane = 3;
-        } else if (finalAction.includes('left')) {
+        } else if (finalAction === 'move_left') {
           this.targetLane = Math.max(1, this.targetLane - 1);
-        } else if (finalAction.includes('right')) {
+        } else if (finalAction === 'move_right') {
           this.targetLane = Math.min(3, this.targetLane + 1);
         }
         if (laneVal) laneVal.textContent = `${this.targetLane} / 3`;
-      } else if (this.gameSkin === 'flappy') {
-        if (finalAction.includes('jump') || finalAction.includes('flap') || finalAction.includes('up') || finalAction.includes('left')) {
-          this.flapManual();
-        }
       }
+      // Note: For Flappy Bird, continuous gap-tracking in update() handles smooth,
+      // flawless flight between logs without jerky step disruptions.
     }
 
-    // Spawn obstacles matching the step
-    this.spawnObstacleFromEvent(event);
+    // Try spawning an obstacle respecting strict distance limits
+    if (this.gameSkin === 'runner') {
+      this.trySpawnRunnerHurdle();
+    } else {
+      this.trySpawnFlappyLog();
+    }
 
     // Audio & Particle Feedback
     if (event.game_response?.good === true) {
@@ -373,26 +455,6 @@ export class GameViewport {
       this.screenShake = 14;
       sound.playBadMoveSound();
       this.addFloatingText('COLLISION! 💥', this.targetLane, '#e52521');
-    }
-  }
-
-  spawnObstacleFromEvent(event) {
-    if (this.gameSkin === 'runner') {
-      const obstacleLanes = [1, 2, 3].filter(l => l !== this.targetLane);
-      const spawnLane = obstacleLanes[Math.floor(Math.random() * obstacleLanes.length)] || 1;
-      this.obstacles.push({
-        lane: spawnLane,
-        z: 1.0,
-        passed: false
-      });
-    } else if (this.gameSkin === 'flappy') {
-      const gapY = 0.34 + Math.random() * 0.32;
-      this.flappyPillars.push({
-        x: 1.15,
-        gapY: gapY,
-        gapSize: 0.36,
-        passed: false
-      });
     }
   }
 
@@ -437,8 +499,8 @@ export class GameViewport {
 
       if (!this.isPaused) {
         this.update(dt);
-        this.render();
       }
+      this.render();
 
       this.animId = requestAnimationFrame(loop);
     };
@@ -447,6 +509,8 @@ export class GameViewport {
   }
 
   update(dt) {
+    if (this.isPaused) return;
+
     this.gridOffset = (this.gridOffset + dt * 1.8 * this.speed) % 1.0;
     this.runnerEnginePulse = (this.runnerEnginePulse + dt * 8) % (Math.PI * 2);
 
@@ -490,7 +554,7 @@ export class GameViewport {
       }
 
       // Advance obstacles down the highway towards the runner
-      const advanceSpeed = dt * 0.60 * this.speed;
+      const advanceSpeed = dt * 0.58 * this.speed;
       for (let i = this.obstacles.length - 1; i >= 0; i--) {
         const obs = this.obstacles[i];
         obs.z -= advanceSpeed;
@@ -527,21 +591,9 @@ export class GameViewport {
         }
       }
 
-      // Spawning new hurdles with clean pacing (minimum z gap of 0.42 between hurdles)
-      const maxZ = this.obstacles.length > 0 ? Math.max(...this.obstacles.map(o => o.z)) : 0;
-      if (this.obstacles.length < 3 && maxZ < 0.62 && Math.random() < 0.045) {
-        // Never block all lanes simultaneously
-        const oncomingNear = this.obstacles.filter(o => o.z > 0.70).map(o => o.lane);
-        const freeLanes = [1, 2, 3].filter(l => !oncomingNear.includes(l));
-        const spawnLane = freeLanes.length > 0
-          ? freeLanes[Math.floor(Math.random() * freeLanes.length)]
-          : Math.floor(Math.random() * 3) + 1;
-
-        this.obstacles.push({
-          lane: spawnLane,
-          z: 1.0,
-          passed: false
-        });
+      // Spawning new hurdles with clean pacing (minimum z gap)
+      if (this.obstacles.length < 3 && Math.random() < 0.04) {
+        this.trySpawnRunnerHurdle();
       }
     }
 
@@ -577,18 +629,18 @@ export class GameViewport {
           this.flappyVy = 1.0;
         }
 
-        // Autonomous Laya Model Navigation
+        // Autonomous Laya Model Navigation: smooth and deliberate gap tracking
         if (this.mode === 'laya') {
           // Find oncoming tree log that the bird hasn't fully cleared
-          const nextPil = this.flappyPillars.find(p => !p.passed && (p.x * w + logWidth) > (birdX - 20));
+          const nextPil = this.flappyPillars.find(p => !p.passed && (p.x * w + logWidth) > (birdX - 10));
           if (nextPil) {
             const gapCenterY = nextPil.gapY * floorY;
-            // Maintain smooth trajectory right through center of the tree logs
+            // Aim smoothly for the exact center of the oncoming tree log gap
             if (currentBirdY > gapCenterY + 4 && this.flappyVy > -1.5) {
               this.flapManual();
             }
           } else {
-            // Open air cruising altitude (48% height)
+            // Smooth open-air cruising altitude (48% height)
             const cruiseY = floorY * 0.48;
             if (currentBirdY > cruiseY + 8 && this.flappyVy > 0) {
               this.flapManual();
@@ -597,7 +649,7 @@ export class GameViewport {
         }
 
         // Scroll tree logs towards the bird
-        const scrollSpeed = dt * 0.32 * this.speed;
+        const scrollSpeed = dt * 0.30 * this.speed;
         for (let i = this.flappyPillars.length - 1; i >= 0; i--) {
           const pil = this.flappyPillars[i];
           pil.x -= scrollSpeed;
@@ -641,16 +693,9 @@ export class GameViewport {
           this.triggerBirdDeath('HIT GROUND');
         }
 
-        // Spawn new tree logs periodically
-        const maxLogX = this.flappyPillars.length > 0 ? Math.max(...this.flappyPillars.map(p => p.x)) : 0;
-        if (this.flappyPillars.length < 3 && maxLogX < 0.95 && Math.random() < 0.035) {
-          const gapY = 0.34 + Math.random() * 0.32;
-          this.flappyPillars.push({
-            x: 1.25,
-            gapY,
-            gapSize: 0.36,
-            passed: false
-          });
+        // Spawn new tree logs periodically while respecting strict minimum spacing
+        if (this.flappyPillars.length < 3) {
+          this.trySpawnFlappyLog();
         }
       } else {
         // Dead bird falling & tumbling to the ground
@@ -746,6 +791,26 @@ export class GameViewport {
 
     // Draw HUD
     this.renderArcadeOverlay(ctx, w, h);
+
+    // Draw Pause Overlay if simulation is paused
+    if (this.isPaused) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.70)';
+      ctx.fillRect(w / 2 - 140, h / 2 - 28, 280, 56);
+      ctx.strokeStyle = '#ffd000';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(w / 2 - 140, h / 2 - 28, 280, 56);
+
+      ctx.font = 'bold 12px "Press Start 2P", monospace';
+      ctx.fillStyle = '#ffd000';
+      ctx.textAlign = 'center';
+      ctx.fillText('⏸ SIMULATION PAUSED', w / 2, h / 2 - 4);
+
+      ctx.font = '8px "Press Start 2P", monospace';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('CLICK RESUME OR PLAY TO CONTINUE', w / 2, h / 2 + 16);
+      ctx.restore();
+    }
 
     ctx.restore();
   }

@@ -105,19 +105,30 @@ export function unmount() {
 /**
  * Starts or restarts the live stream via api.stream().
  */
-function startStream() {
+function startStream(forceDemo = false) {
   if (streamController) {
     streamController.close();
+    streamController = null;
   }
 
   const sessionId = store.getState().currentSession || 'latest';
+  hideWaitingState();
+
+  if (gameViewport) {
+    gameViewport.setPaused(false);
+  }
 
   streamController = api.stream(sessionId, (event) => {
     // Event automatically added to store in api.js
     hideWaitingState();
   }, (err) => {
     showErrorState(err);
-  });
+  }, forceDemo);
+
+  const playPauseBtn = document.getElementById('live-btn-play');
+  if (playPauseBtn) {
+    playPauseBtn.innerHTML = '<span>⏸ PAUSE</span>';
+  }
 }
 
 /**
@@ -126,21 +137,15 @@ function startStream() {
 function renderShell(container) {
   container.innerHTML = `
     <div class="panel-live-hero" id="live-hero-root">
-      <!-- 1. Top Controls Toolbar -->
+      <!-- 1. Top Controls Toolbar (Speed buttons removed per user request) -->
       <div class="live-toolbar">
         <div class="live-controls-group">
-          <button id="live-btn-play" class="btn btn-primary btn-sm" aria-label="Toggle live stream playback">
+          <button id="live-btn-play" class="btn btn-primary btn-sm" aria-label="Toggle live stream and game simulation playback">
             <span>▶ PLAY LIVE</span>
           </button>
           <button id="live-btn-step" class="btn btn-secondary btn-sm" aria-label="Step forward one event">
             <span>⏭ STEP</span>
           </button>
-          
-          <div class="speed-selector" role="group" aria-label="Playback speed selector">
-            <button class="speed-btn" data-speed="1600" aria-label="0.5x speed">0.5x</button>
-            <button class="speed-btn is-active" data-speed="800" aria-label="1x normal speed">1.0x</button>
-            <button class="speed-btn" data-speed="400" aria-label="2x fast speed">2.0x</button>
-          </div>
         </div>
 
         <div style="display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap;">
@@ -199,19 +204,25 @@ function bindControls(container) {
   const playBtn = container.querySelector('#live-btn-play');
   const stepBtn = container.querySelector('#live-btn-step');
   const followToggle = container.querySelector('#live-follow-toggle');
-  const speedBtns = container.querySelectorAll('.speed-btn');
   const reconnectBtn = container.querySelector('#btn-reconnect-stream');
 
   if (playBtn) {
     playBtn.addEventListener('click', () => {
       const state = store.getState();
       if (state.isStreaming) {
-        if (streamController) streamController.close();
+        if (streamController) {
+          streamController.close();
+          streamController = null;
+        }
         store.setStreaming(false);
+        if (gameViewport) gameViewport.setPaused(true);
+        playBtn.innerHTML = '<span>▶ PLAY LIVE</span>';
       } else {
         isFollowLive = true;
         if (followToggle) followToggle.checked = true;
+        if (gameViewport) gameViewport.setPaused(false);
         startStream();
+        playBtn.innerHTML = '<span>⏸ PAUSE</span>';
       }
     });
   }
@@ -233,14 +244,6 @@ function bindControls(container) {
       }
     });
   }
-
-  speedBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      speedBtns.forEach(b => b.classList.remove('is-active'));
-      btn.classList.add('is-active');
-      playbackSpeed = Number(btn.getAttribute('data-speed'));
-    });
-  });
 
   if (reconnectBtn) {
     reconnectBtn.addEventListener('click', () => {
@@ -391,7 +394,17 @@ function showWaitingState(container) {
   const btn = decisionMount.querySelector('#btn-start-demo-stream');
   if (btn) {
     btn.addEventListener('click', () => {
-      startStream();
+      hideWaitingState();
+      // Reset store to step 0 for a fresh run
+      store.setState({ events: [], selectedStep: null, latestEvent: null });
+      if (gameViewport) {
+        gameViewport.resetSkin(gameViewport.gameSkin);
+        gameViewport.setPaused(false);
+      }
+      isFollowLive = true;
+      const followToggle = document.getElementById('live-follow-toggle');
+      if (followToggle) followToggle.checked = true;
+      startStream(true);
     });
   }
 }

@@ -203,16 +203,28 @@ export function downloadUrl(id) {
  * @param {Function} [onError] - Callback for stream errors
  * @returns {Object} Stream controller with .close() method
  */
-export function stream(sessionId = 'latest', onEvent, onError = null) {
+export function stream(sessionId = 'latest', onEvent, onError = null, forceMock = false) {
   store.setStreaming(true);
 
-  if (isMockMode) {
+  if (isMockMode || forceMock) {
     return startMockStream(sessionId, onEvent, onError);
   }
 
   // Attempt real Server-Sent Events stream from FastAPI backend
   let eventSource = null;
+  let fallbackController = null;
   let closed = false;
+
+  const handleEvent = (e) => {
+    if (closed || !e.data) return;
+    try {
+      const eventData = JSON.parse(e.data);
+      store.addEvent(eventData);
+      if (typeof onEvent === 'function') onEvent(eventData);
+    } catch (parseErr) {
+      console.error('[SSE] JSON parse error on stream event:', parseErr);
+    }
+  };
 
   try {
     const sId = encodeURIComponent(sessionId || 'latest');
@@ -223,32 +235,26 @@ export function stream(sessionId = 'latest', onEvent, onError = null) {
       store.setStreaming(true);
     };
 
-    eventSource.onmessage = (e) => {
-      if (closed || !e.data) return;
-      try {
-        const eventData = JSON.parse(e.data);
-        store.addEvent(eventData);
-        if (typeof onEvent === 'function') onEvent(eventData);
-      } catch (parseErr) {
-        console.error('[SSE] JSON parse error on stream event:', parseErr);
-      }
-    };
+    // FastAPI sends 'event: step', so we must listen for 'step'
+    eventSource.addEventListener('step', handleEvent);
+    eventSource.addEventListener('message', handleEvent);
+    eventSource.onmessage = handleEvent;
 
     eventSource.onerror = (err) => {
-      console.warn('[SSE] EventSource connection failed. Falling back to Mock Stream.', err);
+      console.warn('[SSE] EventSource connection ended or failed. Engaging Demo Stream fallback.', err);
       if (eventSource) {
         eventSource.close();
         eventSource = null;
       }
-      if (!closed) {
+      if (!closed && !fallbackController) {
         activateMockMode();
-        return startMockStream(sessionId, onEvent, onError);
+        fallbackController = startMockStream(sessionId, onEvent, onError);
       }
     };
   } catch (err) {
     console.warn('[SSE] Could not initialize EventSource. Using mock stream:', err);
     activateMockMode();
-    return startMockStream(sessionId, onEvent, onError);
+    fallbackController = startMockStream(sessionId, onEvent, onError);
   }
 
   return {
@@ -259,6 +265,10 @@ export function stream(sessionId = 'latest', onEvent, onError = null) {
         eventSource.close();
         eventSource = null;
       }
+      if (fallbackController) {
+        fallbackController.close();
+        fallbackController = null;
+      }
     }
   };
 }
@@ -266,7 +276,7 @@ export function stream(sessionId = 'latest', onEvent, onError = null) {
 /**
  * Replays mock events sequentially at 800 ms per step.
  */
-function startMockStream(sessionId, onEvent, onError) {
+export function startMockStream(sessionId, onEvent, onError) {
   let intervalId = null;
   let currentIndex = 0;
   let eventsList = [];
