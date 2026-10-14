@@ -1,468 +1,385 @@
 /* ==========================================================================
-   BEAT THE BOT — REUSABLE HUD COMPONENTS (components.css)
-   Gamer HUD visual language: Corner brackets, cyber buttons, meters, badges
+   BEAT THE BOT — MARIO RETRO ARCADE COMPONENTS (components.css)
+   Pixel Art Boxes, Chunky 3D Arcade Buttons, Coin Meters, & Badges
    ========================================================================== */
 
-/* --- 1. HUD Card (.hud-card) --- */
+/* --- 1. Mario Pixel HUD Card (.hud-card) --- */
 .hud-card {
   position: relative;
   background-color: var(--bg-panel);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  padding: var(--space-lg);
-  box-shadow: var(--shadow-card);
-  transition: border-color var(--transition-normal), box-shadow var(--transition-normal), transform var(--transition-fast);
+  border: 3px solid #000;
+  border-radius: 0;
+  padding: var(--space-md);
+  box-shadow: 4px 4px 0 #000, inset 0 0 0 2px rgba(252, 216, 0, 0.25);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .hud-card:hover {
-  border-color: var(--border-medium);
+  box-shadow: 4px 4px 0 #000, inset 0 0 0 2px var(--mario-yellow);
 }
 
-/* Cyber Corner Brackets */
+/* Pixel Corner Studs */
 .hud-card::before,
 .hud-card::after {
   content: '';
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
+  background: var(--mario-yellow);
+  border: 1px solid #000;
   pointer-events: none;
-  transition: border-color var(--transition-normal), transform var(--transition-fast);
 }
 
 .hud-card::before {
-  top: -1px;
-  left: -1px;
-  border-top: 2px solid var(--neon-cyan);
-  border-left: 2px solid var(--neon-cyan);
+  top: 4px;
+  left: 4px;
 }
 
 .hud-card::after {
-  bottom: -1px;
-  right: -1px;
-  border-bottom: 2px solid var(--neon-cyan);
-  border-right: 2px solid var(--neon-cyan);
+  bottom: 4px;
+  right: 4px;
+}
+
+/* Mario Brick & Fire Variant */
+.hud-card.card-magenta {
+  box-shadow: 4px 4px 0 #000, inset 0 0 0 2px rgba(229, 37, 33, 0.4);
 }
 
 .hud-card.card-magenta::before,
 .hud-card.card-magenta::after {
-  border-color: var(--neon-magenta);
+  background: var(--mario-red);
+}
+
+.hud-card.card-magenta:hover {
+  box-shadow: 4px 4px 0 #000, inset 0 0 0 2px var(--mario-red);
+}
+
+/* Interactive Card Bump */
+.hud-card.card-interactive {
+  cursor: pointer;
 }
 
 .hud-card.card-interactive:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-bright);
-  box-shadow: var(--shadow-card-elevated);
+  transform: translateY(-3px);
+  box-shadow: 4px 7px 0 #000, inset 0 0 0 2px var(--mario-yellow);
 }
 
-.hud-card.card-interactive:hover::before,
-.hud-card.card-interactive:hover::after {
-  transform: scale(1.15);
-  box-shadow: var(--glow-cyan-sm);
+.hud-card.card-interactive:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #000;
 }
 
-/* --- 2. Buttons (.btn, .btn-primary, .btn-secondary, etc.) --- */
+/* --- 2. Chunky 3D Arcade Buttons (.btn, .btn-primary, etc.) --- */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-xs);
-  padding: 0.75rem 1.6rem;
+  padding: 0.65rem 1.25rem;
   font-family: var(--font-heading);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
   text-decoration: none;
   cursor: pointer;
-  border: 1px solid var(--border-medium);
+  border: 2px solid #000;
   background: var(--bg-panel-elevated);
-  color: var(--text-primary);
-  border-radius: var(--radius-xs);
+  color: #ffffff;
+  border-radius: 0;
   position: relative;
-  overflow: hidden;
+  box-shadow: 
+    inset -3px -3px 0 0 rgba(0, 0, 0, 0.6), 
+    inset 3px 3px 0 0 rgba(255, 255, 255, 0.35), 
+    3px 3px 0 0 #000;
   transition: all var(--transition-fast);
   user-select: none;
-  clip-path: polygon(
-    0 0,
-    calc(100% - 10px) 0,
-    100% 10px,
-    100% 100%,
-    10px 100%,
-    0 calc(100% - 10px)
-  );
+}
+
+.btn:hover {
+  color: var(--mario-yellow);
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  box-shadow: 
+    inset -3px -3px 0 0 rgba(0, 0, 0, 0.6), 
+    inset 3px 3px 0 0 rgba(255, 255, 255, 0.5), 
+    3px 5px 0 0 #000;
 }
 
 .btn:active {
-  transform: scale(0.98);
+  transform: translate(3px, 3px);
+  box-shadow: 
+    inset 3px 3px 0 0 #000, 
+    0 0 0 0 #000;
 }
 
+/* Primary Button (Super Star Gold / Question Block) */
 .btn-primary {
-  background: linear-gradient(135deg, rgba(34, 230, 255, 0.22) 0%, rgba(15, 11, 31, 0.9) 100%);
-  border-color: var(--neon-cyan);
-  color: #fff;
-  box-shadow: 0 0 14px rgba(34, 230, 255, 0.35);
+  background: linear-gradient(180deg, #fcd800 0%, #f87800 100%);
+  color: #000;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.6);
+  border-color: #000;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, rgba(34, 230, 255, 0.4) 0%, rgba(15, 11, 31, 0.95) 100%);
-  color: #fff;
-  border-color: #fff;
-  box-shadow: var(--glow-cyan-lg);
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+  background: linear-gradient(180deg, #fff080 0%, #fcd800 100%);
+  color: #000;
 }
 
+/* Secondary Button (Warp Pipe Green) */
 .btn-secondary {
-  background: linear-gradient(135deg, rgba(255, 61, 242, 0.15) 0%, rgba(15, 11, 31, 0.85) 100%);
-  border-color: var(--neon-magenta);
+  background: linear-gradient(180deg, #43b047 0%, #00a800 100%);
   color: #fff;
-  box-shadow: 0 0 12px rgba(255, 61, 242, 0.25);
+  text-shadow: 1px 1px 0 #000;
 }
 
 .btn-secondary:hover {
-  background: linear-gradient(135deg, rgba(255, 61, 242, 0.35) 0%, rgba(15, 11, 31, 0.9) 100%);
-  border-color: #fff;
-  box-shadow: var(--glow-magenta-lg);
+  background: linear-gradient(180deg, #62d866 0%, #00a800 100%);
+  color: #fff;
 }
 
+/* Ghost Button (Retro Arcade Blue Border) */
 .btn-ghost {
   background: transparent;
-  border-color: var(--border-subtle);
+  border: 2px solid var(--border-subtle);
   color: var(--text-secondary);
+  box-shadow: 2px 2px 0 #000;
 }
 
 .btn-ghost:hover {
-  border-color: var(--neon-cyan);
-  color: var(--neon-cyan);
-  background: var(--neon-cyan-soft);
+  border-color: var(--mario-yellow);
+  color: var(--mario-yellow);
+  background: rgba(252, 216, 0, 0.1);
 }
 
-/* Button size variants */
 .btn-sm {
-  padding: 0.45rem 0.9rem;
-  font-size: var(--text-xs);
-  letter-spacing: 0.08em;
+  padding: 0.45rem 0.85rem;
+  font-size: 10px;
 }
 
-.btn-lg {
-  padding: 1rem 2.2rem;
-  font-size: var(--text-base);
-  letter-spacing: 0.12em;
-}
-
-/* --- 3. Badges (.badge) --- */
+/* --- 3. Mario Badges & Status Chips (.badge) --- */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 10px;
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  padding: 4px 8px;
+  font-family: var(--font-heading);
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  border-radius: var(--radius-xs);
-  border: 1px solid var(--border-subtle);
+  letter-spacing: 0.05em;
+  border-radius: 0;
+  border: 2px solid #000;
   background: var(--bg-panel-elevated);
-  color: var(--text-secondary);
-  line-height: 1.4;
-  white-space: nowrap;
+  color: var(--text-primary);
+  box-shadow: 2px 2px 0 #000;
 }
 
+/* Live Super Star Flashing Badge */
 .badge-live {
-  background: rgba(255, 77, 109, 0.15);
-  border-color: var(--red);
-  color: #fff;
-  box-shadow: 0 0 10px rgba(255, 77, 109, 0.35);
+  background: var(--mario-yellow);
+  color: #000;
+  border-color: #000;
+  animation: marioStarFlash 1.2s infinite;
+}
+
+@keyframes marioStarFlash {
+  0%, 100% { background: var(--mario-yellow); color: #000; }
+  50% { background: #ffffff; color: #000; }
 }
 
 .badge-live::before {
-  content: '';
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  background-color: var(--red);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--red);
-  animation: pulseDot 1.4s ease-in-out infinite;
+  content: '★';
+  font-size: 11px;
 }
 
-@keyframes pulseDot {
-  0%, 100% {
-    transform: scale(0.9);
-    opacity: 0.7;
-  }
-  50% {
-    transform: scale(1.3);
-    opacity: 1;
-    box-shadow: 0 0 12px var(--red);
-  }
-}
-
+/* Good Move / 1-UP Green */
 .badge-good {
-  background: rgba(57, 255, 136, 0.12);
-  border-color: var(--neon-green);
-  color: var(--neon-green);
-  box-shadow: 0 0 8px rgba(57, 255, 136, 0.25);
+  background: var(--mario-green);
+  color: #ffffff;
+  text-shadow: 1px 1px 0 #000;
 }
 
+.badge-good::before {
+  content: '🍄';
+  font-size: 10px;
+}
+
+/* Bad Move / Fire Damage */
 .badge-bad {
-  background: rgba(255, 77, 109, 0.12);
-  border-color: var(--red);
-  color: var(--red);
-  box-shadow: 0 0 8px rgba(255, 77, 109, 0.25);
+  background: var(--mario-red);
+  color: #ffffff;
+  text-shadow: 1px 1px 0 #000;
 }
 
+.badge-bad::before {
+  content: '🔥';
+  font-size: 10px;
+}
+
+/* Illegal / Question Block Retry */
 .badge-illegal {
-  background: rgba(255, 176, 32, 0.12);
-  border-color: var(--amber);
-  color: var(--amber);
-  box-shadow: 0 0 8px rgba(255, 176, 32, 0.25);
+  background: var(--mario-orange);
+  color: #000;
 }
 
-.badge-demo {
-  background: rgba(255, 61, 242, 0.14);
-  border-color: var(--neon-magenta);
-  color: var(--neon-magenta);
-  box-shadow: 0 0 8px rgba(255, 61, 242, 0.25);
+.badge-illegal::before {
+  content: '❓';
+  font-size: 10px;
 }
 
 .badge-cyan {
-  background: rgba(34, 230, 255, 0.12);
-  border-color: var(--neon-cyan);
-  color: var(--neon-cyan);
+  background: var(--bg-panel-elevated);
+  border-color: var(--mario-yellow);
+  color: var(--mario-yellow);
 }
 
-/* --- 4. Probability Bars (.prob-bar) --- */
+.badge-demo {
+  background: var(--mario-brick);
+  color: #fff;
+}
+
+/* --- 4. Retro Segmented Coin Probability Bar (.prob-bar) --- */
 .prob-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
+  margin-bottom: var(--space-xs);
 }
 
 .prob-bar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
+  font-family: var(--font-heading);
+  font-size: 10px;
+  margin-bottom: 4px;
 }
 
 .prob-bar-label {
-  font-family: var(--font-body);
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
+  color: var(--text-primary);
 }
 
 .prob-bar-val {
-  font-family: var(--font-mono);
+  color: var(--mario-yellow);
   font-weight: 700;
-  color: var(--neon-cyan);
 }
 
 .prob-bar-track {
   width: 100%;
-  height: 8px;
-  background-color: rgba(11, 8, 26, 0.9);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
-  overflow: hidden;
+  height: 14px;
+  background: #080c1d;
+  border: 2px solid #000;
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.8);
   position: relative;
+  overflow: hidden;
 }
 
 .prob-bar-fill {
   height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--neon-cyan-dim), var(--neon-cyan));
-  box-shadow: 0 0 10px rgba(34, 230, 255, 0.5);
-  border-radius: var(--radius-xs);
-  transition: width var(--transition-slow);
+  background: linear-gradient(90deg, #f87800 0%, #fcd800 100%);
+  border-right: 2px solid #000;
+  transition: width 400ms steps(8);
+  position: relative;
+}
+
+/* Pixel notch pattern on fill */
+.prob-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.35) 2px, transparent 2px);
+  background-size: 8px 100%;
 }
 
 .prob-bar.winner .prob-bar-fill {
-  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green));
-  box-shadow: 0 0 14px rgba(57, 255, 136, 0.6);
+  background: linear-gradient(90deg, #00a800 0%, #fcd800 100%);
 }
 
-.prob-bar.winner .prob-bar-val {
-  color: var(--neon-green);
-  text-shadow: 0 0 8px rgba(57, 255, 136, 0.5);
+.prob-bar.winner .prob-bar-label {
+  color: var(--mario-yellow);
 }
 
-/* --- 5. XP-Style Score Meter (.meter) --- */
-.meter {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2xs);
-  width: 100%;
+/* --- 5. Mario Question Card (.question-card) --- */
+.question-card {
+  background: var(--bg-panel-elevated);
+  border: 2px solid #000;
+  padding: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  box-shadow: 3px 3px 0 #000;
 }
 
-.meter-header {
+.question-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 2px solid #000;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.question-text {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: #ffffff;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.option-row {
+  margin-bottom: 6px;
+}
+
+.option-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
   font-family: var(--font-heading);
-  font-size: var(--text-xs);
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
+  margin-bottom: 2px;
 }
 
-.meter-track {
-  width: 100%;
-  height: 12px;
-  background: rgba(7, 6, 15, 0.9);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-xs);
-  position: relative;
-  overflow: hidden;
-  padding: 1px;
+.option-row.is-winner .option-label {
+  color: var(--mario-yellow);
 }
 
-.meter-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
-  box-shadow: 0 0 12px rgba(34, 230, 255, 0.5);
-  border-radius: 1px;
-  transition: width var(--transition-normal);
+.option-row.is-winner .option-prob {
+  color: var(--mario-yellow);
+  font-weight: 700;
 }
 
-.meter-grid-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: repeating-linear-gradient(
-    90deg,
-    transparent,
-    transparent 8px,
-    rgba(7, 6, 15, 0.7) 8px,
-    rgba(7, 6, 15, 0.7) 10px
-  );
+/* --- 6. Mario Micro-Interactions & Coin Pop Animations --- */
+.mario-coin-pop {
+  display: inline-block;
+  animation: coinPopJump 0.6s steps(6) forwards;
 }
 
-/* --- 6. Chips (.chip) --- */
+@keyframes coinPopJump {
+  0% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(-24px); opacity: 1; }
+  100% { transform: translateY(-36px); opacity: 0; }
+}
+
+.mario-block-bump {
+  animation: blockBump 0.22s steps(4) forwards;
+}
+
+@keyframes blockBump {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+/* Chip */
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2xs);
-  padding: 4px 10px;
-  background-color: var(--bg-panel-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-  transition: all var(--transition-fast);
-}
-
-.chip:hover {
-  border-color: var(--border-bright);
-  color: var(--text-primary);
-  background-color: rgba(34, 230, 255, 0.08);
+  padding: 4px 8px;
+  font-size: 10px;
+  font-family: var(--font-heading);
+  border: 2px solid #000;
+  background: var(--bg-panel-elevated);
+  box-shadow: 2px 2px 0 #000;
 }
 
 .chip-active {
-  border-color: var(--neon-cyan);
-  color: var(--neon-cyan);
-  background-color: rgba(34, 230, 255, 0.14);
-  box-shadow: var(--glow-cyan-sm);
-}
-
-/* --- 7. Tabs (.tabs) --- */
-.tabs {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: var(--space-2xs);
-  overflow-x: auto;
-}
-
-.tab-btn {
-  background: transparent;
-  border: none;
-  padding: 8px 16px;
-  font-family: var(--font-heading);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  cursor: pointer;
-  position: relative;
-  transition: color var(--transition-fast);
-  white-space: nowrap;
-}
-
-.tab-btn:hover {
-  color: var(--text-primary);
-}
-
-.tab-btn.is-active {
-  color: var(--neon-cyan);
-}
-
-.tab-btn.is-active::after {
-  content: '';
-  position: absolute;
-  bottom: -5px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background-color: var(--neon-cyan);
-  box-shadow: var(--glow-cyan-sm);
-}
-
-/* --- 8. Cyber Keyboard Key (.kbd) --- */
-.kbd {
-  display: inline-block;
-  padding: 2px 6px;
-  font-family: var(--font-mono);
-  font-size: 0.8em;
-  font-weight: 700;
-  color: var(--neon-cyan);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-medium);
-  border-bottom-width: 2px;
-  border-radius: var(--radius-xs);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-}
-
-/* --- 9. Glitch Effect (.glitch-hover & .is-glitching) --- */
-.glitch-text {
-  position: relative;
-  display: inline-block;
-}
-
-.glitch-text:hover,
-.glitch-text.is-glitching {
-  animation: glitchSkew 0.4s ease forwards;
-}
-
-@keyframes glitchSkew {
-  0% { transform: skew(0deg); }
-  20% { transform: skew(-3deg); text-shadow: 2px 0 var(--neon-magenta), -2px 0 var(--neon-cyan); }
-  40% { transform: skew(3deg); text-shadow: -2px 0 var(--neon-magenta), 2px 0 var(--neon-cyan); }
-  60% { transform: skew(-1deg); text-shadow: 1px 0 var(--neon-green), -1px 0 var(--neon-magenta); }
-  80% { transform: skew(1deg); }
-  100% { transform: skew(0deg); }
-}
-
-/* --- 10. Demo Banner Ribbon --- */
-.demo-ribbon {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: 4px 12px;
-  background: rgba(255, 61, 242, 0.16);
-  border: 1px solid var(--neon-magenta);
-  color: var(--neon-magenta);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  border-radius: var(--radius-xs);
-  box-shadow: var(--glow-magenta-sm);
+  background: var(--mario-green);
+  color: #fff;
 }

@@ -1,22 +1,26 @@
 /* ==========================================================================
-   BEAT THE BOT — BASE STYLES & LAYOUT (base.css)
+   BEAT THE BOT — BASE STYLES & RETRO MARIO PIXEL LAYOUT (base.css)
    ========================================================================== */
 
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  image-rendering: pixelated;
 }
 
 html {
   font-size: 16px;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+  overflow-anchor: auto;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-body);
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: none;
 }
 
 body {
@@ -24,153 +28,157 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-size: var(--text-base);
-  line-height: 1.55;
+  line-height: 1.6;
   overflow-x: hidden;
   position: relative;
+  letter-spacing: 0.04em;
 }
 
 /* --- Accessibility Focus States --- */
 :focus-visible {
-  outline: 2px solid var(--neon-cyan);
+  outline: 3px solid var(--neon-cyan);
   outline-offset: 3px;
-  box-shadow: var(--glow-cyan-sm);
+  box-shadow: 0 0 0 5px #000;
 }
 
-/* --- Typography Defaults --- */
+/* --- Retro Mario 8-Bit Typography Defaults --- */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.35;
   color: var(--text-primary);
+  text-shadow: 2px 2px 0 #000, 4px 4px 0 #000;
 }
 
 h1 {
-  font-size: clamp(2rem, 5vw, var(--text-4xl));
-  text-shadow: 0 0 20px rgba(34, 230, 255, 0.5);
+  font-size: clamp(1.4rem, 4vw, var(--text-3xl));
+  color: var(--mario-yellow);
 }
 
 h2 {
-  font-size: clamp(1.5rem, 3.5vw, var(--text-3xl));
-  letter-spacing: 0.07em;
+  font-size: clamp(1.15rem, 2.8vw, var(--text-2xl));
+  color: #ffffff;
 }
 
 h3 {
-  font-size: clamp(1.2rem, 2.5vw, var(--text-xl));
-  letter-spacing: 0.06em;
+  font-size: clamp(0.95rem, 2vw, var(--text-xl));
+  color: var(--mario-yellow);
 }
 
 h4 {
   font-size: var(--text-lg);
-  letter-spacing: 0.05em;
+  color: #ffffff;
+}
+
+/* Mario 3D Gradient Banner (Inspired by "YOU WIN!" Reference) */
+.mario-title-3d {
+  display: inline-block;
+  background: linear-gradient(180deg, #fce470 0%, #fcd800 35%, #f87800 65%, #b84418 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--mario-yellow);
+  font-family: var(--font-heading);
+  font-weight: 900;
+  filter: drop-shadow(3px 3px 0 #000) drop-shadow(5px 5px 0 #481800);
 }
 
 p {
   color: var(--text-secondary);
   font-size: var(--text-base);
   margin-bottom: var(--space-sm);
+  line-height: 1.6;
 }
 
 a {
-  color: var(--neon-cyan);
+  color: var(--mario-yellow);
   text-decoration: none;
-  transition: color var(--transition-fast), text-shadow var(--transition-fast);
+  transition: color var(--transition-fast);
 }
 
 a:hover {
-  color: #fff;
-  text-shadow: var(--glow-cyan-sm);
+  color: #ffffff;
+  text-shadow: 2px 2px 0 #000;
 }
 
 strong, b {
-  color: var(--text-primary);
-  font-weight: 600;
+  color: var(--mario-yellow);
+  font-weight: 700;
 }
 
 code, pre, .mono {
   font-family: var(--font-mono);
-  font-size: 0.9em;
+  font-size: 0.85em;
+  color: var(--mario-yellow);
 }
 
-/* --- Cyber Grid Background --- */
+/* --- Mario 8-Bit Pixel Grid & Starry Sky Background --- */
 .bg-grid {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
   background-image: 
-    linear-gradient(to right, rgba(34, 230, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(34, 230, 255, 0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
+    linear-gradient(to right, rgba(252, 216, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(252, 216, 0, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
   background-position: center center;
-  mask-image: radial-gradient(circle at 50% 40%, black 40%, transparent 90%);
-  -webkit-mask-image: radial-gradient(circle at 50% 40%, black 40%, transparent 90%);
-  animation: gridShift 40s linear infinite;
+  mask-image: radial-gradient(circle at 50% 30%, black 60%, transparent 95%);
+  -webkit-mask-image: radial-gradient(circle at 50% 30%, black 60%, transparent 95%);
 }
 
-@keyframes gridShift {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 48px 48px;
-  }
-}
-
-/* Ambient Radial Spotlights */
+/* Twinkling Pixel Stars Overlay */
 .bg-ambient {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
   background: 
-    radial-gradient(circle at 15% 15%, rgba(34, 230, 255, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 85% 75%, rgba(255, 61, 242, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 50% 90%, rgba(57, 255, 136, 0.04) 0%, transparent 40%);
+    radial-gradient(circle at 20% 15%, rgba(92, 148, 252, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 80% 25%, rgba(252, 216, 0, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 50% 90%, rgba(0, 168, 0, 0.12) 0%, transparent 50%);
 }
 
-/* --- Scanline Overlay --- */
+/* Subtle 8-Bit Arcade CRT Scanline Overlay */
 .scanlines {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: var(--z-overlay);
   background: linear-gradient(
-    rgba(18, 16, 38, 0) 50%, 
-    rgba(0, 0, 0, 0.28) 50%
+    rgba(18, 25, 54, 0) 50%, 
+    rgba(0, 0, 0, 0.35) 50%
   );
   background-size: 100% 4px;
-  opacity: 0.6;
+  opacity: 0.45;
 }
 
-/* --- Custom Scrollbar --- */
+/* --- 8-Bit Stepped Pixel Scrollbar --- */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
   background: var(--bg-primary);
-  border-left: 1px solid var(--border-subtle);
+  border: 2px solid #000;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-panel-elevated);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-xs);
+  background: var(--mario-orange);
+  border: 2px solid #000;
+  box-shadow: inset -2px -2px 0 #b84418, inset 2px 2px 0 #fce470;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--neon-cyan-dim);
-  border-color: var(--neon-cyan);
-  box-shadow: var(--glow-cyan-sm);
+  background: var(--mario-yellow);
 }
 
 /* --- Selection Color --- */
 ::selection {
-  background: var(--neon-cyan);
-  color: var(--bg-primary);
+  background: var(--mario-yellow);
+  color: #000;
   text-shadow: none;
 }
 
@@ -185,7 +193,7 @@ code, pre, .mono {
 }
 
 .section {
-  padding-block: var(--space-3xl);
+  padding-block: var(--space-2xl);
   position: relative;
   z-index: 1;
 }
@@ -197,13 +205,5 @@ code, pre, .mono {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-
-  .bg-grid {
-    animation: none !important;
-  }
-
-  .scanlines {
-    display: none !important;
   }
 }

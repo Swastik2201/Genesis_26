@@ -1,72 +1,105 @@
 /* ==========================================================================
-   BEAT THE BOT — DESIGN TOKENS (tokens.css)
-   Cyber-Gamer HUD Aesthetic: Dark cabinet meets mission control
+   BEAT THE BOT — MARIO RETRO ARCADE DESIGN TOKENS (tokens.css)
+   Inspired by Super Mario Bros, 8-Bit NES Arcade, & Pixel Art UI
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Silkscreen:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap');
 
 :root {
-  /* --- Primary Color Palette --- */
-  --bg-primary: #07060f;
-  --bg-secondary: #0b081a;
-  --bg-panel: #0f0b1f;
-  --bg-panel-elevated: #16112e;
-  --bg-panel-translucent: rgba(15, 11, 31, 0.82);
-  --bg-card-hover: rgba(22, 17, 46, 0.95);
+  /* --- Super Mario Iconic World Colors --- */
+  --mario-sky: #5c94fc;             /* Classic World 1-1 Sky Blue */
+  --mario-sky-dark: #1e2e6b;        /* Night Castle Sky */
+  --mario-red: #e52521;             /* Mario Cap & Fire Flower */
+  --mario-yellow: #fcd800;          /* Super Star & Gold Coin */
+  --mario-yellow-dark: #d89800;     /* Deep Coin Shadow */
+  --mario-green: #00a800;           /* Warp Pipe & 1-UP Mushroom */
+  --mario-green-bright: #43b047;    /* Bright Grass Green */
+  --mario-brick: #b84418;           /* Breakable Brick Block */
+  --mario-brick-dark: #702800;      /* Brick Outline */
+  --mario-orange: #f87800;          /* Question [?] Block Gold */
+  --mario-cloud: #ffffff;           /* Puffy Pixel Cloud */
+  --mario-dirt: #885418;            /* Underground Soil */
+  --mario-dirt-dark: #482c0c;       /* Soil Outline */
 
-  /* --- Neon Accent & Status Tokens --- */
-  --neon-cyan: #22e6ff;
-  --neon-cyan-dim: #138899;
-  --neon-cyan-glow: rgba(34, 230, 255, 0.4);
-  --neon-cyan-soft: rgba(34, 230, 255, 0.12);
+  /* --- Primary Arcade Palette (Dark Blue NES Night Mode) --- */
+  --bg-primary: #121936;            /* Deep NES Night Sky */
+  --bg-secondary: #0c1126;          /* Darker World Grid */
+  --bg-panel: #1b254d;              /* Retro HUD Blue Box */
+  --bg-panel-elevated: #263366;     /* Elevated Question Panel */
+  --bg-panel-translucent: rgba(27, 37, 77, 0.94);
+  --bg-card-hover: #324385;
 
-  --neon-magenta: #ff3df2;
-  --neon-magenta-dim: #992391;
-  --neon-magenta-glow: rgba(255, 61, 242, 0.4);
-  --neon-magenta-soft: rgba(255, 61, 242, 0.12);
+  /* --- Mapped Accent Tokens (Drop-in compatibility with HUD) --- */
+  --neon-cyan: #fcd800;             /* Mapped to Super Star Gold */
+  --neon-cyan-dim: #b89800;
+  --neon-cyan-glow: rgba(252, 216, 0, 0.45);
+  --neon-cyan-soft: rgba(252, 216, 0, 0.16);
 
-  --neon-green: #39ff88;
-  --neon-green-dim: #1ea354;
-  --neon-green-glow: rgba(57, 255, 136, 0.4);
-  --neon-green-soft: rgba(57, 255, 136, 0.12);
+  --neon-magenta: #e52521;          /* Mapped to Mario Red */
+  --neon-magenta-dim: #9e120f;
+  --neon-magenta-glow: rgba(229, 37, 33, 0.45);
+  --neon-magenta-soft: rgba(229, 37, 33, 0.16);
 
-  --amber: #ffb020;
-  --amber-dim: #996913;
-  --amber-glow: rgba(255, 176, 32, 0.4);
-  --amber-soft: rgba(255, 176, 32, 0.14);
+  --neon-green: #00a800;            /* Mapped to 1-UP / Warp Pipe Green */
+  --neon-green-dim: #006b00;
+  --neon-green-glow: rgba(0, 168, 0, 0.45);
+  --neon-green-soft: rgba(0, 168, 0, 0.16);
 
-  --red: #ff4d6d;
-  --red-dim: #992e41;
-  --red-glow: rgba(255, 77, 109, 0.4);
-  --red-soft: rgba(255, 77, 109, 0.14);
+  --amber: #f87800;                 /* Mapped to Question Block Orange */
+  --amber-dim: #b35200;
+  --amber-glow: rgba(248, 120, 0, 0.45);
+  --amber-soft: rgba(248, 120, 0, 0.18);
+
+  --red: #d82800;                   /* Mapped to Hazard / Lava Red */
+  --red-dim: #8a1500;
+  --red-glow: rgba(216, 40, 0, 0.45);
+  --red-soft: rgba(216, 40, 0, 0.18);
 
   /* --- Typography Colors --- */
-  --text-primary: #f0f4ff;
-  --text-secondary: #a2afce;
-  --text-muted: #5e6b8f;
-  --text-dim: #38415c;
-  --text-inverse: #07060f;
+  --text-primary: #ffffff;
+  --text-secondary: #fce470;        /* Light Coin Gold */
+  --text-muted: #8fa5e8;          /* Muted Sky Blue */
+  --text-dim: #54689e;
+  --text-inverse: #000000;
 
-  /* --- Borders & Outlines --- */
-  --border-subtle: rgba(34, 230, 255, 0.14);
-  --border-medium: rgba(34, 230, 255, 0.28);
-  --border-bright: rgba(34, 230, 255, 0.7);
-  --border-magenta-subtle: rgba(255, 61, 242, 0.2);
-  --border-magenta-bright: rgba(255, 61, 242, 0.7);
+  /* --- Pixel Borders (Stepped Hard Shadows, No Blur) --- */
+  --border-subtle: #3a4b87;
+  --border-medium: #fcd800;         /* Gold Pixel Trim */
+  --border-bright: #ffffff;
+  --border-magenta-subtle: #e52521;
+  --border-magenta-bright: #ff6860;
 
-  /* --- Typography Families & Scales --- */
-  --font-heading: 'Orbitron', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-body: 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  /* --- 8-Bit Pixel Typography --- */
+  --font-heading: 'Press Start 2P', 'Silkscreen', monospace;
+  --font-body: 'VT323', 'Silkscreen', monospace;
+  --font-mono: 'Press Start 2P', 'VT323', monospace;
 
-  --text-xs: 0.75rem;     /* 12px */
-  --text-sm: 0.875rem;    /* 14px */
-  --text-base: 1.0625rem; /* 17px */
-  --text-lg: 1.25rem;     /* 20px */
-  --text-xl: 1.5rem;      /* 24px */
-  --text-2xl: 2rem;       /* 32px */
-  --text-3xl: 2.75rem;    /* 44px */
-  --text-4xl: 3.75rem;    /* 60px */
+  --text-xs: 0.65rem;     /* 10px in pixel font */
+  --text-sm: 0.75rem;     /* 12px */
+  --text-base: 0.875rem;  /* 14px */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.35rem;     /* 22px */
+  --text-2xl: 1.75rem;    /* 28px */
+  --text-3xl: 2.25rem;    /* 36px */
+  --text-4xl: 3rem;       /* 48px */
+
+  /* --- Pixel Shadow System (Crisp Stepped Bevels) --- */
+  --pixel-border: 0 0 0 3px #000, 0 0 0 6px #fcd800;
+  --pixel-border-sm: 0 0 0 2px #000, 0 0 0 4px #fcd800;
+  --pixel-border-brick: 0 0 0 3px #000, 0 0 0 6px #b84418;
+  --pixel-border-pipe: 0 0 0 3px #000, 0 0 0 6px #00a800;
+  --pixel-box-shadow: 4px 4px 0 #000;
+  --pixel-text-shadow: 2px 2px 0 #000, 3px 3px 0 #000;
+
+  --shadow-card: 4px 4px 0 #000, 8px 8px 0 rgba(0, 0, 0, 0.6);
+  --shadow-card-elevated: 6px 6px 0 #000, 10px 10px 0 rgba(252, 216, 0, 0.3);
+
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-full: 0px;
 
   /* --- Spacing Scale --- */
   --space-2xs: 4px;
@@ -79,34 +112,10 @@
   --space-3xl: 64px;
   --space-4xl: 96px;
 
-  /* --- Corner Radii --- */
-  --radius-xs: 2px;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-full: 9999px;
-
-  /* --- Glow & Shadow System --- */
-  --glow-cyan-sm: 0 0 8px rgba(34, 230, 255, 0.3);
-  --glow-cyan: 0 0 16px rgba(34, 230, 255, 0.45);
-  --glow-cyan-lg: 0 0 32px rgba(34, 230, 255, 0.65);
-
-  --glow-magenta-sm: 0 0 8px rgba(255, 61, 242, 0.3);
-  --glow-magenta: 0 0 16px rgba(255, 61, 242, 0.45);
-  --glow-magenta-lg: 0 0 32px rgba(255, 61, 242, 0.65);
-
-  --glow-green: 0 0 16px rgba(57, 255, 136, 0.45);
-  --glow-amber: 0 0 16px rgba(255, 176, 32, 0.45);
-  --glow-red: 0 0 16px rgba(255, 77, 109, 0.45);
-
-  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.65), 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-card-elevated: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 20px rgba(34, 230, 255, 0.15);
-
   /* --- Transitions & Timing --- */
-  --transition-fast: 150ms cubic-bezier(0.2, 0, 0, 1);
-  --transition-normal: 260ms cubic-bezier(0.2, 0, 0, 1);
-  --transition-slow: 450ms cubic-bezier(0.2, 0, 0, 1);
+  --transition-fast: 120ms steps(3);
+  --transition-normal: 220ms steps(5);
+  --transition-slow: 400ms steps(8);
 
   /* --- Z-index Scale --- */
   --z-base: 1;

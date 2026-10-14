@@ -1,6 +1,6 @@
 /* ==========================================================================
-   BEAT THE BOT — DASHBOARD LAYOUT & HUD SHELL (dashboard.css)
-   Fixed Left Nav, Persistent Telemetry Topbar, Responsive Grid
+   BEAT THE BOT — MARIO RETRO ARCADE DASHBOARD (dashboard.css)
+   Fixed Left Nav, Retro NES Topbar, 8-Bit Pixel Borders
    ========================================================================== */
 
 /* --- Main Layout Grid --- */
@@ -12,7 +12,7 @@
   position: relative;
 }
 
-/* --- Fixed Left Sidebar Navigation --- */
+/* --- Fixed Left Sidebar Navigation (Mario NES World Rail) --- */
 .dashboard-sidebar {
   position: fixed;
   top: 0;
@@ -20,20 +20,21 @@
   bottom: 0;
   width: 260px;
   background: var(--bg-panel);
-  border-right: 1px solid var(--border-subtle);
+  border-right: 3px solid #000;
+  box-shadow: 4px 0 0 #000, inset -2px 0 0 rgba(252, 216, 0, 0.2);
   display: flex;
   flex-direction: column;
   z-index: var(--z-overlay);
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.6);
   transition: width var(--transition-normal);
 }
 
 .sidebar-header {
   padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 3px solid #000;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: #151d3d;
 }
 
 .sidebar-brand {
@@ -44,61 +45,63 @@
 }
 
 .sidebar-brand-icon {
-  width: 28px;
-  height: 28px;
-  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
-  border-radius: var(--radius-xs);
+  width: 32px;
+  height: 32px;
+  background: var(--mario-red);
+  border: 2px solid #000;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #07060f;
+  color: #fff;
   font-weight: 900;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  box-shadow: 2px 2px 0 #000;
 }
 
 .sidebar-brand-text {
   font-family: var(--font-heading);
-  font-size: var(--text-sm);
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--mario-yellow);
+  text-shadow: 1px 1px 0 #000;
 }
 
 /* Global Session Picker in Sidebar */
 .sidebar-session-picker {
-  padding: var(--space-sm) var(--space-lg);
-  border-bottom: 1px solid var(--border-subtle);
-  background: rgba(7, 6, 15, 0.4);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 3px solid #000;
+  background: rgba(12, 17, 38, 0.7);
 }
 
 .session-select-label {
   display: block;
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  font-family: var(--font-heading);
+  font-size: 9px;
   color: var(--text-muted);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .session-select-input {
   width: 100%;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-xs);
-  color: var(--neon-cyan);
+  background: #0d122b;
+  border: 2px solid #000;
+  border-radius: 0;
+  color: var(--mario-yellow);
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  font-size: 10px;
   padding: 6px 8px;
   cursor: pointer;
   outline: none;
-  transition: border-color var(--transition-fast);
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.8), 2px 2px 0 #000;
 }
 
 .session-select-input:hover,
 .session-select-input:focus {
-  border-color: var(--neon-cyan);
-  box-shadow: var(--glow-cyan-sm);
+  border-color: var(--mario-yellow);
 }
 
 /* Nav Items */
@@ -108,7 +111,7 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   overflow-y: auto;
 }
 
@@ -120,33 +123,37 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: 10px 14px;
-  border-radius: var(--radius-xs);
+  padding: 8px 12px;
+  border-radius: 0;
   color: var(--text-secondary);
   font-family: var(--font-heading);
-  font-size: var(--text-xs);
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
   text-decoration: none;
   text-transform: uppercase;
-  position: relative;
+  border: 2px solid transparent;
   transition: all var(--transition-fast);
 }
 
 .nav-link-btn:hover {
   color: #fff;
-  background: rgba(34, 230, 255, 0.08);
+  background: var(--bg-panel-elevated);
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000;
+  transform: translateX(4px);
 }
 
 .nav-link-btn.is-active {
-  color: var(--neon-cyan);
-  background: rgba(34, 230, 255, 0.14);
-  box-shadow: inset 3px 0 0 var(--neon-cyan), var(--glow-cyan-sm);
+  color: #ffffff;
+  background: var(--mario-green);
+  border: 2px solid #000;
+  box-shadow: 3px 3px 0 #000;
+  text-shadow: 1px 1px 0 #000;
 }
 
 .nav-link-btn.is-active .nav-icon {
-  color: var(--neon-cyan);
-  filter: drop-shadow(0 0 6px var(--neon-cyan));
+  transform: scale(1.15);
 }
 
 .nav-icon {
@@ -156,7 +163,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 .nav-label {
@@ -166,25 +173,24 @@
 /* Sidebar Footer / Mode Status */
 .sidebar-footer {
   padding: var(--space-md);
-  border-top: 1px solid var(--border-subtle);
-  background: rgba(7, 6, 15, 0.5);
+  border-top: 3px solid #000;
+  background: #151d3d;
   font-size: var(--text-xs);
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-/* --- Top Telemetry Status Bar --- */
+/* --- Top Telemetry Status Bar (NES HUD Header) --- */
 .dashboard-topbar {
   position: fixed;
   top: 0;
   left: 260px;
   right: 0;
   height: 64px;
-  background: rgba(15, 11, 31, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-panel);
+  border-bottom: 3px solid #000;
+  box-shadow: 0 4px 0 #000;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -212,20 +218,20 @@
 }
 
 .topbar-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
+  font-family: var(--font-heading);
+  font-size: 8px;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  line-height: 1.1;
+  line-height: 1.2;
 }
 
 .topbar-value {
   font-family: var(--font-heading);
-  font-size: var(--text-sm);
+  font-size: 11px;
   font-weight: 700;
   color: #fff;
-  line-height: 1.3;
+  text-shadow: 1px 1px 0 #000;
 }
 
 .topbar-right {
@@ -234,12 +240,23 @@
   gap: var(--space-sm);
 }
 
-/* --- Main Panel Content Container --- */
+/* Live Session Status Indicator in Topbar */
+.session-live-pulse {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: var(--mario-yellow);
+  border: 1px solid #000;
+  margin-right: 4px;
+  animation: marioStarFlash 1s infinite;
+}
+
+/* --- Main Content Display Canvas --- */
 .dashboard-main {
   margin-left: 260px;
   margin-top: 64px;
   flex: 1;
-  padding: var(--space-lg);
+  padding: var(--space-md);
   position: relative;
   min-height: calc(100vh - 64px);
   z-index: 1;
@@ -268,7 +285,7 @@
 
   .nav-link-btn {
     justify-content: center;
-    padding: 12px;
+    padding: 10px;
   }
 
   .dashboard-topbar {
@@ -288,11 +305,11 @@
     left: 0;
     right: 0;
     width: 100%;
-    height: 60px;
+    height: 58px;
     border-right: none;
-    border-top: 1px solid var(--border-subtle);
+    border-top: 3px solid #000;
     flex-direction: row;
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 -4px 0 #000;
   }
 
   .sidebar-header {
@@ -302,116 +319,19 @@
   .sidebar-nav {
     flex-direction: row;
     justify-content: space-around;
-    align-items: center;
-    padding: 0;
-    width: 100%;
-  }
-
-  .nav-item {
-    width: auto;
-  }
-
-  .nav-link-btn {
-    padding: 10px;
+    padding: 4px;
   }
 
   .dashboard-topbar {
     left: 0;
-    height: auto;
-    padding: var(--space-xs) var(--space-md);
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
+    height: 54px;
+    padding-inline: var(--space-sm);
   }
 
   .dashboard-main {
     margin-left: 0;
-    margin-top: 88px;
-    padding: var(--space-md);
-    padding-bottom: 76px;
-  }
-
-  .topbar-telemetry-group {
-    display: none;
+    margin-top: 54px;
+    margin-bottom: 58px;
+    padding: var(--space-xs);
   }
 }
-
-/* --- Demo Mode Ribbon & Accessibility Helpers --- */
-.demo-mode-top-ribbon {
-  background: linear-gradient(90deg, rgba(255, 176, 32, 0.9) 0%, rgba(20, 15, 38, 0.98) 12%, rgba(20, 15, 38, 0.98) 88%, rgba(255, 176, 32, 0.9) 100%);
-  border-bottom: 1px solid var(--amber);
-  color: #fff;
-  padding: 6px 16px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
-  position: relative;
-  z-index: 1000;
-  box-shadow: 0 2px 14px rgba(255, 176, 32, 0.25);
-  animation: glowPulse 3s infinite alternate;
-}
-
-@media (max-width: 680px) {
-  .demo-mode-top-ribbon {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    padding: 6px 12px;
-  }
-}
-
-.demo-ribbon-content {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-}
-
-.demo-ribbon-badge {
-  background: var(--amber);
-  color: #07060f;
-  font-weight: 800;
-  font-family: var(--font-heading);
-  padding: 2px 8px;
-  border-radius: var(--radius-xs);
-  letter-spacing: 0.05em;
-  font-size: 10px;
-}
-
-.demo-ribbon-text {
-  color: #fff;
-  letter-spacing: 0.02em;
-}
-
-.sound-toggle-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-family: var(--font-mono);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-xs);
-}
-
-.sound-toggle-btn.sound-active {
-  border-color: var(--neon-cyan);
-  color: var(--neon-cyan);
-  box-shadow: var(--glow-cyan-sm);
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-

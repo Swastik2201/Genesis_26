@@ -13,6 +13,8 @@ import * as replayPanel from './panels/replay.js';
 import * as calibrationPanel from './panels/calibration.js';
 import * as logsPanel from './panels/logs.js';
 import * as aboutPanel from './panels/about.js';
+import { triggerWarpPipeTransition, triggerMarioBlockBump } from './fx.js';
+import { playMarioPipeSound } from './sound.js';
 
 const routes = {
   'overview': overviewPanel,
@@ -26,7 +28,9 @@ const routes = {
 };
 
 let currentPanel = null;
+let currentPath = null;
 let containerEl = null;
+let isInitialLoad = true;
 
 /**
  * Parses hash into route path and parameter object.
@@ -50,16 +54,7 @@ function parseHash() {
   return { path, params };
 }
 
-/**
- * Navigates to the route matching the current hash.
- */
-export async function navigate() {
-  if (!containerEl) return;
-
-  const { path, params } = parseHash();
-  const targetRoute = routes[path] ? path : 'live';
-  const panelModule = routes[targetRoute];
-
+function renderPanelContent(targetRoute, panelModule, params) {
   // Unmount previous panel
   if (currentPanel && typeof currentPanel.unmount === 'function') {
     try {
@@ -72,6 +67,7 @@ export async function navigate() {
   // Clear container
   containerEl.innerHTML = '';
   currentPanel = panelModule;
+  currentPath = targetRoute;
 
   // Mount new panel
   if (panelModule && typeof panelModule.mount === 'function') {
@@ -91,6 +87,34 @@ export async function navigate() {
 
   // Update navigation visual highlight
   updateActiveNav(targetRoute);
+}
+
+/**
+ * Navigates to the route matching the current hash.
+ */
+export async function navigate() {
+  if (!containerEl) return;
+
+  const { path, params } = parseHash();
+  const targetRoute = routes[path] ? path : 'live';
+  const panelModule = routes[targetRoute];
+
+  if (isInitialLoad) {
+    isInitialLoad = false;
+    renderPanelContent(targetRoute, panelModule, params);
+    return;
+  }
+
+  // If already on the target route with no different params, avoid re-warping
+  if (currentPath === targetRoute && Object.keys(params).length === 0) {
+    return;
+  }
+
+  // Mario Warp Pipe route transition with sound
+  playMarioPipeSound();
+  triggerWarpPipeTransition(() => {
+    renderPanelContent(targetRoute, panelModule, params);
+  });
 }
 
 function updateActiveNav(activePath) {
@@ -114,6 +138,13 @@ function updateActiveNav(activePath) {
 export function initRouter(container) {
   containerEl = container;
   window.addEventListener('hashchange', navigate);
+
+  // Attach Mario block bump animation to navigation items
+  document.querySelectorAll('[data-route]').forEach(el => {
+    el.addEventListener('click', () => {
+      triggerMarioBlockBump(el);
+    });
+  });
 
   // If no hash present, default to #/live
   if (!window.location.hash) {
