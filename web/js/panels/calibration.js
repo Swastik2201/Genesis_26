@@ -103,15 +103,15 @@ function renderCalibrationUI(container, data) {
 
         <div class="hud-card kpi-card">
           <div class="kpi-label">CALIBRATION ERROR (ECE)</div>
-          <div class="kpi-value kpi-val-nowrap" style="color: ${ece < 0.08 ? 'var(--mario-yellow)' : 'var(--amber)'}; white-space: nowrap;">
+          <div class="kpi-value kpi-val-nowrap" style="color: ${ece < 0.08 ? 'var(--arcade-yellow, #ffd000)' : 'var(--amber)'}; white-space: nowrap;">
             ${ece.toFixed(3)} ECE
           </div>
           <div class="kpi-subtext">Expected Calibration Error</div>
         </div>
 
         <div class="hud-card kpi-card kpi-card-red">
-          <div class="kpi-label" style="color: var(--mario-red);">REC. THRESHOLD (τ)</div>
-          <div class="kpi-value kpi-val-nowrap" style="color: var(--mario-red); white-space: nowrap !important;">
+          <div class="kpi-label" style="color: var(--neon-magenta, #e52521);">REC. THRESHOLD (τ)</div>
+          <div class="kpi-value kpi-val-nowrap" style="color: var(--neon-magenta, #e52521); white-space: nowrap !important;">
             ${(recThreshold * 100).toFixed(0)}% CUTOFF
           </div>
           <div class="kpi-subtext">Optimal confidence threshold</div>

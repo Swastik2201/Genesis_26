@@ -23,7 +23,7 @@
   <header class="site-header">
     <div class="container nav-container">
       <a href="index.html" class="brand-logo" aria-label="Beat the Bot Home">
-        <span class="brand-icon" aria-hidden="true">🍄</span>
+        <span class="brand-icon" aria-hidden="true">⚡</span>
         <span class="brand-title">BEAT THE BOT</span>
       </a>
 
@@ -36,7 +36,7 @@
       </nav>
 
       <div style="display: flex; align-items: center; gap: var(--space-sm);">
-        <button id="btn-sound-toggle-landing" class="btn btn-ghost btn-sm" aria-label="Toggle 8-bit sound" title="Toggle Mario 8-bit sound">
+        <button id="btn-sound-toggle-landing" class="btn btn-ghost btn-sm" aria-label="Toggle 8-bit sound" title="Toggle 8-bit retro sound">
           <span id="sound-landing-icon">🔇</span>
           <span id="sound-landing-label">SFX</span>
         </button>
@@ -397,16 +397,16 @@
         });
       }
 
-      // Add Mario interactive effects on arena buttons
+      // Add arcade interactive effects on arena buttons
       const arenaButtons = document.querySelectorAll('#btn-header-arena, #btn-hero-arena');
       arenaButtons.forEach(btn => {
         btn.addEventListener('click', () => {
           playMarioJumpSound();
-          triggerMarioCoinPop(btn, 'LET\'S A GO!');
+          triggerMarioCoinPop(btn, 'ENTER!');
         });
       });
 
-      // Interactive Mario Question & Brick Blocks
+      // Interactive arcade blocks
       document.querySelectorAll('.stat-item, .pipeline-node').forEach(block => {
         block.style.cursor = 'pointer';
         block.addEventListener('click', () => {
