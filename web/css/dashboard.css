@@ -25,7 +25,7 @@
   display: flex;
   flex-direction: column;
   z-index: var(--z-overlay);
-  transition: width var(--transition-normal);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .sidebar-header {
@@ -181,12 +181,104 @@
   gap: 6px;
 }
 
+/* --- Sidebar Collapse & Toggle Buttons (HD 8-Bit Retro Arcade Style) --- */
+.sidebar-collapse-btn {
+  background: #0d122b;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000, inset 1px 1px 0 rgba(255, 255, 255, 0.2);
+  color: var(--mario-yellow);
+  font-family: var(--font-heading);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 0;
+  transition: all var(--transition-fast);
+}
+
+.sidebar-collapse-btn:hover {
+  background: var(--mario-yellow);
+  color: #000;
+  box-shadow: 3px 3px 0 #000;
+  transform: translate(-1px, -1px);
+}
+
+.sidebar-collapse-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #000;
+}
+
+/* Sidebar Toggle Button in Topbar (Tactile 3D Arcade Button) */
+.sidebar-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffd000;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    #ffd000 0px,
+    #ffd000 2px,
+    #e8ba00 2px,
+    #e8ba00 3px
+  );
+  border: 3px solid #000;
+  box-shadow: 3px 3px 0 #000;
+  color: #000 !important;
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 0;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  text-shadow: none;
+  user-select: none;
+}
+
+.sidebar-toggle-btn:hover {
+  background: #ffffff;
+  background-image: none;
+  color: #000 !important;
+  box-shadow: 4px 4px 0 #000;
+  transform: translate(-1px, -1px);
+}
+
+.sidebar-toggle-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #000;
+}
+
+/* When collapsed, pulse the toggle button so the user knows where to click to restore */
+.sidebar-toggle-btn.nav-is-collapsed {
+  background: #ffea75;
+  box-shadow: 4px 4px 0 #000, 0 0 10px rgba(255, 234, 117, 0.7);
+  animation: navPulse 1.8s infinite ease-in-out;
+}
+
+@keyframes navPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 3px 3px 0 #000, 0 0 0 rgba(255, 234, 117, 0);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 4px 4px 0 #000, 0 0 12px rgba(255, 234, 117, 0.8);
+  }
+}
+
 /* --- Top Telemetry Status Bar (NES HUD Header) --- */
 .dashboard-topbar {
   position: fixed;
   top: 0;
   left: 260px;
   right: 0;
+  width: calc(100% - 260px);
   height: 64px;
   background: var(--bg-panel);
   border-bottom: 3px solid #000;
@@ -194,27 +286,30 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-inline: var(--space-lg);
+  padding-inline: var(--space-md);
   z-index: var(--z-elevated);
-  transition: left var(--transition-normal);
+  box-sizing: border-box;
+  transition: left 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .topbar-left {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
-  flex-wrap: wrap;
+  gap: var(--space-sm);
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .topbar-telemetry-group {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
 .topbar-item {
   display: flex;
   flex-direction: column;
+  white-space: nowrap;
 }
 
 .topbar-label {
@@ -232,12 +327,14 @@
   font-weight: 700;
   color: #fff;
   text-shadow: 1px 1px 0 #000;
+  white-space: nowrap;
 }
 
 .topbar-right {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
+  flex-shrink: 0;
 }
 
 /* Live Session Status Indicator in Topbar */
@@ -255,17 +352,38 @@
 .dashboard-main {
   margin-left: 260px;
   margin-top: 64px;
+  width: calc(100% - 260px);
+  max-width: calc(100% - 260px);
+  box-sizing: border-box;
   flex: 1;
-  padding: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
   position: relative;
   min-height: calc(100vh - 64px);
   z-index: 1;
-  transition: margin-left var(--transition-normal);
+  overflow-x: hidden;
+  transition: margin-left 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), max-width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* --- Sidebar Collapsed State (Toggled via button) --- */
+.dashboard-layout.sidebar-collapsed .dashboard-sidebar {
+  transform: translateX(-100%) !important;
+  pointer-events: none !important;
+}
+
+.dashboard-layout.sidebar-collapsed .dashboard-topbar {
+  left: 0 !important;
+  width: 100% !important;
+}
+
+.dashboard-layout.sidebar-collapsed .dashboard-main {
+  margin-left: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 /* --- Responsive Layout Breakpoints --- */
 
-/* Tablet & Narrow Desktop (Collapse sidebar to icon-rail) */
+/* Tablet & Narrow Desktop */
 @media (max-width: 1024px) {
   .dashboard-sidebar {
     width: 68px;
@@ -290,10 +408,14 @@
 
   .dashboard-topbar {
     left: 68px;
+    width: calc(100% - 68px);
   }
 
   .dashboard-main {
     margin-left: 68px;
+    width: calc(100% - 68px);
+    max-width: calc(100% - 68px);
+    padding: var(--space-md);
   }
 }
 

@@ -5,14 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Beat the Bot Dashboard — Live Laya decision viewer, forensic decision autopsy, replay, question lab, and calibration.">
   <title>BEAT THE BOT — Gamer HUD Dashboard</title>
-  <link rel="stylesheet" href="css/tokens.css">
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/dashboard.css">
-  <link rel="stylesheet" href="css/live.css">
-  <link rel="stylesheet" href="css/autopsy.css">
-  <link rel="stylesheet" href="css/replay.css">
-  <link rel="stylesheet" href="css/panels.css">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <link rel="stylesheet" href="css/tokens.css?v=20261014_hd">
+  <link rel="stylesheet" href="css/base.css?v=20261014_hd">
+  <link rel="stylesheet" href="css/components.css?v=20261014_hd">
+  <link rel="stylesheet" href="css/dashboard.css?v=20261014_hd">
+  <link rel="stylesheet" href="css/live.css?v=20261014_hd">
+  <link rel="stylesheet" href="css/autopsy.css?v=20261014_hd">
+  <link rel="stylesheet" href="css/replay.css?v=20261014_hd">
+  <link rel="stylesheet" href="css/panels.css?v=20261014_hd">
 </head>
 <body>
   <!-- Ambient Overlays -->
@@ -29,6 +32,10 @@
           <span class="sidebar-brand-icon" aria-hidden="true">🍄</span>
           <span class="sidebar-brand-text">BEAT THE BOT</span>
         </a>
+        <button id="btn-sidebar-collapse" class="sidebar-collapse-btn" aria-label="Hide navigation sidebar" title="Hide Navigation Sidebar">
+          <span aria-hidden="true">◀</span>
+          <span>HIDE</span>
+        </button>
       </div>
 
       <!-- Global Session Picker -->
@@ -113,6 +120,12 @@
     <!-- Top Telemetry Status Bar -->
     <header class="dashboard-topbar">
       <div class="topbar-left">
+        <!-- Sidebar Collapse/Expand Toggle Button -->
+        <button id="btn-sidebar-toggle" class="btn btn-ghost btn-sm sidebar-toggle-btn" aria-label="Toggle navigation sidebar" title="Toggle Navigation Sidebar">
+          <span id="sidebar-toggle-icon" aria-hidden="true">◀</span>
+          <span id="sidebar-toggle-text">NAV</span>
+        </button>
+
         <!-- Session ID & Game ID -->
         <div class="topbar-item">
           <span class="topbar-label">WORLD / SESSION</span>
@@ -182,12 +195,12 @@
 
   <!-- Dashboard Boot Script -->
   <script type="module">
-    import { initRouter } from './js/router.js';
-    import { store } from './js/store.js';
-    import * as api from './js/api.js';
-    import { gameConfig } from './config.js';
-    import * as sound from './js/sound.js';
-    import { initParticleBackground, triggerMarioCoinPop, triggerMarioBlockBump } from './js/fx.js';
+    import { initRouter } from './js/router.js?v=20261014_hd';
+    import { store } from './js/store.js?v=20261014_hd';
+    import * as api from './js/api.js?v=20261014_hd';
+    import { gameConfig } from './config.js?v=20261014_hd';
+    import * as sound from './js/sound.js?v=20261014_hd';
+    import { initParticleBackground, triggerMarioCoinPop, triggerMarioBlockBump } from './js/fx.js?v=20261014_hd';
 
     document.addEventListener('DOMContentLoaded', async () => {
       const panelContainer = document.getElementById('panel-container');
@@ -392,6 +405,51 @@
           }
         } else if (ribbon) {
           ribbon.style.display = 'none';
+        }
+      }
+
+      // Sidebar Collapse / Expand Controller (Supports both sidebar header button and topbar button)
+      const sidebarToggleBtn = document.getElementById('btn-sidebar-toggle');
+      const sidebarCollapseBtn = document.getElementById('btn-sidebar-collapse');
+      const sidebarToggleIcon = document.getElementById('sidebar-toggle-icon');
+      const sidebarToggleText = document.getElementById('sidebar-toggle-text');
+      const layoutContainer = document.querySelector('.dashboard-layout');
+
+      if (layoutContainer) {
+        function updateSidebarUI(collapsed) {
+          layoutContainer.classList.toggle('sidebar-collapsed', collapsed);
+          if (sidebarToggleIcon) {
+            sidebarToggleIcon.textContent = collapsed ? '▶' : '◀';
+          }
+          if (sidebarToggleText) {
+            sidebarToggleText.textContent = collapsed ? 'SHOW NAV' : 'HIDE NAV';
+          }
+          if (sidebarToggleBtn) {
+            if (collapsed) {
+              sidebarToggleBtn.classList.add('nav-is-collapsed');
+              sidebarToggleBtn.setAttribute('title', 'Show Navigation Sidebar');
+            } else {
+              sidebarToggleBtn.classList.remove('nav-is-collapsed');
+              sidebarToggleBtn.setAttribute('title', 'Hide Navigation Sidebar');
+            }
+          }
+        }
+
+        const initialCollapsed = localStorage.getItem('beat_the_bot_sidebar_collapsed') === 'true';
+        updateSidebarUI(initialCollapsed);
+
+        function toggleSidebar() {
+          const isCurrentlyCollapsed = layoutContainer.classList.contains('sidebar-collapsed');
+          const nextState = !isCurrentlyCollapsed;
+          updateSidebarUI(nextState);
+          localStorage.setItem('beat_the_bot_sidebar_collapsed', String(nextState));
+        }
+
+        if (sidebarToggleBtn) {
+          sidebarToggleBtn.addEventListener('click', toggleSidebar);
+        }
+        if (sidebarCollapseBtn) {
+          sidebarCollapseBtn.addEventListener('click', toggleSidebar);
         }
       }
     });

@@ -85,36 +85,36 @@ function renderCalibrationUI(container, data) {
 
       <!-- Big HUD Stats Row -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md); margin-bottom: var(--space-lg);">
-        <div class="hud-card">
-          <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">SAMPLE COUNT (n)</div>
-          <div style="font-family: var(--font-heading); font-size: var(--text-2xl); font-weight: 800; color: #fff;">${n}</div>
-          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">
+        <div class="hud-card kpi-card">
+          <div class="kpi-label">SAMPLE COUNT (n)</div>
+          <div class="kpi-value kpi-val-nowrap" style="color: #fff; white-space: nowrap;">${n} SAMPLES</div>
+          <div class="kpi-subtext">
             ${n < 30 ? '<span style="color: var(--amber)">Warning: n &lt; 30</span>' : '<span style="color: var(--neon-green)">Statistically sufficient</span>'}
           </div>
         </div>
 
-        <div class="hud-card">
-          <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">EMPIRICAL ACCURACY</div>
-          <div style="font-family: var(--font-heading); font-size: var(--text-2xl); font-weight: 800; color: var(--neon-green);">
-            ${(accuracy * 100).toFixed(1)}%
+        <div class="hud-card kpi-card kpi-card-green">
+          <div class="kpi-label" style="color: var(--neon-green);">EMPIRICAL ACCURACY</div>
+          <div class="kpi-value kpi-val-nowrap" style="color: var(--neon-green); white-space: nowrap;">
+            ${(accuracy * 100).toFixed(1)}% ACC
           </div>
-          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">Proportion of successful moves</div>
+          <div class="kpi-subtext">Successful move ratio</div>
         </div>
 
-        <div class="hud-card">
-          <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">CALIBRATION ERROR (ECE)</div>
-          <div style="font-family: var(--font-heading); font-size: var(--text-2xl); font-weight: 800; color: ${ece < 0.08 ? 'var(--neon-cyan)' : 'var(--amber)'};">
-            ${ece.toFixed(3)}
+        <div class="hud-card kpi-card">
+          <div class="kpi-label">CALIBRATION ERROR (ECE)</div>
+          <div class="kpi-value kpi-val-nowrap" style="color: ${ece < 0.08 ? 'var(--mario-yellow)' : 'var(--amber)'}; white-space: nowrap;">
+            ${ece.toFixed(3)} ECE
           </div>
-          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">Expected Calibration Error (lower is better)</div>
+          <div class="kpi-subtext">Expected Calibration Error</div>
         </div>
 
-        <div class="hud-card">
-          <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">REC. THRESHOLD (τ)</div>
-          <div style="font-family: var(--font-heading); font-size: var(--text-2xl); font-weight: 800; color: var(--neon-magenta);">
-            ${(recThreshold * 100).toFixed(0)}%
+        <div class="hud-card kpi-card kpi-card-red">
+          <div class="kpi-label" style="color: var(--mario-red);">REC. THRESHOLD (τ)</div>
+          <div class="kpi-value kpi-val-nowrap" style="color: var(--mario-red); white-space: nowrap !important;">
+            ${(recThreshold * 100).toFixed(0)}% CUTOFF
           </div>
-          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">Optimal confidence cutoff</div>
+          <div class="kpi-subtext">Optimal confidence threshold</div>
         </div>
       </div>
 

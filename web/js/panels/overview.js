@@ -26,7 +26,7 @@ export async function mount(container) {
         <div>
           <div class="section-tag">MISSION CONTROL // TELEMETRY SUMMARY</div>
           <h2 style="margin-bottom: 4px;">SYSTEM OVERVIEW</h2>
-          <p style="color: var(--text-muted); margin-bottom: 0;">Autonomous game decision layer performance metrics, score progressions, and historical leaderboards.</p>
+          <p style="color: var(--text-muted); margin-bottom: 0;">Autonomous game decision layer performance metrics, score progressions, and real-time telemetry.</p>
         </div>
         <div style="display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap;">
           <a href="#/live" class="btn btn-primary btn-sm">
@@ -125,16 +125,19 @@ function renderOverviewUI(container, runs, calibData, events) {
       <!-- Header Row -->
       <div class="panel-header-row" style="margin-bottom: var(--space-md); display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: var(--space-md);">
         <div>
-          <div class="section-tag">MISSION CONTROL // TELEMETRY SUMMARY</div>
+          <div class="section-tag">★ MISSION CONTROL // TELEMETRY SUMMARY ★</div>
           <h2 style="margin-bottom: 4px;">SYSTEM OVERVIEW</h2>
-          <p style="color: var(--text-muted); margin-bottom: 0;">Autonomous game decision layer performance metrics, score progressions, and historical leaderboards.</p>
+          <p style="color: var(--text-muted); margin-bottom: 0;">Autonomous game decision layer performance metrics, score progressions, and real-time audits.</p>
         </div>
         <div style="display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap;">
-          <span class="badge ${state.isStreaming ? 'badge-good' : 'badge-neutral'}">
-            ${state.isStreaming ? 'STREAMING ACTIVE' : 'SYSTEM IDLE'}
+          <span class="badge ${state.isStreaming ? 'badge-live' : 'badge-good'}">
+            ${state.isStreaming ? 'STREAMING ACTIVE' : 'SYSTEM ONLINE'}
           </span>
           <a href="#/live" class="btn btn-primary btn-sm">
             <span>⚡ LIVE RUN</span>
+          </a>
+          <a href="#/replay?session=${currentSessionId}" class="btn btn-secondary btn-sm">
+            <span>📼 REPLAY</span>
           </a>
         </div>
       </div>
@@ -144,19 +147,19 @@ function renderOverviewUI(container, runs, calibData, events) {
         <!-- KPI 1: Games Played -->
         <div class="kpi-card">
           <div class="kpi-label">GAMES PLAYED</div>
-          <div class="kpi-value" style="color: #fff;">${gamesPlayed}</div>
-          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+          <div class="kpi-value kpi-val-nowrap" style="color: #fff;">${gamesPlayed}</div>
+          <div class="kpi-subtext">
             Completed game sessions
           </div>
         </div>
 
         <!-- KPI 2: Best Score -->
-        <div class="kpi-card" style="border-color: rgba(57, 255, 136, 0.3);">
+        <div class="kpi-card kpi-card-green">
           <div class="kpi-label" style="color: var(--neon-green);">BEST SCORE</div>
-          <div id="ov-best-score" class="kpi-value" style="color: var(--neon-green);">
+          <div id="ov-best-score" class="kpi-value kpi-val-nowrap" style="color: var(--neon-green); white-space: nowrap;">
             ${bestScore.toLocaleString()} PTS
           </div>
-          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+          <div class="kpi-subtext">
             Highest historical peak
           </div>
         </div>
@@ -164,134 +167,58 @@ function renderOverviewUI(container, runs, calibData, events) {
         <!-- KPI 3: Average Laya Latency -->
         <div class="kpi-card">
           <div class="kpi-label">AVG LAYA LATENCY</div>
-          <div id="ov-latency" class="kpi-value" style="color: var(--neon-cyan);">
+          <div id="ov-latency" class="kpi-value kpi-val-nowrap" style="color: var(--neon-cyan); white-space: nowrap;">
             ${avgLatency.toFixed(1)} ms
           </div>
-          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+          <div class="kpi-subtext">
             Inference turnaround time
           </div>
         </div>
 
         <!-- KPI 4: Invalid-Move Rate -->
-        <div class="kpi-card" style="border-color: rgba(255, 176, 32, 0.3);">
+        <div class="kpi-card kpi-card-amber">
           <div class="kpi-label" style="color: var(--amber);">INVALID-MOVE RATE</div>
-          <div class="kpi-value" style="color: var(--amber);">${invalidRateStr}</div>
-          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+          <div class="kpi-value kpi-val-nowrap" style="color: var(--amber); white-space: nowrap;">${invalidRateStr}</div>
+          <div class="kpi-subtext">
             ${totalInvalid} rejected &amp; retried
           </div>
         </div>
 
         <!-- KPI 5: Calibration Score -->
-        <div class="kpi-card" style="border-color: rgba(255, 61, 242, 0.3);">
+        <div class="kpi-card kpi-card-magenta">
           <div class="kpi-label" style="color: var(--neon-magenta);">CALIBRATION SCORE</div>
-          <div class="kpi-value" style="color: var(--neon-magenta);">${calibrationScoreStr}</div>
-          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+          <div class="kpi-value kpi-val-nowrap" style="color: var(--neon-magenta); white-space: nowrap;">${calibrationScoreStr}</div>
+          <div class="kpi-subtext">
             ${calibQuality}
           </div>
         </div>
       </div>
 
       <!-- 2. Active Session Hero Sparkline -->
-      <div class="hud-card" style="margin-bottom: var(--space-xl); padding: var(--space-md) var(--space-lg);">
+      <div class="hud-card" style="margin-bottom: var(--space-xl); padding: var(--space-md) var(--space-lg); width: 100%; box-sizing: border-box;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-sm); margin-bottom: var(--space-xs);">
           <div>
             <div style="font-family: var(--font-heading); font-size: var(--text-sm); font-weight: 800; color: #fff;">
               ACTIVE SESSION SCORE TRAJECTORY: <span style="color: var(--neon-cyan);">${currentSessionId}</span>
             </div>
-            <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">
+            <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 2px;">
               Step-by-step score progression curve with real-time gradient tracking
             </div>
           </div>
-          <div style="display: flex; gap: var(--space-sm); align-items: center;">
-            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">
-              CURRENT: <strong id="ov-live-score" style="color: var(--neon-green); font-size: 14px;">${state.score || bestScore} PTS</strong>
+          <div style="display: flex; gap: var(--space-sm); align-items: center; flex-wrap: nowrap;">
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); white-space: nowrap;">
+              CURRENT: <strong id="ov-live-score" style="color: var(--neon-green); font-size: 13px; white-space: nowrap;">${(state.score || bestScore).toLocaleString()} PTS</strong>
             </div>
-            <a href="#/replay?session=${currentSessionId}" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 11px;">
+            <a href="#/replay?session=${currentSessionId}" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 11px; white-space: nowrap;">
               OPEN IN REPLAY ➔
             </a>
           </div>
         </div>
 
         <!-- Inline SVG Hero Chart -->
-        <div style="width: 100%; height: 90px; margin-top: var(--space-xs);">
+        <div style="width: 100%; height: 110px; margin-top: var(--space-xs);">
           ${renderHeroSparklineSvg(activeScoreSeries)}
         </div>
-      </div>
-
-      <!-- 3. Best Runs Leaderboard with Inline Session Sparklines -->
-      <div class="hud-card" style="margin-bottom: var(--space-xl);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md); flex-wrap: wrap; gap: var(--space-sm);">
-          <div>
-            <h3 style="color: #fff; font-size: var(--text-base); margin-bottom: 2px;">
-              HISTORICAL RUNS LEADERBOARD
-            </h3>
-            <p style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: 0;">
-              Best runs ranked by score with per-session score sparklines and replay links.
-            </p>
-          </div>
-          <span class="chip chip-active">${runs.length} Recorded Sessions</span>
-        </div>
-
-        <div class="lab-table-container">
-          <table class="lab-table">
-            <thead>
-              <tr>
-                <th style="width: 50px;">RANK</th>
-                <th>SESSION IDENTIFIER</th>
-                <th>GAME ADAPTER</th>
-                <th>SCORE</th>
-                <th>STEPS</th>
-                <th>SCORE-OVER-STEPS SPARKLINE</th>
-                <th>LATENCY</th>
-                <th>INVALID</th>
-                <th>STATUS</th>
-                <th style="text-align: right;">ACTION</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${renderRunsTableRows(runs, currentSessionId, activeScoreSeries)}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- 4. Quick Architecture & USP Jump Cards -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-md);">
-        <a href="#/autopsy" class="hud-card" style="text-decoration: none; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform='none'">
-          <div>
-            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--neon-cyan); margin-bottom: 4px;">USP 01 // AUDIT</div>
-            <h4 style="color: #fff; margin-bottom: 4px;">DECISION AUTOPSY</h4>
-            <p style="font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: 0;">Investigate mispredictions, misses, and the top 5 worst decisions.</p>
-          </div>
-          <div style="margin-top: var(--space-sm); font-size: 11px; font-weight: 700; color: var(--neon-cyan);">OPEN AUTOPSY ➔</div>
-        </a>
-
-        <a href="#/lab" class="hud-card" style="text-decoration: none; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform='none'">
-          <div>
-            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--neon-magenta); margin-bottom: 4px;">USP 02 // BENCHMARK</div>
-            <h4 style="color: #fff; margin-bottom: 4px;">QUESTION LAB</h4>
-            <p style="font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: 0;">Compare question formulations on identical seeds with SVG charts.</p>
-          </div>
-          <div style="margin-top: var(--space-sm); font-size: 11px; font-weight: 700; color: var(--neon-magenta);">OPEN LAB ➔</div>
-        </a>
-
-        <a href="#/replay" class="hud-card" style="text-decoration: none; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform='none'">
-          <div>
-            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--neon-green); margin-bottom: 4px;">USP 03 // VERIFY</div>
-            <h4 style="color: #fff; margin-bottom: 4px;">RUN REPLAY</h4>
-            <p style="font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: 0;">Rewind step-by-step with raw JSON verification and SHA-256 seal.</p>
-          </div>
-          <div style="margin-top: var(--space-sm); font-size: 11px; font-weight: 700; color: var(--neon-green);">OPEN REPLAY ➔</div>
-        </a>
-
-        <a href="#/calibration" class="hud-card" style="text-decoration: none; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform='none'">
-          <div>
-            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--amber); margin-bottom: 4px;">USP 04 // RIGOR</div>
-            <h4 style="color: #fff; margin-bottom: 4px;">CALIBRATION CHECK</h4>
-            <p style="font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: 0;">Reliability diagram, overconfidence verdicts, and threshold tuning.</p>
-          </div>
-          <div style="margin-top: var(--space-sm); font-size: 11px; font-weight: 700; color: var(--amber);">OPEN CALIBRATION ➔</div>
-        </a>
       </div>
     </div>
   `;
@@ -308,99 +235,6 @@ function renderOverviewUI(container, runs, calibData, events) {
       latencyEl.textContent = `${newState.latencyMs.toFixed(1)} ms`;
     }
   });
-}
-
-function renderRunsTableRows(runs, currentSessionId, activeScoreSeries) {
-  // Sort runs descending by final_score
-  const sortedRuns = [...runs].sort((a, b) => (b.final_score || 0) - (a.final_score || 0));
-
-  if (sortedRuns.length === 0) {
-    return `
-      <tr>
-        <td colspan="10" style="text-align: center; padding: var(--space-lg); color: var(--text-muted);">
-          No run sessions recorded yet.
-        </td>
-      </tr>
-    `;
-  }
-
-  return sortedRuns.map((run, idx) => {
-    const rank = idx + 1;
-    const isWinner = rank === 1;
-    const isCurrent = run.session_id === currentSessionId;
-    
-    // Status badge
-    let statusBadge = '<span class="badge badge-good">COMPLETED</span>';
-    if (run.completion_status === 'collision') {
-      statusBadge = '<span class="badge badge-illegal">COLLISION</span>';
-    }
-
-    // Sparkline points for this run
-    let series = [];
-    if (isCurrent && activeScoreSeries.length > 0) {
-      series = activeScoreSeries;
-    } else {
-      // Synthesize realistic trajectory ending at final_score over steps
-      series = synthesizeScoreSeries(run.final_score || 1000, run.steps || 30);
-    }
-    const sparklineSvg = renderInlineSparklineSvg(series, isWinner ? 'var(--neon-green)' : 'var(--neon-cyan)');
-
-    return `
-      <tr class="${isWinner ? 'winner-row' : ''}">
-        <td>
-          ${isWinner ? '<span class="crown-badge">👑 #1</span>' : `<span style="font-weight: 700; color: var(--text-muted);">#${rank}</span>`}
-        </td>
-        <td>
-          <a href="#/replay?session=${run.session_id}" style="color: ${isCurrent ? 'var(--neon-cyan)' : 'var(--text-primary)'}; font-family: var(--font-mono); font-weight: 600; text-decoration: none;">
-            ${run.session_id}
-            ${isCurrent ? ' <span style="font-size: 10px; color: var(--neon-cyan);">(ACTIVE)</span>' : ''}
-          </a>
-        </td>
-        <td style="color: var(--text-muted); font-size: 11px;">
-          ${run.game_id || 'mock-runner-v1'}
-        </td>
-        <td style="font-weight: 800; color: ${isWinner ? 'var(--neon-green)' : '#fff'};">
-          ${(run.final_score || 0).toLocaleString()} PTS
-        </td>
-        <td style="font-family: var(--font-mono); color: var(--text-secondary);">
-          ${run.steps || 0}
-        </td>
-        <td style="padding-block: 6px; width: 140px;">
-          <div style="width: 140px; height: 28px;">
-            ${sparklineSvg}
-          </div>
-        </td>
-        <td style="font-family: var(--font-mono); color: var(--text-muted);">
-          ${run.average_laya_latency_ms ? `${run.average_laya_latency_ms.toFixed(1)}ms` : '--'}
-        </td>
-        <td style="font-family: var(--font-mono); color: ${(run.invalid_moves || 0) > 0 ? 'var(--amber)' : 'var(--text-muted)'};">
-          ${run.invalid_moves || 0}
-        </td>
-        <td>
-          ${statusBadge}
-        </td>
-        <td style="text-align: right;">
-          <a href="#/replay?session=${run.session_id}" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 10px;" title="Inspect in Reproducible Replay">
-            REPLAY
-          </a>
-        </td>
-      </tr>
-    `;
-  }).join('');
-}
-
-function synthesizeScoreSeries(finalScore, steps) {
-  const points = [0];
-  const count = Math.max(8, Math.min(25, steps));
-  for (let i = 1; i <= count; i++) {
-    const progress = i / count;
-    // slightly non-linear progression with small dips
-    const dip = (i % 5 === 0) ? -0.05 : 0.02;
-    const factor = Math.max(0, Math.min(1, Math.pow(progress, 1.2) + dip));
-    points.push(Math.round(finalScore * factor));
-  }
-  points[points.length - 1] = finalScore;
-  return points;
 }
 
 function renderHeroSparklineSvg(series) {
@@ -452,30 +286,3 @@ function renderHeroSparklineSvg(series) {
   `;
 }
 
-function renderInlineSparklineSvg(series, strokeColor = 'var(--neon-cyan)') {
-  if (!series || series.length < 2) return '';
-
-  const max = Math.max(...series, 1);
-  const min = Math.min(...series, 0);
-  const range = max - min || 1;
-  const width = 140;
-  const height = 28;
-  const pad = 3;
-  const chartHeight = height - pad * 2;
-
-  const points = series.map((val, idx) => {
-    const x = pad + (idx / (series.length - 1)) * (width - pad * 2);
-    const y = pad + chartHeight - ((val - min) / range) * chartHeight;
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  });
-
-  const pathStr = `M ${points.join(' L ')}`;
-  const areaStr = `M ${points[0]} L ${points.join(' L ')} L ${width - pad},${height} L ${pad},${height} Z`;
-
-  return `
-    <svg viewBox="0 0 ${width} ${height}" style="width: 100%; height: 100%; display: block;" preserveAspectRatio="none">
-      <path d="${areaStr}" fill="${strokeColor}" fill-opacity="0.12" />
-      <path d="${pathStr}" fill="none" stroke="${strokeColor}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
-  `;
-}
