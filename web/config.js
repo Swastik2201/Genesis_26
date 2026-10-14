@@ -1,16 +1,19 @@
 /**
  * ==========================================================================
- * BEAT THE BOT — CENTRAL GAME CONFIGURATION (web/config.js)
+ * LAYAMIND — CENTRAL GAME CONFIGURATION (web/config.js)
  * Single source of truth for game branding, theme accents, and parameters.
  * Retheme on hackathon game day by editing only this configuration file.
  * ==========================================================================
  */
 
 export const gameConfig = {
+  // Website Branding
+  brandName: "LayaMind",
+
   // Game Branding
   gameId: "mock-runner-v1",
   gameName: "CYBER RUNNER",
-  gameSubtitle: "Beat the Bot // Autonomous Game Decision Layer",
+  gameSubtitle: "LayaMind // Autonomous Game Decision Layer",
   gameTagline: "High-speed 3-lane tactical navigation guided by Laya typed probabilities",
   gameDescription: "Autonomous decision layer that normalizes game observations, queries Laya with typed questions, validates move legality, and submits actions with immutable audit proofs.",
   

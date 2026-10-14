@@ -1,6 +1,6 @@
 /**
  * ==========================================================================
- * BEAT THE BOT — ABOUT & ARCHITECTURE PANEL (panels/about.js)
+ * LAYAMIND — ABOUT & ARCHITECTURE PANEL (panels/about.js)
  * Specifications, two-line problem statement, five-stage pipeline diagram,
  * formal credits (Nandakishor M, Convai Innovations, brainfunctioncollapse.com/laya),
  * and non-negotiable integrity rules.
@@ -16,7 +16,7 @@ export function mount(container) {
       <div class="panel-header-row" style="margin-bottom: var(--space-md); display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: var(--space-md);">
         <div>
           <div class="section-tag">SPECIFICATION // MISSION ARCHITECTURE</div>
-          <h2 style="margin-bottom: 4px;">ABOUT ${gameConfig.gameName || 'BEAT THE BOT'}</h2>
+          <h2 style="margin-bottom: 4px;">ABOUT ${gameConfig.brandName || 'LayaMind'}</h2>
           <p style="color: var(--text-muted); margin-bottom: 0;">${gameConfig.gameTagline || 'Autonomous game decision layer built around the Laya model for hackathon auditing.'}</p>
         </div>
         <div style="display: flex; gap: var(--space-sm); align-items: center;">
@@ -192,7 +192,7 @@ export function mount(container) {
           </div>
 
           <div style="margin-top: var(--space-md); font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-align: center; border-top: 1px solid var(--border-subtle); padding-top: var(--space-xs);">
-            PROJECT REPOSITORY: BEAT THE BOT // MEMBER C FRONTEND
+            PROJECT REPOSITORY: LAYAMIND // MEMBER C FRONTEND
           </div>
         </div>
       </div>

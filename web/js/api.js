@@ -1,6 +1,6 @@
 /**
  * ==========================================================================
- * BEAT THE BOT — API CLIENT & STREAMING DATA LAYER (api.js)
+ * LAYAMIND — API CLIENT & STREAMING DATA LAYER (api.js)
  * Implements HTTP API contract per AGENTS.md section 5.7 with automatic
  * resilient fallback to web/mock/ data when offline or server unreachable.
  * ==========================================================================
@@ -84,7 +84,7 @@ export async function health() {
     return {
       status: "ok",
       mode: "mock_demo",
-      service: "Beat the Bot Mock Layer",
+      service: "LayaMind Mock Layer",
       log_available: true,
       freshness_seconds: 0
     };
