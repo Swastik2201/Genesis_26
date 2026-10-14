@@ -10,7 +10,7 @@ import { store } from '../store.js';
 import * as api from '../api.js';
 import { typewriter, animateCounter, triggerGlitch } from '../fx.js';
 import { renderDecisionGrid, renderSplitDecision } from '../components/decisionCard.js';
-import { GameViewport } from '../components/gameCanvas.js';
+import { GameViewport } from '../components/gameCanvas.js?v=20261014_v5';
 import * as sound from '../sound.js';
 
 let streamController = null;
@@ -40,10 +40,14 @@ export async function mount(container) {
   renderShell(container);
   bindControls(container);
 
-  // Initialize visual game canvas viewport
+  // Initialize visual game canvas viewport with restart handler
   const viewportMount = container.querySelector('#live-game-viewport-mount');
   if (viewportMount) {
-    gameViewport = new GameViewport(viewportMount);
+    gameViewport = new GameViewport(viewportMount, {
+      onRestart: () => {
+        restartLiveRun();
+      }
+    });
   }
 
   // If we already have events in store, render the latest one or selected
@@ -81,6 +85,71 @@ export async function mount(container) {
   if (!state.isStreaming) {
     startStream();
   }
+}
+
+/**
+ * Resets the decision timeline, game simulation, and replays all steps from Step 0.
+ */
+export function restartLiveRun() {
+  if (streamController) {
+    streamController.close();
+    streamController = null;
+  }
+
+  // 1. Reset store events to empty
+  store.setState({
+    events: [],
+    selectedStep: null,
+    latestEvent: null,
+    score: 0,
+    isStreaming: true
+  });
+
+  currentDisplayedStep = null;
+  isFollowLive = true;
+
+  // 2. Clear state and decision mounts for clean entry
+  const stateMount = document.getElementById('live-state-mount');
+  const decisionMount = document.getElementById('live-decision-mount');
+  if (stateMount) stateMount.innerHTML = '';
+  if (decisionMount) {
+    decisionMount.innerHTML = `
+      <div class="empty-hero-state hud-card" style="padding: var(--space-xl);">
+        <div style="font-size: 2.5rem; color: var(--neon-cyan); margin-bottom: var(--space-sm); animation: pulseDot 1.2s infinite;">
+          🔄
+        </div>
+        <h3 style="font-size: var(--text-lg); color: #fff; margin-bottom: var(--space-xs);">
+          RESTARTING RUN...
+        </h3>
+        <p style="color: var(--text-secondary); font-size: var(--text-sm);">
+          Resetting decision timeline to Step 0 and initiating fresh live inference stream.
+        </p>
+      </div>
+    `;
+  }
+
+  // 3. Clear bottom timeline pips track
+  const track = document.getElementById('timeline-pips-track');
+  if (track) track.innerHTML = '';
+
+  // 4. Reset game canvas
+  if (gameViewport) {
+    gameViewport.resetSkin(gameViewport.gameSkin);
+    gameViewport.setPaused(false);
+  }
+
+  // 5. Reset UI toggles
+  const followToggle = document.getElementById('live-follow-toggle');
+  if (followToggle) followToggle.checked = true;
+
+  const playBtn = document.getElementById('live-btn-play');
+  if (playBtn) playBtn.innerHTML = '<span>⏸ PAUSE</span>';
+
+  const indicator = document.getElementById('inspecting-indicator');
+  if (indicator) indicator.style.display = 'none';
+
+  // 6. Start stream fresh from step 0
+  startStream(true);
 }
 
 /**
@@ -137,7 +206,7 @@ function startStream(forceDemo = false) {
 function renderShell(container) {
   container.innerHTML = `
     <div class="panel-live-hero" id="live-hero-root">
-      <!-- 1. Top Controls Toolbar (Speed buttons removed per user request) -->
+      <!-- 1. Top Controls Toolbar (Speed buttons 0.5x, 1x, 2x removed) -->
       <div class="live-toolbar">
         <div class="live-controls-group">
           <button id="live-btn-play" class="btn btn-primary btn-sm" aria-label="Toggle live stream and game simulation playback">
@@ -145,6 +214,9 @@ function renderShell(container) {
           </button>
           <button id="live-btn-step" class="btn btn-secondary btn-sm" aria-label="Step forward one event">
             <span>⏭ STEP</span>
+          </button>
+          <button id="live-btn-restart" class="btn btn-secondary btn-sm" aria-label="Restart decision step timeline and simulation from step 0">
+            <span>🔄 RESTART</span>
           </button>
         </div>
 
@@ -203,6 +275,7 @@ function renderShell(container) {
 function bindControls(container) {
   const playBtn = container.querySelector('#live-btn-play');
   const stepBtn = container.querySelector('#live-btn-step');
+  const restartBtn = container.querySelector('#live-btn-restart');
   const followToggle = container.querySelector('#live-follow-toggle');
   const reconnectBtn = container.querySelector('#btn-reconnect-stream');
 
@@ -230,6 +303,12 @@ function bindControls(container) {
   if (stepBtn) {
     stepBtn.addEventListener('click', () => {
       advanceOneStep();
+    });
+  }
+
+  if (restartBtn) {
+    restartBtn.addEventListener('click', () => {
+      restartLiveRun();
     });
   }
 

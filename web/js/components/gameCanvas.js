@@ -169,11 +169,15 @@ export class GameViewport {
       });
     }
 
-    // Restart Button
+    // Restart Button (calls parent onRestart to reset full timeline and replay steps)
     const btnRestart = this.container.querySelector('#btn-restart-game');
     if (btnRestart) {
       btnRestart.addEventListener('click', () => {
-        this.resetSkin(this.gameSkin);
+        if (typeof this.options.onRestart === 'function') {
+          this.options.onRestart();
+        } else {
+          this.resetSkin(this.gameSkin);
+        }
       });
     }
 
