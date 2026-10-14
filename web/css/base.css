@@ -207,3 +207,92 @@ code, pre, .mono {
     scroll-behavior: auto !important;
   }
 }
+
+/* --- HD 8-Bit Retro Arcade Utilities --- */
+.bevel-3d {
+  border: 3px solid #000 !important;
+  box-shadow: 4px 4px 0 #000 !important;
+  border-radius: 0 !important;
+}
+
+/* Green victory bevels for high scores / winners */
+.bevel-green, .bevel-victory {
+  background: #00a800 !important;
+  border: 3px solid #000 !important;
+  box-shadow: 4px 4px 0 #000, inset 2px 2px 0 #62d866, inset -2px -2px 0 #004d00 !important;
+  color: #ffffff !important;
+  text-shadow: 1px 1px 0 #000 !important;
+  border-radius: 0 !important;
+}
+
+/* Amber bevels for uncertainty / rejected moves */
+.bevel-amber {
+  background: #f87800 !important;
+  border: 3px solid #000 !important;
+  box-shadow: 4px 4px 0 #000, inset 2px 2px 0 #ffaa44, inset -2px -2px 0 #883300 !important;
+  color: #ffffff !important;
+  text-shadow: 1px 1px 0 #000 !important;
+  border-radius: 0 !important;
+}
+
+/* Mario red bevels for calibration cutoffs / collisions / severe faults */
+.bevel-red, .bevel-cutoff {
+  background: #e52521 !important;
+  border: 3px solid #000 !important;
+  box-shadow: 4px 4px 0 #000, inset 2px 2px 0 #ff6666, inset -2px -2px 0 #7a0000 !important;
+  color: #ffffff !important;
+  text-shadow: 1px 1px 0 #000 !important;
+  border-radius: 0 !important;
+}
+
+/* Gold Question Block Bevel */
+.bevel-gold {
+  background: #fcd800 !important;
+  border: 3px solid #000 !important;
+  box-shadow: 4px 4px 0 #000, inset 2px 2px 0 #fff080, inset -2px -2px 0 #b38600 !important;
+  color: #000000 !important;
+  text-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* Clean, high-contrast arcade headings with pixel text shadows */
+.arcade-heading {
+  font-family: var(--font-heading) !important;
+  text-shadow: 2px 2px 0 #000 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+}
+
+/* Consistent Arcade-style chamfered buttons & chips with tactile feedback */
+.arcade-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #141026;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000, inset 1px 1px 0 rgba(255, 255, 255, 0.15);
+  border-radius: 0;
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--transition-fast);
+}
+
+.arcade-chip:hover {
+  background: var(--mario-yellow);
+  color: #000;
+  border-color: #000;
+  box-shadow: 3px 3px 0 #000;
+  transform: translate(-1px, -1px);
+}
+
+.arcade-chip:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #000;
+}
+

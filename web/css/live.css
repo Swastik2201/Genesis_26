@@ -4,6 +4,7 @@
    ========================================================================== */
 
 /* --- Top Controls Toolbar --- */
+/* --- Top Controls Toolbar (HD 8-Bit Retro Arcade) --- */
 .live-toolbar {
   display: flex;
   justify-content: space-between;
@@ -11,11 +12,11 @@
   flex-wrap: wrap;
   gap: var(--space-md);
   background: var(--bg-panel);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
+  border: 3px solid #000;
+  border-radius: 0;
   padding: var(--space-sm) var(--space-md);
   margin-bottom: var(--space-md);
-  box-shadow: var(--shadow-card);
+  box-shadow: 4px 4px 0 #000;
 }
 
 .live-controls-group {
@@ -28,9 +29,10 @@
 .speed-selector {
   display: flex;
   align-items: center;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-xs);
+  background: #080c1d;
+  border: 2px solid #000;
+  border-radius: 0;
+  box-shadow: 2px 2px 0 #000;
   overflow: hidden;
 }
 
@@ -38,8 +40,8 @@
   background: transparent;
   border: none;
   color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  font-family: var(--font-heading);
+  font-size: 10px;
   padding: 4px 8px;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -47,14 +49,13 @@
 
 .speed-btn:hover {
   color: #fff;
-  background: rgba(34, 230, 255, 0.1);
+  background: rgba(252, 216, 0, 0.15);
 }
 
 .speed-btn.is-active {
-  background: var(--neon-cyan);
-  color: var(--bg-primary);
-  font-weight: 700;
-  box-shadow: var(--glow-cyan-sm);
+  background: var(--mario-yellow);
+  color: #000;
+  font-weight: 800;
 }
 
 /* Follow Live Toggle Switch */
@@ -74,9 +75,10 @@
   -webkit-appearance: none;
   width: 32px;
   height: 18px;
-  background: var(--bg-panel-elevated);
-  border: 1px solid var(--border-medium);
-  border-radius: 9px;
+  background: #0d122b;
+  border: 2px solid #000;
+  border-radius: 0;
+  box-shadow: 2px 2px 0 #000;
   position: relative;
   cursor: pointer;
   outline: none;
@@ -88,22 +90,22 @@
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   background: var(--text-muted);
-  border-radius: 50%;
+  border-radius: 0;
+  border: 1px solid #000;
   transition: all var(--transition-fast);
 }
 
 .follow-checkbox:checked {
-  background: rgba(34, 230, 255, 0.2);
-  border-color: var(--neon-cyan);
+  background: #141026;
+  border-color: #000;
 }
 
 .follow-checkbox:checked::before {
   left: 16px;
-  background: var(--neon-cyan);
-  box-shadow: var(--glow-cyan-sm);
+  background: var(--mario-yellow);
 }
 
 /* --- 3-Column Hero Grid --- */
@@ -148,9 +150,10 @@
 
 /* --- Column 1: State Readout --- */
 .state-text-box {
-  background: rgba(7, 6, 15, 0.7);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
+  background: #080c1d;
+  border: 2px solid #000;
+  border-radius: 0;
+  box-shadow: inset 2px 2px 0 #000;
   padding: var(--space-md);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
@@ -162,7 +165,7 @@
 
 .state-text-box.is-typing::after {
   content: '▋';
-  color: var(--neon-cyan);
+  color: var(--mario-yellow);
   animation: cursorBlink 0.8s infinite;
 }
 
@@ -179,9 +182,10 @@
 }
 
 .fact-badge {
-  background: var(--bg-panel-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
+  background: #0d122b;
+  border: 2px solid #000;
+  border-radius: 0;
+  box-shadow: 2px 2px 0 #000;
   padding: 6px 8px;
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -195,7 +199,7 @@
 }
 
 .fact-val {
-  color: var(--neon-cyan);
+  color: var(--mario-yellow);
   font-weight: 700;
 }
 
@@ -211,9 +215,10 @@
   justify-content: space-between;
   align-items: center;
   padding: 6px 10px;
-  background: rgba(11, 8, 26, 0.8);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
+  background: #0d122b;
+  border: 2px solid #000;
+  border-radius: 0;
+  box-shadow: 2px 2px 0 #000;
   font-family: var(--font-mono);
   font-size: var(--text-xs);
 }
@@ -232,9 +237,10 @@
 }
 
 .question-card {
-  background: rgba(11, 8, 26, 0.9);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
+  background: #141026;
+  border: 3px solid #000;
+  border-radius: 0;
+  box-shadow: 4px 4px 0 #000;
   padding: var(--space-md);
   position: relative;
   transition: all var(--transition-normal);
@@ -326,15 +332,15 @@
   text-shadow: 0 0 6px var(--neon-green);
 }
 
-/* --- Column 3: Decision & Game Outcome --- */
+/* --- Column 3: Decision & Game Outcome (HD 8-Bit Retro Arcade) --- */
 .action-display-box {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-bright);
-  border-radius: var(--radius-xs);
+  background: #141026;
+  border: 3px solid #000;
+  border-radius: 0;
   padding: var(--space-lg);
   text-align: center;
   position: relative;
-  box-shadow: var(--shadow-card-elevated);
+  box-shadow: 4px 4px 0 #000;
   margin-bottom: var(--space-md);
 }
 
@@ -352,8 +358,8 @@
   font-size: clamp(1.6rem, 3.2vw, 2.4rem);
   font-weight: 900;
   letter-spacing: 0.1em;
-  color: var(--neon-green);
-  text-shadow: 0 0 16px rgba(57, 255, 136, 0.5);
+  color: var(--mario-yellow);
+  text-shadow: 2px 2px 0 #000;
   margin-bottom: 6px;
 }
 
@@ -372,20 +378,14 @@
   margin-bottom: var(--space-md);
 }
 
-/* Validator Retry Alert Box */
+/* Validator Retry Alert Box (Amber Uncertainty Bevel) */
 .validator-retry-box {
-  background: rgba(255, 176, 32, 0.1);
-  border: 1px solid var(--amber);
-  border-radius: var(--radius-xs);
+  background: #181028;
+  border: 3px solid #000;
+  border-radius: 0;
   padding: var(--space-md);
   margin-bottom: var(--space-md);
-  box-shadow: var(--glow-amber);
-  animation: retryPulse 2s infinite;
-}
-
-@keyframes retryPulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(255, 176, 32, 0.3); }
-  50% { box-shadow: 0 0 16px rgba(255, 176, 32, 0.6); }
+  box-shadow: 4px 4px 0 #000, inset 0 0 0 2px var(--amber);
 }
 
 .validator-title {
@@ -408,9 +408,10 @@
 
 /* Game Response Box */
 .game-response-box {
-  background: rgba(11, 8, 26, 0.9);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
+  background: #0d122b;
+  border: 3px solid #000;
+  border-radius: 0;
+  box-shadow: 4px 4px 0 #000;
   padding: var(--space-md);
   display: flex;
   flex-direction: column;
@@ -429,35 +430,35 @@
 }
 
 @keyframes flashGreen {
-  0% { background: rgba(57, 255, 136, 0.3); border-color: var(--neon-green); }
-  100% { background: rgba(11, 8, 26, 0.9); border-color: var(--border-subtle); }
+  0% { background: rgba(0, 168, 0, 0.4); border-color: #000; }
+  100% { background: #0d122b; border-color: #000; }
 }
 
 @keyframes flashRed {
-  0% { background: rgba(255, 77, 109, 0.3); border-color: var(--red); }
-  100% { background: rgba(11, 8, 26, 0.9); border-color: var(--border-subtle); }
+  0% { background: rgba(229, 37, 33, 0.4); border-color: #000; }
+  100% { background: #0d122b; border-color: #000; }
 }
 
 .score-delta-badge {
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   font-weight: 900;
-  color: var(--neon-green);
-  text-shadow: 0 0 8px var(--neon-green);
+  color: var(--mario-green);
+  text-shadow: 1px 1px 0 #000;
 }
 
 .score-delta-badge.negative {
-  color: var(--red);
-  text-shadow: 0 0 8px var(--red);
+  color: var(--mario-red);
+  text-shadow: 1px 1px 0 #000;
 }
 
 /* --- Bottom Timeline Strip --- */
 .timeline-strip-container {
   background: var(--bg-panel);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
+  border: 3px solid #000;
+  border-radius: 0;
   padding: var(--space-md);
-  box-shadow: var(--shadow-card);
+  box-shadow: 4px 4px 0 #000;
 }
 
 .timeline-header {
@@ -490,13 +491,14 @@
 }
 
 .pip-legend-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 0;
+  border: 1px solid #000;
 }
 
-.pip-legend-dot.good { background: var(--neon-green); }
-.pip-legend-dot.bad { background: var(--red); }
+.pip-legend-dot.good { background: var(--mario-green); }
+.pip-legend-dot.bad { background: var(--mario-red); }
 .pip-legend-dot.illegal { background: var(--amber); }
 
 .timeline-pips-track {
@@ -511,9 +513,10 @@
 .timeline-pip {
   width: 14px;
   height: 24px;
-  border-radius: 2px;
-  background: var(--bg-panel-elevated);
-  border: 1px solid var(--border-subtle);
+  border-radius: 0;
+  background: #0d122b;
+  border: 2px solid #000;
+  box-shadow: 1px 1px 0 #000;
   cursor: pointer;
   flex-shrink: 0;
   position: relative;
@@ -522,27 +525,29 @@
 
 .timeline-pip:hover {
   transform: scaleY(1.25);
-  border-color: #fff;
+  border-color: #000;
+  background: #fff;
 }
 
 .timeline-pip.good {
-  background: rgba(57, 255, 136, 0.35);
-  border-color: var(--neon-green);
+  background: var(--mario-green);
+  border-color: #000;
 }
 
 .timeline-pip.bad {
-  background: rgba(255, 77, 109, 0.45);
-  border-color: var(--red);
+  background: var(--mario-red);
+  border-color: #000;
 }
 
 .timeline-pip.illegal {
-  background: rgba(255, 176, 32, 0.45);
-  border-color: var(--amber);
+  background: var(--amber);
+  border-color: #000;
 }
 
 .timeline-pip.is-current {
-  border-color: var(--neon-cyan);
-  box-shadow: 0 0 10px var(--neon-cyan), 0 0 18px var(--neon-cyan);
+  background: var(--mario-yellow);
+  border-color: #000;
+  box-shadow: 2px 2px 0 #000;
   transform: scaleY(1.35);
   animation: pipPulse 1.2s ease-in-out infinite;
 }

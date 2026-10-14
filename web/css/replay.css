@@ -1,16 +1,17 @@
 /* ==========================================================================
    BEAT THE BOT — REPRODUCIBLE RUN REPLAY STYLES (replay.css)
    USP 3: Deterministic Playback, Scrubber, Raw JSON Inspector, Audit Banner
+   HD 8-Bit Retro Arcade Theme with Chunky 3D Pixel Bevels & Shadows
    ========================================================================== */
 
-/* --- Audit Proof Banner --- */
+/* --- Audit Proof Banner (Green Victory Bevel) --- */
 .replay-proof-banner {
-  background: linear-gradient(135deg, rgba(57, 255, 136, 0.12) 0%, rgba(15, 11, 31, 0.95) 100%);
-  border: 1px solid var(--neon-green);
-  border-radius: var(--radius-sm);
+  background: #008000;
+  border: 3px solid #000;
+  border-radius: 0;
   padding: var(--space-md) var(--space-lg);
   margin-bottom: var(--space-md);
-  box-shadow: 0 0 16px rgba(57, 255, 136, 0.25);
+  box-shadow: 4px 4px 0 #000, inset 2px 2px 0 #62d866, inset -2px -2px 0 #004d00;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -26,7 +27,8 @@
 
 .proof-banner-icon {
   font-size: 1.8rem;
-  color: var(--neon-green);
+  color: #fff;
+  text-shadow: 2px 2px 0 #000;
 }
 
 .proof-banner-title {
@@ -36,11 +38,12 @@
   color: #fff;
   letter-spacing: 0.08em;
   margin-bottom: 2px;
+  text-shadow: 1px 1px 0 #000;
 }
 
 .proof-banner-subtitle {
   font-size: var(--text-xs);
-  color: var(--text-secondary);
+  color: #e0ffe0;
   margin-bottom: 0;
 }
 
@@ -54,11 +57,11 @@
 /* --- Replay Control Deck --- */
 .replay-control-deck {
   background: var(--bg-panel);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
+  border: 3px solid #000;
+  border-radius: 0;
   padding: var(--space-md);
   margin-bottom: var(--space-md);
-  box-shadow: var(--shadow-card);
+  box-shadow: 4px 4px 0 #000;
 }
 
 .replay-controls-row {
@@ -70,7 +73,7 @@
   margin-bottom: var(--space-md);
 }
 
-/* Big Cyber Scrubber Range Slider */
+/* Big Cyber Scrubber Range Slider (8-Bit Stepped) */
 .replay-scrubber-wrapper {
   display: flex;
   align-items: center;
@@ -82,79 +85,81 @@
   flex: 1;
   appearance: none;
   -webkit-appearance: none;
-  height: 8px;
-  background: rgba(7, 6, 15, 0.9);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-xs);
+  height: 12px;
+  background: #080c1d;
+  border: 2px solid #000;
+  border-radius: 0;
   outline: none;
   cursor: pointer;
+  box-shadow: inset 2px 2px 0 #000;
   transition: all var(--transition-fast);
 }
 
 .scrubber-slider:hover {
-  border-color: var(--neon-cyan);
+  border-color: var(--mario-yellow);
 }
 
 .scrubber-slider::-webkit-slider-thumb {
   appearance: none;
   -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 2px;
-  background: var(--neon-cyan);
-  border: 2px solid #fff;
+  width: 22px;
+  height: 22px;
+  border-radius: 0;
+  background: var(--mario-yellow);
+  border: 2px solid #000;
   cursor: pointer;
-  box-shadow: var(--glow-cyan-sm);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: 2px 2px 0 #000, inset 1px 1px 0 #fff;
+  transition: transform var(--transition-fast);
 }
 
 .scrubber-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: var(--glow-cyan-lg);
+  transform: scale(1.15);
+  background: #ffffff;
 }
 
 .scrubber-slider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 2px;
-  background: var(--neon-cyan);
-  border: 2px solid #fff;
+  width: 22px;
+  height: 22px;
+  border-radius: 0;
+  background: var(--mario-yellow);
+  border: 2px solid #000;
   cursor: pointer;
-  box-shadow: var(--glow-cyan-sm);
+  box-shadow: 2px 2px 0 #000, inset 1px 1px 0 #fff;
 }
 
 .scrubber-step-indicator {
   font-family: var(--font-heading);
   font-size: var(--text-sm);
   font-weight: 800;
-  color: var(--neon-cyan);
+  color: var(--mario-yellow);
   white-space: nowrap;
   min-width: 90px;
   text-align: right;
+  text-shadow: 1px 1px 0 #000;
 }
 
 /* --- View Mode Tabs (Interactive vs Raw JSON) --- */
 .replay-view-tabs {
   display: flex;
   gap: var(--space-xs);
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 2px solid #000;
   margin-bottom: var(--space-md);
 }
 
 /* Raw Event JSON Inspector */
 .raw-json-inspector {
-  background: rgba(7, 6, 15, 0.95);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-sm);
+  background: #080c1d;
+  border: 3px solid #000;
+  border-radius: 0;
   padding: var(--space-md);
-  box-shadow: var(--shadow-card);
+  box-shadow: 4px 4px 0 #000;
 }
 
 .raw-json-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 2px solid #000;
   padding-bottom: var(--space-sm);
   margin-bottom: var(--space-md);
 }
@@ -170,8 +175,8 @@
 
 .raw-json-code-box {
   background: #040308;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
+  border: 2px solid #000;
+  border-radius: 0;
   padding: var(--space-md);
   max-height: 520px;
   overflow: auto;
@@ -180,9 +185,10 @@
   line-height: 1.5;
   color: #c9d1d9;
   white-space: pre;
+  box-shadow: inset 2px 2px 0 #000;
 }
 
-.raw-json-code-box .json-key { color: var(--neon-cyan); }
-.raw-json-code-box .json-string { color: var(--neon-green); }
+.raw-json-code-box .json-key { color: var(--mario-yellow); }
+.raw-json-code-box .json-string { color: var(--mario-green); }
 .raw-json-code-box .json-number { color: var(--neon-magenta); }
 .raw-json-code-box .json-boolean { color: var(--amber); }
