@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Beat the Bot Dashboard — Live Laya decision viewer, forensic decision autopsy, replay, question lab, and calibration.">
-  <title>BEAT THE BOT — Gamer HUD Dashboard</title>
+  <meta name="description" content="LayaMind Dashboard — Live Laya decision viewer, forensic decision autopsy, replay, question lab, and calibration.">
+  <title>LayaMind — Gamer HUD Dashboard</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -30,7 +30,7 @@
       <div class="sidebar-header">
         <a href="index.html" class="sidebar-brand" aria-label="Return to Landing Page">
           <span class="sidebar-brand-icon" aria-hidden="true">🎮</span>
-          <span class="sidebar-brand-text">BEAT THE BOT</span>
+          <span class="sidebar-brand-text">LayaMind</span>
         </a>
         <button id="btn-sidebar-collapse" class="sidebar-collapse-btn" aria-label="Hide navigation sidebar" title="Hide Navigation Sidebar">
           <span aria-hidden="true">◀</span>
@@ -221,8 +221,8 @@
         statusGame.textContent = gameConfig.gameId;
       }
       const brandText = document.querySelector('.sidebar-brand-text');
-      if (brandText && gameConfig.gameName) {
-        brandText.textContent = gameConfig.gameName;
+      if (brandText) {
+        brandText.textContent = gameConfig.brandName || 'LayaMind';
       }
 
       // Initialize ambient particles (capped, rAF, pauses when hidden)

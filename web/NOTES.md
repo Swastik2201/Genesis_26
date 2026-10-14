@@ -39,7 +39,7 @@
 ---
 
 ## Prompt 1: Landing Page (`web/index.html`)
-- **Hero Section:** "BEAT THE BOT" with tagline "Teach Laya to play. Every move logged. Every decision visible.", plus quick stats ticker.
+- **Hero Section:** "LayaMind" with tagline "Teach Laya to play. Every move logged. Every decision visible.", plus quick stats ticker.
 - **Pipeline Strip:** 5 glowing connected stages (Game API ➔ State Normaliser ➔ Laya Engine ➔ Action Validator ➔ Submit Move).
 - **Interactive Decision Preview ("How a Decision Looks"):** Live cyclical simulation powered by `fx.js` demonstrating the decision flow: State ➔ Typed Questions ➔ Probabilities ➔ Selected Move ➔ Game Outcome (+10 pts). Includes Play/Pause control.
 - **4 Required USPs:**
