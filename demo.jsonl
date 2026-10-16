@@ -1,0 +1,296 @@
+
+{
+  "step": 14,
+  "state": {
+    "game_id": "snake",
+    "session_id": "20261016-072656-6690",
+    "step": 14,
+    "state_text": "Snake head is at col 6, row 9 moving left. Food is at col 1, row 1. Eaten: 3/15.",
+    "facts": {
+      "snake": [
+        {
+          "x": 6,
+          "y": 9
+        },
+        {
+          "x": 7,
+          "y": 9
+        },
+        {
+          "x": 7,
+          "y": 8
+        },
+        {
+          "x": 7,
+          "y": 7
+        },
+        {
+          "x": 8,
+          "y": 7
+        },
+        {
+          "x": 8,
+          "y": 6
+        }
+      ],
+      "food": {
+        "x": 1,
+        "y": 1
+      },
+      "direction": "left",
+      "food_eaten": 3,
+      "grid_size": [
+        12,
+        12
+      ],
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          3,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "body_length": 6,
+      "demo_flag": true
+    },
+    "legal_actions": [
+      {
+        "id": "up",
+        "label": "Up",
+        "hint": "Move upward"
+      },
+      {
+        "id": "down",
+        "label": "Down",
+        "hint": "Move downward"
+      },
+      {
+        "id": "left",
+        "label": "Left",
+        "hint": "Move leftward"
+      },
+      {
+        "id": "right",
+        "label": "Right",
+        "hint": "Move rightward"
+      }
+    ],
+    "score": 180,
+    "done": true
+  },
+  "laya_calls": [
+    {
+      "question_set": "game1_v1_perception",
+      "questions": [
+        {
+          "id": "safest_direction",
+          "type": "choice",
+          "text": "Which adjacent tile is completely clear of obstacles?",
+          "options": [
+            "up",
+            "down",
+            "left",
+            "right"
+          ]
+        }
+      ],
+      "raw": {
+        "predicted_direction": "left",
+        "prob": 0.9,
+        "demo": true
+      },
+      "action_scores": {
+        "up": 0.0333,
+        "down": 0.0333,
+        "left": 0.9001,
+        "right": 0.0333
+      },
+      "chosen_action": "left",
+      "latency_ms": 43.3,
+      "accepted": true,
+      "excluded": false,
+      "legal": true
+    }
+  ],
+  "validator": {
+    "retries": 0,
+    "fallback": false,
+    "rejections": []
+  },
+  "final_action": "left",
+  "game_response": {
+    "good": true,
+    "score_before": 180,
+    "score_after": 180,
+    "done": true,
+    "message": "DEMO: Clear trajectory"
+  },
+  "outcome": "DEMO step 14: action=left, score=180",
+  "schema": 1,
+  "session_id": "20261016-072656-6690",
+  "game_id": "snake",
+  "ts": "2026-10-16T07:26:59.796Z"
+}
