@@ -94,11 +94,11 @@ export class GameViewport {
         <div class="arcade-header">
           <div class="arcade-title-group">
             <span class="arcade-crt-dot" aria-hidden="true"></span>
-            <span class="arcade-title" id="arcade-title-label">TOPGAMEAI ARENA // SNAKE (12x12)</span>
+            <span class="arcade-title" id="arcade-title-label">TOPGAMEAI ARENA // TEAM: 4-GOATS</span>
           </div>
 
           <div class="arcade-header-controls">
-            <span class="badge badge-live" id="arcade-mode-badge">⚡ LAYA AUTONOMOUS</span>
+            <span class="badge badge-live" id="arcade-mode-badge" style="background: rgba(147, 51, 234, 0.25); border-color: #a855f7; color: #d8b4fe;">⚡ TOPGAMEAI ARENA LIVE</span>
           </div>
         </div>
 
@@ -780,6 +780,11 @@ export class GameViewport {
     this.steps = event.step !== undefined ? event.step : this.steps;
     const action = event.final_action || event.laya_calls?.[0]?.chosen_action || event.decision?.chosen_action || event.action;
     const facts = event.state?.facts || {};
+    const agentName = facts.agent_name || '4-Goats';
+    const titleLabel = this.container.querySelector('#arcade-title-label');
+    if (titleLabel) {
+      titleLabel.textContent = `TOPGAMEAI ARENA // TEAM: ${agentName.toUpperCase()}`;
+    }
 
     if (facts.grid && Array.isArray(facts.grid)) {
       this.grid = facts.grid;

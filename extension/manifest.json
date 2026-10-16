@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Beat the Bot — TopGameAI Arena Lockstep Relay",
+  "version": "1.0.0",
+  "description": "Simultaneously plays TopGameAI Snake when Play Now is clicked and streams to local dashboard",
+  "permissions": [],
+  "host_permissions": [
+    "https://topgameai.com/*",
+    "http://localhost:8000/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://topgameai.com/arena/snake*",
+        "https://topgameai.com/arena/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ]
+}
