@@ -23,7 +23,7 @@
       "avg_score": 180.0,
       "best_score": 180.0,
       "invalid_rate": 0.0,
-      "avg_latency_ms": 0.01,
+      "avg_latency_ms": 0.02,
       "completion_rate": 1.0,
       "avg_confidence": 0.3333,
       "session_ids": [
