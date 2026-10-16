@@ -1,20 +1,20 @@
 {
   "runs": [
     {
-      "session_id": "demo-runner-20261013-001",
-      "game_id": "mock-runner-v1",
-      "started_at": "2026-10-13T10:00:00.000Z",
-      "ended_at": "2026-10-13T10:00:34.000Z",
-      "steps": 40,
-      "final_score": 1840,
-      "invalid_moves": 2,
+      "session_id": "20261016-072656-6690",
+      "game_id": "snake",
+      "started_at": "2026-10-16T07:26:56.000Z",
+      "ended_at": "2026-10-16T07:27:00.000Z",
+      "steps": 15,
+      "final_score": 180,
+      "invalid_moves": 0,
       "fallbacks": 0,
-      "average_laya_latency_ms": 30.8,
-      "laya_call_count": 42,
+      "average_laya_latency_ms": 32.5,
+      "laya_call_count": 15,
       "completion_status": "completed",
       "qualifying_score": null,
-      "verified": null,
-      "event_count": 40,
+      "verified": "DEMO_UNVERIFIED",
+      "event_count": 15,
       "sha256": "4b9e25d8863f6a25b180746e01a1d1d8ef35b6df926c89178adad319de8d98e1"
     },
     {

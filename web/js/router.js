@@ -6,7 +6,7 @@
  */
 
 import * as overviewPanel from './panels/overview.js?v=20261014_v5';
-import * as livePanel from './panels/live.js?v=20261014_v5';
+import * as livePanel from './panels/live.js?v=20261016_v6';
 import * as autopsyPanel from './panels/autopsy.js?v=20261014_v5';
 import * as labPanel from './panels/lab.js?v=20261014_v5';
 import * as replayPanel from './panels/replay.js?v=20261014_v5';
