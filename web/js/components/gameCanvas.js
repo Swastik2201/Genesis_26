@@ -474,19 +474,100 @@ export class GameViewport {
   }
 
   /**
+   * Breadth-First Search shortest path distance on the 12x12 grid.
+   * Returns step count (integer >= 0) if reachable, or null if unreachable.
+   */
+  bfsDistance(start, target, blockedSet) {
+    if (start.x === target.x && start.y === target.y) return 0;
+    const queue = [{ x: start.x, y: start.y, d: 0 }];
+    const visited = new Set([`${start.x},${start.y}`]);
+    const dirs = [
+      { dx: 0, dy: -1 },
+      { dx: 0, dy: 1 },
+      { dx: -1, dy: 0 },
+      { dx: 1, dy: 0 }
+    ];
+
+    while (queue.length > 0) {
+      const curr = queue.shift();
+      for (let i = 0; i < 4; i++) {
+        const nx = curr.x + dirs[i].dx;
+        const ny = curr.y + dirs[i].dy;
+        if (nx < 0 || nx >= 12 || ny < 0 || ny >= 12) continue;
+        if (nx === target.x && ny === target.y) return curr.d + 1;
+        const key = `${nx},${ny}`;
+        if (!blockedSet.has(key) && !visited.has(key)) {
+          visited.add(key);
+          queue.push({ x: nx, y: ny, d: curr.d + 1 });
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Flood-fill to count contiguous reachable free cells from a starting coordinate.
+   */
+  countReachableSpace(start, blockedSet) {
+    const queue = [{ x: start.x, y: start.y }];
+    const visited = new Set([`${start.x},${start.y}`]);
+    const dirs = [
+      { dx: 0, dy: -1 },
+      { dx: 0, dy: 1 },
+      { dx: -1, dy: 0 },
+      { dx: 1, dy: 0 }
+    ];
+
+    while (queue.length > 0) {
+      const curr = queue.shift();
+      for (let i = 0; i < 4; i++) {
+        const nx = curr.x + dirs[i].dx;
+        const ny = curr.y + dirs[i].dy;
+        if (nx < 0 || nx >= 12 || ny < 0 || ny >= 12) continue;
+        const key = `${nx},${ny}`;
+        if (!blockedSet.has(key) && !visited.has(key)) {
+          visited.add(key);
+          queue.push({ x: nx, y: ny });
+        }
+      }
+    }
+    return visited.size;
+  }
+
+  /**
    * Autonomous Laya policy driver with full action probability distribution.
+   * Optimizes snake survivability via BFS shortest-path, flood-fill free space,
+   * tail chasing fallback, and mathematically validated probabilities (sum === 1.0000,
+   * fatal moves === 0.0000).
    */
   layaAutonomousDecision() {
     const head = this.snake[0];
+    const tail = this.snake[this.snake.length - 1];
     const candidates = ['up', 'down', 'left', 'right'];
     const opposite = OPPOSITE_DIRECTIONS[this.direction];
-    const rawScores = {};
+
+    // Obstacle sets: body except the tail (which vacates on non-eating move)
+    const blockedSet = new Set();
+    for (let i = 0; i < this.snake.length - 1; i++) {
+      blockedSet.add(`${this.snake[i].x},${this.snake[i].y}`);
+    }
+
+    // Blocked set for tail reachability check (excluding both head and tail)
+    const blockedForTail = new Set();
+    for (let i = 1; i < this.snake.length - 1; i++) {
+      blockedForTail.add(`${this.snake[i].x},${this.snake[i].y}`);
+    }
+
+    const legalMoves = { up: false, down: false, left: false, right: false };
+    const rawScores = { up: -Infinity, down: -Infinity, left: -Infinity, right: -Infinity };
+    const moveStats = {};
 
     for (const dir of candidates) {
+      // 1. Strictly forbid 180-degree reversal
       if (dir === opposite) {
-        rawScores[dir] = 0.005; // Strictly forbidden 180-degree reversal
         continue;
       }
+
       let nx = head.x;
       let ny = head.y;
       if (dir === 'up') ny--;
@@ -494,45 +575,121 @@ export class GameViewport {
       else if (dir === 'left') nx--;
       else if (dir === 'right') nx++;
 
-      // Check wall collision
+      // 2. Wall collision check
       if (nx < 0 || nx >= 12 || ny < 0 || ny >= 12) {
-        rawScores[dir] = 0.005;
         continue;
       }
 
-      // Check body collision
-      const bodyHit = this.snake.slice(0, -1).some(s => s.x === nx && s.y === ny);
-      if (bodyHit) {
-        rawScores[dir] = 0.005;
+      // 3. Snake body collision check
+      if (blockedSet.has(`${nx},${ny}`)) {
         continue;
       }
 
-      // Manhattan distance to target apple
-      const dist = Math.abs(nx - this.food.x) + Math.abs(ny - this.food.y);
-      // Softmax weight favoring moves closer to food
-      rawScores[dir] = Math.exp(-dist / 2.2);
+      legalMoves[dir] = true;
+      const startPos = { x: nx, y: ny };
+
+      // Compute BFS metrics
+      const space = this.countReachableSpace(startPos, blockedSet);
+      const foodDist = this.food ? this.bfsDistance(startPos, this.food, blockedSet) : null;
+      const tailDist = this.bfsDistance(startPos, tail, blockedForTail);
+
+      // Scoring fitness:
+      // A move is considered safe if available space >= current snake length
+      const isSafe = space >= this.snake.length;
+      let score = 0;
+
+      if (isSafe) {
+        // High base reward for open maneuvering space
+        score += 200 + space * 1.5;
+
+        // BFS path to food bonus (closer is better)
+        if (foodDist !== null) {
+          score += (30 - foodDist) * 12;
+        } else {
+          score -= 40; // Food temporarily blocked by body
+        }
+
+        // Tail reachability reassurance
+        if (tailDist !== null) {
+          score += 35;
+        }
+      } else {
+        // Dangerous/trapping pocket: penalize heavily
+        score += space * 2;
+        if (tailDist !== null) {
+          score += (30 - tailDist) * 5;
+        }
+      }
+
+      // Momentum bias: slight preference for continuing straight
+      if (dir === this.direction) {
+        score += 3;
+      }
+
+      rawScores[dir] = score;
+      moveStats[dir] = { space, foodDist, tailDist, isSafe };
     }
 
-    // Normalize probabilities to sum to 1.0000
-    const sum = Object.values(rawScores).reduce((a, b) => a + b, 0) || 1.0;
-    this.probabilities = {
-      up: +(rawScores.up / sum).toFixed(4),
-      down: +(rawScores.down / sum).toFixed(4),
-      left: +(rawScores.left / sum).toFixed(4),
-      right: +(rawScores.right / sum).toFixed(4),
-    };
+    const legalList = candidates.filter(d => legalMoves[d]);
 
-    let bestDir = 'right';
-    let maxP = -1;
+    // Handle rare trapped state (all moves collision)
+    if (legalList.length === 0) {
+      this.probabilities = { up: 0.2500, down: 0.2500, left: 0.2500, right: 0.2500 };
+      this.lastConfidence = 0.2500;
+      this.decisionReason = 'No legal moves remaining; collision unavoidable.';
+      return;
+    }
+
+    // Determine best direction (argmax score)
+    let bestDir = legalList[0];
+    let maxScore = rawScores[bestDir];
+    for (const d of legalList) {
+      if (rawScores[d] > maxScore) {
+        maxScore = rawScores[d];
+        bestDir = d;
+      }
+    }
+
+    // Softmax over legal moves with temperature = 14.0
+    // Fatal/illegal moves strictly receive raw exp = 0
+    const temperature = 14.0;
+    const expScores = {};
+    let sumExp = 0;
+
     for (const dir of candidates) {
-      if (this.probabilities[dir] > maxP) {
-        maxP = this.probabilities[dir];
-        bestDir = dir;
+      if (legalMoves[dir]) {
+        const val = Math.exp((rawScores[dir] - maxScore) / temperature);
+        expScores[dir] = val;
+        sumExp += val;
+      } else {
+        expScores[dir] = 0;
       }
     }
 
+    // Normalize and round to 4 decimal places
+    const rounded = { up: 0, down: 0, left: 0, right: 0 };
+    for (const dir of candidates) {
+      if (legalMoves[dir] && sumExp > 0) {
+        rounded[dir] = +(expScores[dir] / sumExp).toFixed(4);
+      } else {
+        rounded[dir] = 0.0000;
+      }
+    }
+
+    // Exact sum verification: ensure sum(rounded) === 1.0000 by adjusting residual on bestDir
+    const currentSum = +(rounded.up + rounded.down + rounded.left + rounded.right).toFixed(4);
+    const residual = +(1.0 - currentSum).toFixed(4);
+    if (residual !== 0) {
+      rounded[bestDir] = +((rounded[bestDir] + residual).toFixed(4));
+    }
+
+    this.probabilities = rounded;
     this.nextDirection = bestDir;
-    this.lastConfidence = maxP;
+    this.lastConfidence = rounded[bestDir];
+
+    const stats = moveStats[bestDir] || {};
+    const fDistStr = stats.foodDist !== null && stats.foodDist !== undefined ? `BFS food dist: ${stats.foodDist}` : 'food unreachable';
+    this.decisionReason = `Optimal move ${bestDir.toUpperCase()}: ${fDistStr}, free space: ${stats.space || 0} cells. Confidence: ${(this.lastConfidence * 100).toFixed(1)}%.`;
   }
 
   /**
@@ -592,7 +749,7 @@ export class GameViewport {
           accepted: true,
           excluded: false,
           legal: true,
-          reason: `Clear path toward target food identified with probability ${Math.round((this.lastConfidence || probs[this.direction]) * 100)}%.`,
+          reason: this.decisionReason || `Clear path toward target food identified with probability ${Math.round((this.lastConfidence || probs[this.direction]) * 100)}%.`,
         }
       ],
       validator: { retries: 0, fallback: false, rejections: [] },
