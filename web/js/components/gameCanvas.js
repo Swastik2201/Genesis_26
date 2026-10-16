@@ -320,12 +320,12 @@ export class GameViewport {
     // Strict TopGameAI rule: cannot reverse direction
     if (OPPOSITE_DIRECTIONS[this.direction] === dir) {
       this.addFloatingText('CANNOT REVERSE!', this.canvas.width / 4, 70, '#ff4d6d');
-      sound.playCollisionSound();
+      try { sound.playCollisionSound?.(); } catch (e) {}
       return;
     }
 
     this.nextDirection = dir;
-    sound.playStepClickSound();
+    try { sound.playStepClickSound?.(); } catch (e) {}
 
     if (this.mode === 'manual') {
       // Step immediately for responsive manual tactile feedback
@@ -417,7 +417,7 @@ export class GameViewport {
       this.score = this.foodEaten * 60;
       this.addParticles(this.canvas.width / 4, this.canvas.height / 4, 14, '#4ade80');
       this.addFloatingText('+60 FOOD!', this.canvas.width / 4, 90, '#4ade80');
-      sound.playSuccessChime();
+      try { sound.playSuccessChime?.(); } catch (e) {}
 
       if (this.foodEaten >= this.targetFood) {
         this.score += 100; // Win bonus
@@ -449,10 +449,10 @@ export class GameViewport {
 
     if (won) {
       this.addFloatingText(`★ ${reason} ★`, this.canvas.width / 4, 110, '#ffd000');
-      sound.playSuccessChime();
+      try { sound.playSuccessChime?.(); } catch (e) {}
     } else {
       this.addFloatingText(`COLLISION: ${reason}`, this.canvas.width / 4, 110, '#ff4d6d');
-      sound.playCollisionSound();
+      try { sound.playCollisionSound?.(); } catch (e) {}
     }
 
     setTimeout(() => {

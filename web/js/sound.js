@@ -211,3 +211,6 @@ export const playGoodMoveSound = playMarioCoinSound;
 export const playBadMoveSound = playMarioHitSound;
 export const playIllegalMoveSound = playMarioPipeSound;
 export const playStepClickSound = playMarioJumpSound;
+export const playSuccessChime = playMarioCoinSound;
+export const playCollisionSound = playMarioHitSound;
+
