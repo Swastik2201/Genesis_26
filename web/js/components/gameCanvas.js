@@ -94,11 +94,11 @@ export class GameViewport {
         <div class="arcade-header">
           <div class="arcade-title-group">
             <span class="arcade-crt-dot" aria-hidden="true"></span>
-            <span class="arcade-title" id="arcade-title-label">TOPGAMEAI ARENA // TEAM: 4-GOATS</span>
+            <span class="arcade-title" id="arcade-title-label">TOPGAMEAI ARENA // SNAKE (12x12)</span>
           </div>
 
           <div class="arcade-header-controls">
-            <span class="badge badge-live" id="arcade-mode-badge" style="background: rgba(147, 51, 234, 0.25); border-color: #a855f7; color: #d8b4fe;">⚡ TOPGAMEAI ARENA LIVE</span>
+            <span class="badge badge-live" id="arcade-mode-badge">⚡ LAYA AUTONOMOUS</span>
           </div>
         </div>
 
@@ -535,9 +535,41 @@ export class GameViewport {
   }
 
   /**
+   * Breadth-First Search shortest path on the 12x12 grid.
+   * Returns array of direction strings ['up', 'left', ...] or null if unreachable.
+   */
+  bfsPath(start, target, blockedSet) {
+    if (start.x === target.x && start.y === target.y) return [];
+    const queue = [[start, []]];
+    const visited = new Set([`${start.x},${start.y}`]);
+    const dirs = {
+      up: { dx: 0, dy: -1 },
+      down: { dx: 0, dy: 1 },
+      left: { dx: -1, dy: 0 },
+      right: { dx: 1, dy: 0 },
+    };
+
+    while (queue.length > 0) {
+      const [curr, path] = queue.shift();
+      for (const [dName, d] of Object.entries(dirs)) {
+        const nx = curr.x + d.dx;
+        const ny = curr.y + d.dy;
+        if (nx < 0 || nx >= 12 || ny < 0 || ny >= 12) continue;
+        if (nx === target.x && ny === target.y) return [...path, dName];
+        const key = `${nx},${ny}`;
+        if (!blockedSet.has(key) && !visited.has(key)) {
+          visited.add(key);
+          queue.push([{ x: nx, y: ny }, [...path, dName]]);
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
    * Autonomous Laya policy driver with full action probability distribution.
-   * Optimizes snake survivability via BFS shortest-path, flood-fill free space,
-   * tail chasing fallback, and mathematically validated probabilities (sum === 1.0000,
+   * Optimizes snake survivability via full BFS virtual path simulation lookahead,
+   * safe tail-chasing fallback, and mathematically validated probabilities (sum === 1.0000,
    * fatal moves === 0.0000).
    */
   layaAutonomousDecision() {
@@ -545,92 +577,36 @@ export class GameViewport {
     const tail = this.snake[this.snake.length - 1];
     const candidates = ['up', 'down', 'left', 'right'];
     const opposite = OPPOSITE_DIRECTIONS[this.direction];
+    const dirs = {
+      up: { dx: 0, dy: -1 },
+      down: { dx: 0, dy: 1 },
+      left: { dx: -1, dy: 0 },
+      right: { dx: 1, dy: 0 },
+    };
 
-    // Obstacle sets: body except the tail (which vacates on non-eating move)
-    const blockedSet = new Set();
-    for (let i = 0; i < this.snake.length - 1; i++) {
-      blockedSet.add(`${this.snake[i].x},${this.snake[i].y}`);
+    const bodyBlocks = new Set(this.snake.slice(0, -1).map((s) => `${s.x},${s.y}`));
+    const legalDirs = {};
+
+    for (const [dName, d] of Object.entries(dirs)) {
+      if (dName === opposite) continue;
+      const nx = head.x + d.dx;
+      const ny = head.y + d.dy;
+      if (nx < 0 || nx >= 12 || ny < 0 || ny >= 12) continue;
+      if (bodyBlocks.has(`${nx},${ny}`)) continue;
+
+      const newHead = { x: nx, y: ny };
+      const ate = this.food && nx === this.food.x && ny === this.food.y;
+      const simSnake = [newHead, ...this.snake.map((s) => ({ ...s }))];
+      if (!ate) simSnake.pop();
+      const simBlocks = new Set(simSnake.slice(0, -1).map((s) => `${s.x},${s.y}`));
+      const simTail = simSnake[simSnake.length - 1];
+
+      const canReachTail = this.bfsPath(newHead, simTail, simBlocks) !== null;
+      const space = this.countReachableSpace(newHead, simBlocks);
+      legalDirs[dName] = { newHead, canReachTail, space, ate };
     }
 
-    // Blocked set for tail reachability check (excluding both head and tail)
-    const blockedForTail = new Set();
-    for (let i = 1; i < this.snake.length - 1; i++) {
-      blockedForTail.add(`${this.snake[i].x},${this.snake[i].y}`);
-    }
-
-    const legalMoves = { up: false, down: false, left: false, right: false };
-    const rawScores = { up: -Infinity, down: -Infinity, left: -Infinity, right: -Infinity };
-    const moveStats = {};
-
-    for (const dir of candidates) {
-      // 1. Strictly forbid 180-degree reversal
-      if (dir === opposite) {
-        continue;
-      }
-
-      let nx = head.x;
-      let ny = head.y;
-      if (dir === 'up') ny--;
-      else if (dir === 'down') ny++;
-      else if (dir === 'left') nx--;
-      else if (dir === 'right') nx++;
-
-      // 2. Wall collision check
-      if (nx < 0 || nx >= 12 || ny < 0 || ny >= 12) {
-        continue;
-      }
-
-      // 3. Snake body collision check
-      if (blockedSet.has(`${nx},${ny}`)) {
-        continue;
-      }
-
-      legalMoves[dir] = true;
-      const startPos = { x: nx, y: ny };
-
-      // Compute BFS metrics
-      const space = this.countReachableSpace(startPos, blockedSet);
-      const foodDist = this.food ? this.bfsDistance(startPos, this.food, blockedSet) : null;
-      const tailDist = this.bfsDistance(startPos, tail, blockedForTail);
-
-      // Scoring fitness:
-      // A move is considered safe if available space >= current snake length
-      const isSafe = space >= this.snake.length;
-      let score = 0;
-
-      if (isSafe) {
-        // High base reward for open maneuvering space
-        score += 200 + space * 1.5;
-
-        // BFS path to food bonus (closer is better)
-        if (foodDist !== null) {
-          score += (30 - foodDist) * 12;
-        } else {
-          score -= 40; // Food temporarily blocked by body
-        }
-
-        // Tail reachability reassurance
-        if (tailDist !== null) {
-          score += 35;
-        }
-      } else {
-        // Dangerous/trapping pocket: penalize heavily
-        score += space * 2;
-        if (tailDist !== null) {
-          score += (30 - tailDist) * 5;
-        }
-      }
-
-      // Momentum bias: slight preference for continuing straight
-      if (dir === this.direction) {
-        score += 3;
-      }
-
-      rawScores[dir] = score;
-      moveStats[dir] = { space, foodDist, tailDist, isSafe };
-    }
-
-    const legalList = candidates.filter(d => legalMoves[d]);
+    const legalList = Object.keys(legalDirs);
 
     // Handle rare trapped state (all moves collision)
     if (legalList.length === 0) {
@@ -640,39 +616,76 @@ export class GameViewport {
       return;
     }
 
-    // Determine best direction (argmax score)
-    let bestDir = legalList[0];
-    let maxScore = rawScores[bestDir];
-    for (const d of legalList) {
-      if (rawScores[d] > maxScore) {
-        maxScore = rawScores[d];
-        bestDir = d;
+    let bestDir = null;
+    let decisionType = 'fallback';
+
+    // 1. Virtual simulation: if path to food exists, simulate the ENTIRE path.
+    // Only commit to food path if after eating food at destination, snake can still reach its tail!
+    if (this.food) {
+      const pathToFood = this.bfsPath(head, this.food, bodyBlocks);
+      if (pathToFood && pathToFood.length > 0) {
+        let virtualSnake = this.snake.map((s) => ({ ...s }));
+        for (const m of pathToFood) {
+          const vHead = virtualSnake[0];
+          const vNext = { x: vHead.x + dirs[m].dx, y: vHead.y + dirs[m].dy };
+          const vAte = vNext.x === this.food.x && vNext.y === this.food.y;
+          virtualSnake.unshift(vNext);
+          if (!vAte) virtualSnake.pop();
+        }
+        const vHead = virtualSnake[0];
+        const vTail = virtualSnake[virtualSnake.length - 1];
+        const vBlocks = new Set(virtualSnake.slice(0, -1).map((s) => `${s.x},${s.y}`));
+        const vCanReachTail = this.bfsPath(vHead, vTail, vBlocks) !== null;
+
+        if (vCanReachTail && legalDirs[pathToFood[0]]) {
+          bestDir = pathToFood[0];
+          decisionType = 'food';
+        }
       }
     }
 
-    // Softmax over legal moves with temperature = 14.0
-    // Fatal/illegal moves strictly receive raw exp = 0
-    const temperature = 14.0;
-    const expScores = {};
-    let sumExp = 0;
-
-    for (const dir of candidates) {
-      if (legalMoves[dir]) {
-        const val = Math.exp((rawScores[dir] - maxScore) / temperature);
-        expScores[dir] = val;
-        sumExp += val;
-      } else {
-        expScores[dir] = 0;
+    // 2. Safe tail chasing: if food path is unsafe or blocked, follow open corridor towards tail
+    if (!bestDir) {
+      let maxTailScore = -1;
+      for (const [dName, info] of Object.entries(legalDirs)) {
+        if (info.canReachTail) {
+          const distToTail = Math.abs(info.newHead.x - tail.x) + Math.abs(info.newHead.y - tail.y);
+          const score = info.space * 10 + distToTail;
+          if (score > maxTailScore) {
+            maxTailScore = score;
+            bestDir = dName;
+            decisionType = 'tail';
+          }
+        }
       }
     }
 
-    // Normalize and round to 4 decimal places
+    // 3. Fallback: move into maximum reachable space
+    if (!bestDir) {
+      let maxSpace = -1;
+      for (const [dName, info] of Object.entries(legalDirs)) {
+        if (info.space > maxSpace) {
+          maxSpace = info.space;
+          bestDir = dName;
+          decisionType = 'space';
+        }
+      }
+    }
+
+    if (!bestDir) bestDir = legalList[0];
+
+    // Probability distribution:
+    // Chosen move gets primary confidence (80-88%), other legal moves share remaining,
+    // fatal/illegal moves strictly receive 0.0000, and sum strictly === 1.0000.
+    const chosenP = decisionType === 'food' ? 0.8500 : 0.7500;
     const rounded = { up: 0, down: 0, left: 0, right: 0 };
-    for (const dir of candidates) {
-      if (legalMoves[dir] && sumExp > 0) {
-        rounded[dir] = +(expScores[dir] / sumExp).toFixed(4);
-      } else {
-        rounded[dir] = 0.0000;
+    rounded[bestDir] = chosenP;
+
+    const otherLegals = legalList.filter((d) => d !== bestDir);
+    if (otherLegals.length > 0) {
+      const share = +((1.0 - chosenP) / otherLegals.length).toFixed(4);
+      for (const d of otherLegals) {
+        rounded[d] = share;
       }
     }
 
@@ -687,9 +700,14 @@ export class GameViewport {
     this.nextDirection = bestDir;
     this.lastConfidence = rounded[bestDir];
 
-    const stats = moveStats[bestDir] || {};
-    const fDistStr = stats.foodDist !== null && stats.foodDist !== undefined ? `BFS food dist: ${stats.foodDist}` : 'food unreachable';
-    this.decisionReason = `Optimal move ${bestDir.toUpperCase()}: ${fDistStr}, free space: ${stats.space || 0} cells. Confidence: ${(this.lastConfidence * 100).toFixed(1)}%.`;
+    const stats = legalDirs[bestDir] || {};
+    if (decisionType === 'food') {
+      this.decisionReason = `Optimal corridor ${bestDir.toUpperCase()}: Direct BFS path to food at (${this.food?.x}, ${this.food?.y}); tail connectivity verified. Confidence: ${(this.lastConfidence * 100).toFixed(1)}%.`;
+    } else if (decisionType === 'tail') {
+      this.decisionReason = `Safe maneuvering ${bestDir.toUpperCase()}: Chasing tail corridor (free space: ${stats.space || 0} cells); awaiting clear food window. Confidence: ${(this.lastConfidence * 100).toFixed(1)}%.`;
+    } else {
+      this.decisionReason = `Space evasion ${bestDir.toUpperCase()}: Moving into maximum reachable space (${stats.space || 0} cells). Confidence: ${(this.lastConfidence * 100).toFixed(1)}%.`;
+    }
   }
 
   /**
@@ -776,15 +794,11 @@ export class GameViewport {
    */
   feedStep(event) {
     if (!event) return;
+    this.isExternalStream = true;
 
     this.steps = event.step !== undefined ? event.step : this.steps;
     const action = event.final_action || event.laya_calls?.[0]?.chosen_action || event.decision?.chosen_action || event.action;
     const facts = event.state?.facts || {};
-    const agentName = facts.agent_name || '4-Goats';
-    const titleLabel = this.container.querySelector('#arcade-title-label');
-    if (titleLabel) {
-      titleLabel.textContent = `TOPGAMEAI ARENA // TEAM: ${agentName.toUpperCase()}`;
-    }
 
     if (facts.grid && Array.isArray(facts.grid)) {
       this.grid = facts.grid;
@@ -869,7 +883,7 @@ export class GameViewport {
   }
 
   update(dt) {
-    if (this.mode === 'laya' && !this.done && !this.isPaused) {
+    if (this.mode === 'laya' && !this.done && !this.isPaused && !this.isExternalStream) {
       this.moveTimer += dt;
       if (this.moveTimer >= this.moveInterval) {
         this.moveTimer = 0;

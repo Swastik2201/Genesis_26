@@ -222,13 +222,12 @@ function renderShell(container) {
           <button id="live-btn-restart" class="btn btn-secondary btn-sm" aria-label="Restart decision step timeline and simulation from step 0">
             <span>🔄 RESTART</span>
           </button>
-          <div class="arena-team-picker" style="display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; border-left: 1px solid rgba(255,255,255,0.15); padding-left: 10px;">
-            <span style="font-size: 11px; font-weight: 700; color: #a855f7;">TEAM:</span>
-            <input type="text" id="live-team-name-input" value="4-Goats" style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(168, 85, 247, 0.4); color: #fff; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 12px; width: 95px;" placeholder="4-Goats" aria-label="Team name">
-            <button id="live-btn-launch-arena" class="btn btn-sm" style="background: linear-gradient(135deg, #7c3aed, #2563eb); color: #fff; border: 1px solid #9333ea; font-weight: 600;" title="Simultaneously play on TopGameAI Arena and stream here">
-              <span>⚔️ PLAY ARENA MATCH</span>
-            </button>
-          </div>
+          <button id="live-btn-copy-hook" class="btn btn-secondary btn-sm" title="Copy 1-line script to paste into DevTools Console on topgameai.com/arena/snake">
+            <span>📋 COPY RELAY HOOK</span>
+          </button>
+          <button id="live-btn-play-topgameai" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #9333ea, #4f46e5); border-color: #a855f7; box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);" title="Plays simultaneously on TopGameAI Arena & streams live here as 4-Goats">
+            <span>⚔️ PLAY TOPGAMEAI (4-GOATS)</span>
+          </button>
         </div>
 
         <div style="display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap;">
@@ -245,32 +244,6 @@ function renderShell(container) {
 
           <button id="btn-reconnect-stream" class="btn btn-ghost btn-sm" style="display: none;">
             <span>RECONNECT</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- 2. TopGameAI Arena Broadcast Synchronizer Card -->
-      <div class="hud-card arena-broadcast-bar" style="margin-bottom: var(--space-md); padding: 12px 18px; border-left: 3px solid #a855f7; background: linear-gradient(90deg, rgba(147, 51, 234, 0.12), rgba(15, 23, 42, 0.85)); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="font-size: 1.5rem;">🐍</span>
-          <div>
-            <div style="font-weight: 700; color: #fff; font-size: 13px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
-              <span>TOPGAMEAI ARENA BROADCAST</span>
-              <span class="badge" style="background: rgba(34, 230, 255, 0.15); color: #22e6ff; border-color: #22e6ff; font-size: 10px;">LIVE LOCKSTEP</span>
-            </div>
-            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">
-              Play on <a href="https://topgameai.com/arena/snake" target="_blank" style="color: #38bdf8; text-decoration: underline;">topgameai.com/arena/snake</a> as <strong>4-Goats</strong> to mirror live, or launch directly below!
-            </div>
-          </div>
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="font-size: 11px; color: #a855f7; font-weight: 700;">TEAM:</span>
-            <input type="text" id="arena-card-team-input" value="4-Goats" style="background: rgba(0,0,0,0.6); border: 1px solid rgba(168,85,247,0.5); color: #fff; font-family: monospace; font-size: 12px; padding: 5px 10px; border-radius: 4px; width: 90px;" aria-label="Team name">
-          </div>
-          <button id="btn-arena-start-match" class="btn btn-sm" style="background: linear-gradient(135deg, #7c3aed, #2563eb); color: #fff; border: 1px solid #9333ea; font-weight: 600;">
-            <span>▶ PLAY NOW (4-GOATS)</span>
           </button>
         </div>
       </div>
@@ -368,63 +341,50 @@ function bindControls(container) {
     });
   }
 
-  const launchBtn = container.querySelector('#live-btn-launch-arena');
-  const teamInput = container.querySelector('#live-team-name-input');
-  if (launchBtn) {
-    launchBtn.addEventListener('click', async () => {
-      const team = (teamInput?.value || '4-Goats').trim();
-      launchBtn.disabled = true;
-      launchBtn.innerHTML = '<span>⏳ CONNECTING...</span>';
+  const playTopGameBtn = container.querySelector('#live-btn-play-topgameai');
+  if (playTopGameBtn) {
+    playTopGameBtn.addEventListener('click', async () => {
+      playTopGameBtn.disabled = true;
+      playTopGameBtn.innerHTML = '<span>⚡ CONNECTING TOPGAMEAI...</span>';
       try {
-        const resp = await fetch('/api/arena/play', {
+        await fetch('/api/arena/play', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ agent_name: team, delay: 0.12 })
+          body: JSON.stringify({ agent_name: '4-Goats', delay: 0.08 })
         });
-        const data = await resp.json();
-        launchBtn.innerHTML = `<span>⚔️ PLAYING AS ${team}</span>`;
+        sound.playSelectTone?.();
+        // Give 400ms for session to initialize then stream
         setTimeout(() => {
+          isFollowLive = true;
+          if (followToggle) followToggle.checked = true;
           startStream();
-          launchBtn.disabled = false;
-          launchBtn.innerHTML = '<span>⚔️ PLAY ARENA MATCH</span>';
-        }, 1200);
-      } catch (err) {
-        console.error('Launch arena match failed:', err);
-        launchBtn.disabled = false;
-        launchBtn.innerHTML = '<span>❌ RETRY MATCH</span>';
+          playTopGameBtn.innerHTML = '<span>⚔️ 4-GOATS PLAYING LIVE</span>';
+        }, 500);
+      } catch (e) {
+        console.error(e);
+        playTopGameBtn.innerHTML = '<span>⚠ FAILED TO LAUNCH</span>';
       }
+      setTimeout(() => {
+        playTopGameBtn.disabled = false;
+        playTopGameBtn.innerHTML = '<span>⚔️ PLAY TOPGAMEAI (4-GOATS)</span>';
+      }, 8000);
     });
   }
 
-  // TopGameAI Arena Broadcast Card Controls
-  const cardStartBtn = container.querySelector('#btn-arena-start-match');
-  const cardTeamInput = container.querySelector('#arena-card-team-input');
-  if (cardStartBtn) {
-    cardStartBtn.addEventListener('click', async () => {
-      const team = (cardTeamInput?.value || '4-Goats').trim();
-      cardStartBtn.disabled = true;
-      cardStartBtn.innerHTML = '<span>⏳ STARTING ARENA...</span>';
-      try {
-        const resp = await fetch('/api/arena/play', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ agent_name: team, delay: 0.10 })
-        });
-        const data = await resp.json();
-        cardStartBtn.innerHTML = `<span>⚡ PLAYING (${team})</span>`;
+  const copyHookBtn = container.querySelector('#live-btn-copy-hook');
+  if (copyHookBtn) {
+    copyHookBtn.addEventListener('click', () => {
+      const scriptCode = `fetch('http://localhost:8000/relay.js').then(r=>r.text()).then(eval);`;
+      navigator.clipboard.writeText(scriptCode).then(() => {
+        copyHookBtn.innerHTML = '<span>✓ COPIED TO CLIPBOARD!</span>';
         setTimeout(() => {
-          startStream();
-          cardStartBtn.disabled = false;
-          cardStartBtn.innerHTML = `<span>▶ PLAY NOW (${team.toUpperCase()})</span>`;
-        }, 1000);
-      } catch (err) {
-        console.error('Start arena match failed:', err);
-        cardStartBtn.disabled = false;
-        cardStartBtn.innerHTML = '<span>❌ RETRY</span>';
-      }
+          copyHookBtn.innerHTML = '<span>📋 COPY RELAY HOOK</span>';
+        }, 3000);
+      }).catch(() => {
+        prompt('Copy and paste into DevTools Console on https://topgameai.com/arena/snake:', scriptCode);
+      });
     });
   }
-
 }
 
 /**
