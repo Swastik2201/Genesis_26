@@ -1,0 +1,197 @@
+[
+  {
+    "game_id": "snake",
+    "session_id": "fixture-snake-001",
+    "step": 0,
+    "state_text": "The snake head is at row 5, col 5 moving right. Food is 4 tiles directly ahead to the right at row 5, col 9. Ahead to the right is completely clear for 4 tiles. Above (up) is clear open space. Below (down) is clear open space. Moving left is an immediate 180-degree reverse into our body (fatal).",
+    "facts": {
+      "head": [5, 5],
+      "direction": "right",
+      "food": [5, 9],
+      "body_length": 3,
+      "grid_size": [10, 10],
+      "distance_to_food": 4,
+      "danger": {
+        "up": "clear",
+        "down": "clear",
+        "left": "reverse_fatal",
+        "right": "clear_target"
+      }
+    },
+    "legal_actions": [
+      {
+        "id": "up",
+        "label": "Up",
+        "hint": "Clear open space"
+      },
+      {
+        "id": "right",
+        "label": "Right",
+        "hint": "Direct clear path towards food"
+      },
+      {
+        "id": "down",
+        "label": "Down",
+        "hint": "Clear open space"
+      }
+    ],
+    "score": 0.0,
+    "done": false
+  },
+  {
+    "game_id": "snake",
+    "session_id": "fixture-snake-002",
+    "step": 5,
+    "state_text": "The snake head is at row 2, col 9 moving right. Right wall is directly ahead in 1 tile — continuing right will crash into the wall. Food is located downward at row 7, col 9. Moving down is completely clear and aligns directly toward food. Moving up is clear open space. Moving left is reverse into body.",
+    "facts": {
+      "head": [2, 9],
+      "direction": "right",
+      "food": [7, 9],
+      "body_length": 4,
+      "grid_size": [10, 10],
+      "distance_to_food": 5,
+      "danger": {
+        "up": "clear",
+        "down": "clear_target",
+        "left": "reverse_fatal",
+        "right": "wall_collision_imminent"
+      }
+    },
+    "legal_actions": [
+      {
+        "id": "down",
+        "label": "Down",
+        "hint": "Clear path toward food"
+      },
+      {
+        "id": "up",
+        "label": "Up",
+        "hint": "Clear open space away from food"
+      },
+      {
+        "id": "right",
+        "label": "Right",
+        "hint": "Wall collision directly ahead in 1 tile"
+      }
+    ],
+    "score": 60.0,
+    "done": false
+  },
+  {
+    "game_id": "snake",
+    "session_id": "fixture-snake-003",
+    "step": 12,
+    "state_text": "The snake head is at row 6, col 4 moving down. Snake body segments block the tile directly below and the tile to the right. Moving down or right will cause an immediate body collision. Moving left is clear into open space. Moving up is an immediate 180-degree reverse into neck.",
+    "facts": {
+      "head": [6, 4],
+      "direction": "down",
+      "food": [2, 1],
+      "body_length": 6,
+      "grid_size": [10, 10],
+      "distance_to_food": 7,
+      "danger": {
+        "up": "reverse_fatal",
+        "down": "body_collision_imminent",
+        "left": "clear_escape",
+        "right": "body_collision_imminent"
+      }
+    },
+    "legal_actions": [
+      {
+        "id": "left",
+        "label": "Left",
+        "hint": "Only unobstructed escape corridor"
+      },
+      {
+        "id": "down",
+        "label": "Down",
+        "hint": "Collision with snake body directly ahead"
+      },
+      {
+        "id": "right",
+        "label": "Right",
+        "hint": "Blocked by snake body segment"
+      }
+    ],
+    "score": 120.0,
+    "done": false
+  },
+  {
+    "game_id": "snake",
+    "session_id": "fixture-snake-004",
+    "step": 20,
+    "state_text": "The snake head is at row 4, col 3 moving left. Food is located directly above at row 3, col 3. Moving up is clear and immediately reaches the food. Moving left is clear for 3 tiles before reaching the left wall. Moving down is clear open space. Moving right is reverse into body.",
+    "facts": {
+      "head": [4, 3],
+      "direction": "left",
+      "food": [3, 3],
+      "body_length": 7,
+      "grid_size": [10, 10],
+      "distance_to_food": 1,
+      "danger": {
+        "up": "clear_food_immediate",
+        "down": "clear",
+        "left": "clear",
+        "right": "reverse_fatal"
+      }
+    },
+    "legal_actions": [
+      {
+        "id": "up",
+        "label": "Up",
+        "hint": "Directly reaches food target"
+      },
+      {
+        "id": "left",
+        "label": "Left",
+        "hint": "Clear path toward wall"
+      },
+      {
+        "id": "down",
+        "label": "Down",
+        "hint": "Clear open space"
+      }
+    ],
+    "score": 180.0,
+    "done": false
+  },
+  {
+    "game_id": "snake",
+    "session_id": "fixture-snake-005",
+    "step": 35,
+    "state_text": "The snake head is at the bottom-left corner at row 9, col 0 moving down. Bottom wall is directly ahead in 1 tile. Left wall is directly to the left. Moving down will crash into the bottom wall; moving left will crash into the left wall. Moving right is completely open and the only legal survival path along the bottom edge. Moving up is reverse into body.",
+    "facts": {
+      "head": [9, 0],
+      "direction": "down",
+      "food": [8, 5],
+      "body_length": 9,
+      "grid_size": [10, 10],
+      "distance_to_food": 6,
+      "danger": {
+        "up": "reverse_fatal",
+        "down": "wall_collision_imminent",
+        "left": "wall_collision_imminent",
+        "right": "clear_escape"
+      }
+    },
+    "legal_actions": [
+      {
+        "id": "right",
+        "label": "Right",
+        "hint": "Safe escape route along bottom edge"
+      },
+      {
+        "id": "down",
+        "label": "Down",
+        "hint": "Fatal bottom wall collision"
+      },
+      {
+        "id": "up",
+        "label": "Up",
+        "hint": "Reverse into body"
+      }
+    ],
+    "score": 240.0,
+    "done": false
+  }
+]

@@ -1,0 +1,52 @@
+{
+  "name": "lab-game1-quick",
+  "created_at": "2026-10-16T05:45:08.626Z",
+  "adapter": "game1",
+  "variants": [
+    {
+      "question_set": "game1_v1_perception",
+      "games": 3,
+      "avg_score": 60.0,
+      "best_score": 120.0,
+      "invalid_rate": 0.0,
+      "avg_latency_ms": 1473.54,
+      "completion_rate": 1.0,
+      "avg_confidence": 0.8149,
+      "session_ids": [
+        "20261016-054414-95bd",
+        "20261016-054422-10fc",
+        "20261016-054429-d779"
+      ]
+    },
+    {
+      "question_set": "game1_v2_direct_action",
+      "games": 3,
+      "avg_score": 60.0,
+      "best_score": 120.0,
+      "invalid_rate": 0.0,
+      "avg_latency_ms": 738.41,
+      "completion_rate": 1.0,
+      "avg_confidence": 0.6737,
+      "session_ids": [
+        "20261016-054437-ae17",
+        "20261016-054441-a20c",
+        "20261016-054445-1c1c"
+      ]
+    },
+    {
+      "question_set": "game1_v3_hazard_gates",
+      "games": 3,
+      "avg_score": 60.0,
+      "best_score": 120.0,
+      "invalid_rate": 0.0,
+      "avg_latency_ms": 1256.42,
+      "completion_rate": 1.0,
+      "avg_confidence": 0.5598,
+      "session_ids": [
+        "20261016-054449-5e6a",
+        "20261016-054455-e432",
+        "20261016-054502-5c6c"
+      ]
+    }
+  ]
+}

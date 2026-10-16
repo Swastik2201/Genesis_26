@@ -121,25 +121,14 @@ class MockAdapter(GameAdapter):
         response: dict[str, Any],
         new_raw: dict[str, Any],
     ) -> bool | None:
-        """Return False on collision (score did not increase), True otherwise.
-
-        We compare ``score_before`` vs ``score_after`` as the primary signal.
-        If ``done`` flipped to True, the game ended; that is treated as a bad
-        move (collision) and returns False.
-        """
-        score_before = prev_raw.get("score")
-        score_after = new_raw.get("score")
+        """Return False on collision or loss, True on safe move or food collection."""
         game_over = new_raw.get("done", False)
+        won = new_raw.get("won", False)
 
-        if game_over and score_after is not None and score_before is not None:
-            # Collision: score did not increase
-            if score_after <= score_before:
-                return False
+        if game_over and not won:
+            return False
 
-        if score_before is None or score_after is None:
-            return None
-
-        return score_after > score_before  # True = score went up; None not reached here
+        return True
 
     def close(self) -> None:
         """Close the underlying HTTP session."""

@@ -1,34 +1,47 @@
-"""Deterministic local mock game server (Lane A).
+"""Deterministic local mock game server for TopGameAI Arena Snake.
 
-Lane-runner game rules
-----------------------
-- 3 lanes (1, 2, 3).  Player starts in lane 2.
-- Each step the player can: ``move_left``, ``stay``, ``move_right``.
-- Obstacles appear randomly (seeded) at the start of each step.
-- Score increases by 10 for every safe step.
-- Game over when the player's lane has an obstacle at distance 0 (collision).
-- An ``--illegal-rate`` flag causes the server to randomly reject moves as
-  illegal (HTTP 422) at the given probability — used to exercise the validator.
+TopGameAI Arena Snake Game Rules
+---------------------------------
+- 12x12 grid (columns 0..11, rows 0..11).
+- Snake starts with 3 segments: head at (5, 5), body at (4, 5), (3, 5), facing RIGHT.
+- Each step the player can move: UP, DOWN, LEFT, RIGHT.
+- Immediate 180-degree reversals are strictly illegal and rejected (HTTP 422).
+- Food appears at random unoccupied grid coordinates.
+- Eating food gives +60 points and extends the snake by 1 segment.
+- Winning condition: eating 15 foods awards +100 bonus (total score = 1000) and marks done=True.
+- Collision with walls (out of bounds) or snake body terminates the game (done=True).
+- Maximum duration: 300 steps.
+- Grid representation:
+    0 = Empty cell
+    1 = Snake body segment
+    2 = Food
+    3 = Snake head
 
 Endpoints
 ---------
 ``POST /start``
-    Body: ``{"seed": int}`` (optional; defaults to CLI --seed).
-    Returns the initial state.
+    Body: ``{"seed": int}`` (optional). Returns the initial state.
 
 ``GET /state``
     Returns the current state for the active session.
 
 ``POST /move``
     Body: ``{"session_id": str, "action": str}``.
-    ``action`` must be one of ``move_left``, ``stay``, ``move_right``.
-    Returns the updated state or HTTP 422 if the move is illegal/rejected.
+    Returns the updated state or HTTP 422 if the move is illegal (e.g. reversal).
+
+``POST /api/arena/sessions``
+    TopGameAI Arena compatibility endpoint for session initialization.
+
+``POST /api/arena/sessions/<session_id>/action``
+    TopGameAI Arena compatibility endpoint for move submission.
+
+``GET /health``
+    Health check.
 
 Run
 ---
 ::
-
-    python -m mock_game.server --port 8181 --seed 42 --illegal-rate 0.1
+    python -m mock_game.server --port 8181 --seed 42
 """
 
 from __future__ import annotations
@@ -42,218 +55,281 @@ import uuid
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any
 
-logging.basicConfig(level=logging.INFO, format="[mock_game] %(message)s")
+logging.basicConfig(level=logging.INFO, format="[mock_snake] %(message)s")
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Game constants
+# Constants
 # ---------------------------------------------------------------------------
 
-NUM_LANES = 3
-SCORE_PER_STEP = 10
-OBSTACLE_LOOKAHEAD = 5   # obstacles placed 1–OBSTACLE_LOOKAHEAD steps ahead
-OBSTACLE_DENSITY = 0.35  # probability an obstacle appears in any given lane each step
+GRID_WIDTH = 12
+GRID_HEIGHT = 12
+MAX_STEPS = 300
+WIN_FOOD_COUNT = 15
+FOOD_POINTS = 60
+WIN_BONUS = 100
 
-VALID_ACTIONS = {"move_left", "stay", "move_right"}
+OPPOSITE_DIRECTIONS = {
+    "up": "down",
+    "down": "up",
+    "left": "right",
+    "right": "left",
+}
+
+DIRECTION_DELTAS = {
+    "up": (0, -1),
+    "down": (0, 1),
+    "left": (-1, 0),
+    "right": (1, 0),
+}
+
 
 # ---------------------------------------------------------------------------
 # Game state
 # ---------------------------------------------------------------------------
 
 
-class MockGame:
-    """Encapsulates one game session."""
+class MockSnakeGame:
+    """Encapsulates one TopGameAI Arena Snake game session."""
 
-    def __init__(self, seed: int, illegal_rate: float) -> None:
+    def __init__(self, seed: int = 42, illegal_rate: float = 0.0) -> None:
         self.session_id: str = uuid.uuid4().hex[:12]
         self.rng = random.Random(seed)
         self.illegal_rate = illegal_rate
 
-        self.lane: int = 2          # 1-indexed; start in centre
+        self.width = GRID_WIDTH
+        self.height = GRID_HEIGHT
         self.step: int = 0
         self.score: float = 0.0
+        self.food_eaten: int = 0
         self.done: bool = False
-        self.last_message: str = ""
+        self.won: bool = False
+        self.last_message: str = "Game started."
 
-        # Pre-generate obstacle field for the next OBSTACLE_LOOKAHEAD steps.
-        self.obstacles: list[dict[str, int]] = []
-        self._spawn_obstacles()
+        # Snake starts at length 3 facing right
+        self.direction: str = "right"
+        self.snake: list[dict[str, int]] = [
+            {"x": 5, "y": 5},
+            {"x": 4, "y": 5},
+            {"x": 3, "y": 5},
+        ]
+        self.food: dict[str, int] = {"x": 8, "y": 5}
+        self._spawn_food()
 
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
+    def _spawn_food(self) -> None:
+        """Place food in a random unoccupied cell."""
+        occupied = {(s["x"], s["y"]) for s in self.snake}
+        empty_cells = [
+            (x, y)
+            for y in range(self.height)
+            for x in range(self.width)
+            if (x, y) not in occupied
+        ]
+        if empty_cells:
+            fx, fy = self.rng.choice(empty_cells)
+            self.food = {"x": fx, "y": fy}
 
-    def _spawn_obstacles(self) -> None:
-        """Replace obstacle list with fresh randomised obstacles."""
-        obs: list[dict[str, int]] = []
-        for dist in range(1, OBSTACLE_LOOKAHEAD + 1):
-            for lane in range(1, NUM_LANES + 1):
-                if self.rng.random() < OBSTACLE_DENSITY:
-                    obs.append({"lane": lane, "distance": dist})
-        self.obstacles = obs
-
-    def _obstacles_at_distance(self, dist: int) -> list[int]:
-        """Return lanes that have an obstacle at exactly ``dist`` steps."""
-        return [o["lane"] for o in self.obstacles if o["distance"] == dist]
+    def _get_grid(self) -> list[list[int]]:
+        """12x12 grid: 0=empty, 1=body, 2=food, 3=head."""
+        grid = [[0 for _ in range(self.width)] for _ in range(self.height)]
+        # Body
+        for seg in self.snake[1:]:
+            if 0 <= seg["y"] < self.height and 0 <= seg["x"] < self.width:
+                grid[seg["y"]][seg["x"]] = 1
+        # Head
+        if self.snake:
+            hx, hy = self.snake[0]["x"], self.snake[0]["y"]
+            if 0 <= hy < self.height and 0 <= hx < self.width:
+                grid[hy][hx] = 3
+        # Food
+        fx, fy = self.food["x"], self.food["y"]
+        if 0 <= fy < self.height and 0 <= fx < self.width:
+            grid[fy][fx] = 2
+        return grid
 
     def _legal_actions(self) -> list[dict[str, str]]:
-        """Return legal actions with contextual hints."""
+        """Return non-reversing cardinal directions."""
+        opposite = OPPOSITE_DIRECTIONS.get(self.direction.lower(), "")
         actions = []
-        # move_left
-        target_left = self.lane - 1
-        if target_left < 1:
-            actions.append({
-                "id": "move_left",
-                "label": "Move Left",
-                "hint": "Blocked by left wall — would go out of bounds",
-            })
-        else:
-            blocked = target_left in self._obstacles_at_distance(1)
-            actions.append({
-                "id": "move_left",
-                "label": "Move Left",
-                "hint": f"Lane {target_left} {'has an obstacle ahead' if blocked else 'is clear'}",
-            })
+        for d in ("up", "down", "left", "right"):
+            if d == opposite:
+                continue
+            dx, dy = DIRECTION_DELTAS[d]
+            head = self.snake[0]
+            nx, ny = head["x"] + dx, head["y"] + dy
+            # Check if immediately lethal
+            if nx < 0 or nx >= self.width or ny < 0 or ny >= self.height:
+                hint = f"Moving {d} will collide with outer wall"
+            elif any(s["x"] == nx and s["y"] == ny for s in self.snake[:-1]):
+                hint = f"Moving {d} will collide with snake body"
+            elif nx == self.food["x"] and ny == self.food["y"]:
+                hint = f"Moving {d} captures food! (+60 pts)"
+            else:
+                hint = f"Clear corridor towards ({nx}, {ny})"
 
-        # stay
-        blocked = self.lane in self._obstacles_at_distance(1)
-        actions.append({
-            "id": "stay",
-            "label": "Stay in Current Lane",
-            "hint": f"Lane {self.lane} {'has an obstacle ahead' if blocked else 'is clear'}",
-        })
-
-        # move_right
-        target_right = self.lane + 1
-        if target_right > NUM_LANES:
             actions.append({
-                "id": "move_right",
-                "label": "Move Right",
-                "hint": "Blocked by right wall — would go out of bounds",
+                "id": d,
+                "label": d.capitalize(),
+                "hint": hint,
             })
-        else:
-            blocked = target_right in self._obstacles_at_distance(1)
-            actions.append({
-                "id": "move_right",
-                "label": "Move Right",
-                "hint": f"Lane {target_right} {'has an obstacle ahead' if blocked else 'is clear'}",
-            })
-
         return actions
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
     def state_dict(self) -> dict[str, Any]:
+        """Return contract-compliant and TopGameAI-compatible state dictionary."""
+        head = self.snake[0]
         return {
-            "game_id": "mock-v1",
+            "game_id": "snake",
             "session_id": self.session_id,
             "step": self.step,
-            "lane": self.lane,
             "score": self.score,
             "done": self.done,
-            "obstacles": list(self.obstacles),
+            "won": self.won,
+            "direction": self.direction,
+            "foodEaten": self.food_eaten,
+            "snake": list(self.snake),
+            "food": dict(self.food),
+            "width": self.width,
+            "height": self.height,
+            "grid": self._get_grid(),
             "legal_actions": self._legal_actions(),
             "message": self.last_message,
+            "state": {
+                "grid": self._get_grid(),
+                "snake": list(self.snake),
+                "food": dict(self.food),
+                "direction": self.direction,
+                "foodEaten": self.food_eaten,
+                "score": self.score,
+                "step": self.step,
+                "width": self.width,
+                "height": self.height,
+            },
         }
 
     def apply_move(self, action: str) -> tuple[dict[str, Any], bool]:
-        """Apply ``action`` and return (new_state_dict, collision).
+        """Apply directional move.
 
-        Raises
-        ------
-        ValueError
-            If ``action`` is not a recognised action string.
+        Returns (new_state_dict, collision_occurred).
+        Raises ValueError on invalid or 180-degree reversal moves.
         """
-        if action not in VALID_ACTIONS:
+        act_lower = action.lower()
+        if act_lower not in DIRECTION_DELTAS:
             raise ValueError(f"Unknown action '{action}'")
 
         if self.done:
             return self.state_dict(), False
 
-        # Determine target lane
-        target = self.lane
-        if action == "move_left":
-            target = self.lane - 1
-        elif action == "move_right":
-            target = self.lane + 1
+        # 180-degree reversal rule strictly forbidden by TopGameAI
+        opposite = OPPOSITE_DIRECTIONS.get(self.direction.lower())
+        if act_lower == opposite:
+            raise ValueError("Cannot reverse direction")
 
-        # Wall check — out-of-bounds is treated as illegal by the server
-        if target < 1 or target > NUM_LANES:
-            raise ValueError(
-                f"Action '{action}' is out-of-bounds from lane {self.lane}"
-            )
+        self.direction = act_lower
+        head = self.snake[0]
+        dx, dy = DIRECTION_DELTAS[act_lower]
+        new_head = {"x": head["x"] + dx, "y": head["y"] + dy}
 
-        # Move player
-        self.lane = target
-
-        # Check collision (obstacle at distance 0 = current position after move)
-        collided_lanes = self._obstacles_at_distance(1)
-        collision = self.lane in collided_lanes
-
-        if collision:
+        # Wall collision check
+        if (
+            new_head["x"] < 0
+            or new_head["x"] >= self.width
+            or new_head["y"] < 0
+            or new_head["y"] >= self.height
+        ):
             self.done = True
-            self.last_message = f"Collision in lane {self.lane}. Game over."
+            self.last_message = f"Collision with wall at ({new_head['x']}, {new_head['y']}). Game over."
+            self.step += 1
+            return self.state_dict(), True
+
+        # Self collision check
+        # Note: if snake doesn't grow, the last tail segment moves away,
+        # but standard TopGameAI checks against current body segments.
+        is_food = (new_head["x"] == self.food["x"] and new_head["y"] == self.food["y"])
+        body_to_check = self.snake if is_food else self.snake[:-1]
+        if any(s["x"] == new_head["x"] and s["y"] == new_head["y"] for s in body_to_check):
+            self.done = True
+            self.last_message = f"Collision with self at ({new_head['x']}, {new_head['y']}). Game over."
+            self.step += 1
+            return self.state_dict(), True
+
+        # Valid safe move: advance snake
+        self.snake.insert(0, new_head)
+        collision = False
+
+        if is_food:
+            self.food_eaten += 1
+            self.score += FOOD_POINTS
+            self.last_message = f"Food eaten! Count: {self.food_eaten}/15. Score: {self.score}"
+            if self.food_eaten >= WIN_FOOD_COUNT:
+                self.won = True
+                self.done = True
+                self.score += WIN_BONUS
+                self.last_message = f"Victory! All 15 foods collected. Final Score: {self.score}"
+            else:
+                self._spawn_food()
         else:
-            self.score += SCORE_PER_STEP
-            self.last_message = f"Moved to lane {self.lane}. Score: {self.score}"
+            self.snake.pop()
+            self.last_message = f"Advanced {act_lower} to ({new_head['x']}, {new_head['y']})."
 
         self.step += 1
-
-        # Advance obstacle distances and spawn new ones
-        self.obstacles = [
-            {"lane": o["lane"], "distance": o["distance"] - 1}
-            for o in self.obstacles
-            if o["distance"] > 1
-        ]
-        self._spawn_obstacles()
+        if self.step >= MAX_STEPS and not self.done:
+            self.done = True
+            self.last_message = f"Maximum step limit ({MAX_STEPS}) reached. Game over."
 
         return self.state_dict(), collision
 
 
 # ---------------------------------------------------------------------------
-# HTTP handler
+# HTTP Handler
 # ---------------------------------------------------------------------------
 
-# Module-level storage: one active game at a time (sufficient for testing).
-_active_game: MockGame | None = None
+_active_game: MockSnakeGame | None = None
 _server_illegal_rate: float = 0.0
 _server_seed: int = 42
 
 
-def _json_body(handler: "MockHandler") -> dict[str, Any]:
+def _json_body(handler: BaseHTTPRequestHandler) -> dict[str, Any]:
     length = int(handler.headers.get("Content-Length", 0))
     raw = handler.rfile.read(length) if length else b"{}"
     return json.loads(raw) if raw.strip() else {}
 
 
-def _respond(handler: "MockHandler", code: int, body: dict[str, Any]) -> None:
-    data = json.dumps(body).encode()
+def _respond(handler: BaseHTTPRequestHandler, code: int, body: dict[str, Any]) -> None:
+    data = json.dumps(body).encode("utf-8")
     handler.send_response(code)
     handler.send_header("Content-Type", "application/json")
+    handler.send_header("Access-Control-Allow-Origin", "*")
+    handler.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    handler.send_header("Access-Control-Allow-Headers", "Content-Type")
     handler.send_header("Content-Length", str(len(data)))
     handler.end_headers()
     handler.wfile.write(data)
 
 
 class MockHandler(BaseHTTPRequestHandler):
-    """Simple request router for the mock game."""
+    """Request router for TopGameAI Snake mock server."""
 
-    def log_message(self, fmt: str, *args: Any) -> None:  # type: ignore[override]
+    def log_message(self, fmt: str, *args: Any) -> None:
         logger.info(fmt, *args)
 
-    def do_POST(self) -> None:  # noqa: N802
+    def do_OPTIONS(self) -> None:
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
+    def do_POST(self) -> None:
         global _active_game
 
-        if self.path == "/start":
+        if self.path in ("/start", "/api/arena/sessions"):
             body = _json_body(self)
             seed = int(body.get("seed", _server_seed))
-            _active_game = MockGame(seed=seed, illegal_rate=_server_illegal_rate)
-            logger.info("New session %s (seed=%d)", _active_game.session_id, seed)
+            _active_game = MockSnakeGame(seed=seed, illegal_rate=_server_illegal_rate)
+            logger.info("New Snake session %s (seed=%d)", _active_game.session_id, seed)
             _respond(self, 200, _active_game.state_dict())
 
-        elif self.path == "/move":
+        elif self.path == "/move" or self.path.startswith("/api/arena/sessions/"):
             if _active_game is None:
                 _respond(self, 400, {"error": "No active session. POST /start first."})
                 return
@@ -261,10 +337,10 @@ class MockHandler(BaseHTTPRequestHandler):
             body = _json_body(self)
             action = body.get("action", "")
 
-            # Random illegal rejection (simulates game-side validation quirks)
+            # Simulated random illegal rejection rate if configured
             if (
                 _server_illegal_rate > 0
-                and random.random() < _server_illegal_rate  # noqa: S311 (test only)
+                and random.random() < _server_illegal_rate
             ):
                 _respond(self, 422, {
                     "error": "illegal_move",
@@ -288,29 +364,24 @@ class MockHandler(BaseHTTPRequestHandler):
         else:
             _respond(self, 404, {"error": f"Unknown path: {self.path}"})
 
-    def do_GET(self) -> None:  # noqa: N802
+    def do_GET(self) -> None:
         global _active_game
 
-        if self.path == "/state":
+        if self.path in ("/state", "/api/arena"):
             if _active_game is None:
                 _respond(self, 400, {"error": "No active session. POST /start first."})
                 return
             _respond(self, 200, _active_game.state_dict())
 
         elif self.path == "/health":
-            _respond(self, 200, {"status": "ok", "game": "mock-v1"})
+            _respond(self, 200, {"status": "ok", "game": "snake", "arena": "topgameai"})
 
         else:
             _respond(self, 404, {"error": f"Unknown path: {self.path}"})
 
 
-# ---------------------------------------------------------------------------
-# Entrypoint
-# ---------------------------------------------------------------------------
-
-
-def make_server(port: int, seed: int, illegal_rate: float) -> HTTPServer:
-    """Create the HTTPServer (does not start it)."""
+def make_server(port: int, seed: int = 42, illegal_rate: float = 0.0) -> HTTPServer:
+    """Create the HTTPServer for the TopGameAI Snake mock server."""
     global _server_seed, _server_illegal_rate
     _server_seed = seed
     _server_illegal_rate = illegal_rate
@@ -319,14 +390,14 @@ def make_server(port: int, seed: int, illegal_rate: float) -> HTTPServer:
 
 
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description="Mock lane-runner game server")
+    parser = argparse.ArgumentParser(description="TopGameAI Arena Snake Mock Server")
     parser.add_argument("--port", type=int, default=8181)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument(
         "--illegal-rate",
         type=float,
         default=0.0,
-        help="Probability [0,1] that a valid move is randomly rejected as illegal",
+        help="Probability [0,1] of simulated illegal rejection",
     )
     args = parser.parse_args(argv)
 
@@ -335,8 +406,8 @@ def main(argv: list[str] | None = None) -> None:
 
     server = make_server(args.port, args.seed, args.illegal_rate)
     logger.info(
-        "Mock game server on http://127.0.0.1:%d  (seed=%d, illegal-rate=%.2f)",
-        args.port, args.seed, args.illegal_rate,
+        "TopGameAI Snake Server running at http://127.0.0.1:%d (seed=%d)",
+        args.port, args.seed,
     )
     try:
         server.serve_forever()

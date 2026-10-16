@@ -65,12 +65,20 @@ export function renderDecisionGrid(container, event, options = {}) {
           </div>
           <div class="state-facts-grid">
             <div class="fact-badge">
-              <span class="fact-key">CURRENT LANE</span>
-              <span class="fact-val">LANE ${state.facts?.current_lane ?? 2}</span>
+              <span class="fact-key">SNAKE LENGTH</span>
+              <span class="fact-val">${state.facts?.body_length || (state.facts?.snake ? state.facts.snake.length : 3)}</span>
             </div>
             <div class="fact-badge">
-              <span class="fact-key">TRACK SPEED</span>
-              <span class="fact-val">${state.facts?.speed ? Number(state.facts.speed).toFixed(2) + 'x' : '1.0x'}</span>
+              <span class="fact-key">DIRECTION</span>
+              <span class="fact-val">${String(state.facts?.direction || 'RIGHT').toUpperCase()}</span>
+            </div>
+            <div class="fact-badge">
+              <span class="fact-key">FOOD EATEN</span>
+              <span class="fact-val">${state.facts?.food_eaten ?? 0} / 15</span>
+            </div>
+            <div class="fact-badge">
+              <span class="fact-key">GRID ARENA</span>
+              <span class="fact-val">12x12</span>
             </div>
           </div>
         </div>
@@ -353,12 +361,20 @@ export function renderSplitDecision(stateContainer, decisionContainer, event, op
       <!-- Structured Facts -->
       <div class="state-facts-grid" style="margin-bottom: var(--space-sm);">
         <div class="fact-badge">
-          <span class="fact-key">CURRENT LANE</span>
-          <span class="fact-val">LANE ${state.facts?.current_lane ?? 2}</span>
+          <span class="fact-key">SNAKE LENGTH</span>
+          <span class="fact-val">${state.facts?.body_length || (state.facts?.snake ? state.facts.snake.length : 3)}</span>
         </div>
         <div class="fact-badge">
-          <span class="fact-key">TRACK SPEED</span>
-          <span class="fact-val">${state.facts?.speed ? Number(state.facts.speed).toFixed(2) + 'x' : '1.0x'}</span>
+          <span class="fact-key">DIRECTION</span>
+          <span class="fact-val">${String(state.facts?.direction || 'RIGHT').toUpperCase()}</span>
+        </div>
+        <div class="fact-badge">
+          <span class="fact-key">FOOD EATEN</span>
+          <span class="fact-val">${state.facts?.food_eaten ?? 0} / 15</span>
+        </div>
+        <div class="fact-badge">
+          <span class="fact-key">GRID ARENA</span>
+          <span class="fact-val">12x12</span>
         </div>
       </div>
 
