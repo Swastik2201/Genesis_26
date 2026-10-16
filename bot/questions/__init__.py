@@ -10,6 +10,11 @@ from bot.questions.game1 import (
     Game1V2DirectActionQuestionSet,
     Game1V3HazardGatesQuestionSet,
 )
+from bot.questions.game2 import (
+    Game2V1PerceptionQuestionSet,
+    Game2V2DirectActionQuestionSet,
+    Game2V3CornerAnchorQuestionSet,
+)
 from bot.questions.v1_perception import V1PerceptionQuestionSet
 from bot.questions.v2_direct_action import V2DirectActionQuestionSet
 from bot.questions.v3_hybrid_gates import V3HybridGatesQuestionSet
@@ -19,6 +24,9 @@ __all__ = [
     "Game1V1PerceptionQuestionSet",
     "Game1V2DirectActionQuestionSet",
     "Game1V3HazardGatesQuestionSet",
+    "Game2V1PerceptionQuestionSet",
+    "Game2V2DirectActionQuestionSet",
+    "Game2V3CornerAnchorQuestionSet",
     "QuestionSet",
     "V1PerceptionQuestionSet",
     "V2DirectActionQuestionSet",
@@ -63,7 +71,7 @@ def list_question_sets() -> list[str]:
     return sorted(_REGISTRY.keys())
 
 
-# Pre-register standard question-set variants
+# Pre-register standard question-set variants (legacy mock runner)
 register_question_set("v1_perception", V1PerceptionQuestionSet)
 register_question_set("v2_direct_action", V2DirectActionQuestionSet)
 register_question_set("v3_hybrid_gates", V3HybridGatesQuestionSet)
@@ -73,5 +81,13 @@ register_question_set("v4_terse_state", V4TerseStateQuestionSet)
 register_question_set("game1_v1_perception", Game1V1PerceptionQuestionSet)
 register_question_set("game1_v2_direct_action", Game1V2DirectActionQuestionSet)
 register_question_set("game1_v3_hazard_gates", Game1V3HazardGatesQuestionSet)
-register_question_set("game1", Game1V1PerceptionQuestionSet)  # Default game1 candidate
+register_question_set("game1", Game1V1PerceptionQuestionSet)
+register_question_set("snake", Game1V1PerceptionQuestionSet)
+
+# Pre-register Game 2 (2048) candidates
+register_question_set("game2_v1_perception", Game2V1PerceptionQuestionSet)
+register_question_set("game2_v2_direct_action", Game2V2DirectActionQuestionSet)
+register_question_set("game2_v3_corner_anchor", Game2V3CornerAnchorQuestionSet)
+register_question_set("game2", Game2V1PerceptionQuestionSet)
+register_question_set("2048", Game2V1PerceptionQuestionSet)
 

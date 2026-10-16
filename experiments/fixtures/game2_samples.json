@@ -1,0 +1,212 @@
+[
+  {
+    "game_id": "2048",
+    "session_id": "fixture-2048-001",
+    "step": 0,
+    "state_text": "The 2048 board has sixteen tiles. Row 2 column 3 has a four, and row 3 column 3 has a four. All other tiles are empty zeros. Sliding up or down will merge the two fours into an eight. Sliding left or right will shift tiles horizontally without immediate merges.",
+    "facts": {
+      "grid": [
+        [0, 0, 0, 0],
+        [0, 0, 4, 0],
+        [0, 0, 4, 0],
+        [0, 0, 0, 0]
+      ],
+      "max_tile": 4,
+      "max_tile_pos": [1, 2],
+      "score": 0.0,
+      "best": 4
+    },
+    "legal_actions": [
+      {
+        "id": "up",
+        "label": "Up",
+        "hint": "Merges two fours into an eight at the top"
+      },
+      {
+        "id": "down",
+        "label": "Down",
+        "hint": "Merges two fours into an eight at the bottom"
+      },
+      {
+        "id": "left",
+        "label": "Left",
+        "hint": "Slides tiles to left wall without merge"
+      },
+      {
+        "id": "right",
+        "label": "Right",
+        "hint": "Slides tiles to right wall without merge"
+      }
+    ],
+    "score": 0.0,
+    "done": false
+  },
+  {
+    "game_id": "2048",
+    "session_id": "fixture-2048-002",
+    "step": 5,
+    "state_text": "The largest tile is eight in the top-right at row 1 column 3. A new tile two is at the bottom-left row 4 column 1. Sliding up preserves the eight anchored at the top perimeter. Sliding down or right would displace the eight from the top row.",
+    "facts": {
+      "grid": [
+        [0, 0, 8, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [2, 0, 0, 0]
+      ],
+      "max_tile": 8,
+      "max_tile_pos": [0, 2],
+      "score": 8.0,
+      "best": 8
+    },
+    "legal_actions": [
+      {
+        "id": "up",
+        "label": "Up",
+        "hint": "Maintains anchor along top perimeter"
+      },
+      {
+        "id": "left",
+        "label": "Left",
+        "hint": "Shifts eight to top-left corner"
+      },
+      {
+        "id": "down",
+        "label": "Down",
+        "hint": "Displaces eight into center"
+      },
+      {
+        "id": "right",
+        "label": "Right",
+        "hint": "Slides tiles rightward"
+      }
+    ],
+    "score": 8.0,
+    "done": false
+  },
+  {
+    "game_id": "2048",
+    "session_id": "fixture-2048-003",
+    "step": 25,
+    "state_text": "The bottom row is cleanly sorted monotonically: thirty-two at bottom-left, sixteen, eight, four at bottom-right. The row above has two fours that can merge. Sliding left or down preserves the bottom-left anchor and consolidates row two. Sliding up or right breaks bottom-row monotonicity.",
+    "facts": {
+      "grid": [
+        [0, 0, 0, 0],
+        [0, 2, 0, 0],
+        [0, 4, 4, 2],
+        [32, 16, 8, 4]
+      ],
+      "max_tile": 32,
+      "max_tile_pos": [3, 0],
+      "score": 184.0,
+      "best": 32
+    },
+    "legal_actions": [
+      {
+        "id": "left",
+        "label": "Left",
+        "hint": "Merges fours into eight while preserving bottom row"
+      },
+      {
+        "id": "down",
+        "label": "Down",
+        "hint": "Packs tiles into bottom anchor"
+      },
+      {
+        "id": "right",
+        "label": "Right",
+        "hint": "Displaces bottom-left thirty-two anchor"
+      },
+      {
+        "id": "up",
+        "label": "Up",
+        "hint": "Lifts bottom row tiles upward"
+      }
+    ],
+    "score": 184.0,
+    "done": false
+  },
+  {
+    "game_id": "2048",
+    "session_id": "fixture-2048-004",
+    "step": 50,
+    "state_text": "The largest tile is one-hundred-twenty-eight pinned at the bottom-left corner. Row three contains two thirty-twos ready to merge into sixty-four upon sliding left. Sliding left combines equal neighbors and keeps the anchor secure.",
+    "facts": {
+      "grid": [
+        [2, 0, 0, 0],
+        [4, 2, 0, 0],
+        [32, 32, 8, 4],
+        [128, 64, 16, 2]
+      ],
+      "max_tile": 128,
+      "max_tile_pos": [3, 0],
+      "score": 640.0,
+      "best": 128
+    },
+    "legal_actions": [
+      {
+        "id": "left",
+        "label": "Left",
+        "hint": "Merges thirty-twos into sixty-four in row three"
+      },
+      {
+        "id": "down",
+        "label": "Down",
+        "hint": "Packs vertical columns"
+      },
+      {
+        "id": "right",
+        "label": "Right",
+        "hint": "Shifts high-value tiles away from corner"
+      },
+      {
+        "id": "up",
+        "label": "Up",
+        "hint": "Dislodges one-hundred-twenty-eight anchor"
+      }
+    ],
+    "score": 640.0,
+    "done": false
+  },
+  {
+    "game_id": "2048",
+    "session_id": "fixture-2048-005",
+    "step": 95,
+    "state_text": "The board is densely populated with a five-hundred-twelve tile at the bottom-left corner. Sixty-four and sixty-four are aligned in row three. Sliding left triggers an immediate sixty-four merge and frees three empty tiles.",
+    "facts": {
+      "grid": [
+        [4, 8, 16, 2],
+        [8, 16, 32, 4],
+        [64, 64, 8, 2],
+        [512, 256, 128, 16]
+      ],
+      "max_tile": 512,
+      "max_tile_pos": [3, 0],
+      "score": 3820.0,
+      "best": 512
+    },
+    "legal_actions": [
+      {
+        "id": "left",
+        "label": "Left",
+        "hint": "Merges sixty-twos into one-hundred-twenty-eight"
+      },
+      {
+        "id": "down",
+        "label": "Down",
+        "hint": "Packs columns down"
+      },
+      {
+        "id": "right",
+        "label": "Right",
+        "hint": "Disrupts monotonic bottom row"
+      },
+      {
+        "id": "up",
+        "label": "Up",
+        "hint": "Moves five-hundred-twelve away from corner"
+      }
+    ],
+    "score": 3820.0,
+    "done": false
+  }
+]

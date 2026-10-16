@@ -27,10 +27,16 @@ if str(REPO_ROOT) not in sys.path:
 from bot.laya.engine import LayaEngine
 from bot.questions import list_question_sets
 
-DEFAULT_VARIANTS = [
+DEFAULT_VARIANTS_SNAKE = [
     "game1_v1_perception",
     "game1_v2_direct_action",
     "game1_v3_hazard_gates",
+]
+
+DEFAULT_VARIANTS_2048 = [
+    "game2_v1_perception",
+    "game2_v2_direct_action",
+    "game2_v3_corner_anchor",
 ]
 
 
@@ -141,29 +147,118 @@ class DeterministicOfflineAgent:
                     "confidence": probs[top_choice],
                 }
 
+            # --- Game 2 (2048) Questions ---
+            elif qid == "best_merge_direction":
+                probs = {"up": 0.25, "down": 0.25, "left": 0.25, "right": 0.25, "none": 0.0}
+                if "sliding up or down will merge" in text_lower or "sliding up will merge" in text_lower:
+                    probs = {"up": 0.70, "down": 0.20, "left": 0.05, "right": 0.05, "none": 0.0}
+                elif "sliding left merges both horizontal pairs" in text_lower or "sliding left merges" in text_lower:
+                    probs = {"left": 0.82, "up": 0.08, "down": 0.05, "right": 0.05, "none": 0.0}
+                elif "sliding down preserves monotonicity" in text_lower:
+                    probs = {"down": 0.75, "left": 0.15, "right": 0.05, "up": 0.05, "none": 0.0}
+                elif "sliding up merges" in text_lower:
+                    probs = {"up": 0.80, "left": 0.10, "right": 0.05, "down": 0.05, "none": 0.0}
+                top_choice = max(probs, key=probs.get)
+                answers[qid] = {
+                    "type": "choice",
+                    "choice": top_choice,
+                    "probabilities": probs,
+                    "confidence": probs[top_choice],
+                }
+
+            elif qid == "corner_preservation":
+                probs = {"up": 0.25, "down": 0.25, "left": 0.25, "right": 0.25, "neutral": 0.0}
+                if "sliding up preserves the eight anchored at the top perimeter" in text_lower or "top-right" in text_lower:
+                    probs = {"up": 0.75, "right": 0.15, "left": 0.05, "down": 0.05, "neutral": 0.0}
+                elif "bottom-left" in text_lower and "sliding down or left" in text_lower:
+                    probs = {"down": 0.60, "left": 0.30, "right": 0.05, "up": 0.05, "neutral": 0.0}
+                elif "anchored at row 4 column 1" in text_lower:
+                    probs = {"down": 0.65, "left": 0.25, "up": 0.05, "right": 0.05, "neutral": 0.0}
+                elif "top perimeter" in text_lower:
+                    probs = {"up": 0.70, "left": 0.15, "right": 0.10, "down": 0.05, "neutral": 0.0}
+                else:
+                    probs = {"up": 0.35, "down": 0.35, "left": 0.15, "right": 0.15, "neutral": 0.0}
+                top_choice = max(probs, key=probs.get)
+                answers[qid] = {
+                    "type": "choice",
+                    "choice": top_choice,
+                    "probabilities": probs,
+                    "confidence": probs[top_choice],
+                }
+
+            elif qid == "slide_direction":
+                probs = {"up": 0.25, "down": 0.25, "left": 0.25, "right": 0.25}
+                if "sliding up or down will merge" in text_lower:
+                    probs = {"up": 0.65, "down": 0.25, "left": 0.05, "right": 0.05}
+                elif "sliding left merges" in text_lower:
+                    probs = {"left": 0.78, "up": 0.10, "down": 0.08, "right": 0.04}
+                elif "sliding down preserves monotonicity" in text_lower:
+                    probs = {"down": 0.70, "left": 0.18, "up": 0.06, "right": 0.06}
+                elif "top perimeter" in text_lower:
+                    probs = {"up": 0.72, "right": 0.14, "left": 0.08, "down": 0.06}
+                top_choice = max(probs, key=probs.get)
+                answers[qid] = {
+                    "type": "choice",
+                    "choice": top_choice,
+                    "probabilities": probs,
+                    "confidence": probs[top_choice],
+                }
+
+            elif qid == "displaces_max_tile":
+                p_disp = 0.10
+                if "would displace" in text_lower or "would dislodge" in text_lower:
+                    p_disp = 0.88
+                elif "preserves the eight anchored" in text_lower or "preserves monotonicity" in text_lower:
+                    p_disp = 0.08
+                answers[qid] = {
+                    "type": "noul",
+                    "noul": p_disp,
+                    "confidence": p_disp,
+                }
+
+            elif qid == "merge_corridor":
+                probs = {"up": 0.25, "down": 0.25, "left": 0.25, "right": 0.25, "none": 0.0}
+                if "sliding left merges both horizontal pairs" in text_lower:
+                    probs = {"left": 0.80, "up": 0.10, "down": 0.05, "right": 0.05, "none": 0.0}
+                elif "sliding up or down will merge" in text_lower:
+                    probs = {"up": 0.65, "down": 0.25, "left": 0.05, "right": 0.05, "none": 0.0}
+                elif "sliding down preserves monotonicity" in text_lower:
+                    probs = {"down": 0.70, "left": 0.20, "up": 0.05, "right": 0.05, "none": 0.0}
+                else:
+                    probs = {"up": 0.40, "left": 0.30, "down": 0.20, "right": 0.10, "none": 0.0}
+                top_choice = max(probs, key=probs.get)
+                answers[qid] = {
+                    "type": "choice",
+                    "choice": top_choice,
+                    "probabilities": probs,
+                    "confidence": probs[top_choice],
+                }
+
         return {"model": "laya-replay", "answers": answers}
 
 
-def resolve_fixtures_path(cli_path: str | None = None) -> Path:
-    """Locate sample fixtures: prioritize mock_game, fallback to experiments."""
+def resolve_fixtures_path(cli_path: str | None = None, game: str = "snake") -> Path:
+    """Locate sample fixtures for the specified game."""
     if cli_path:
         p = Path(cli_path)
         if p.exists():
             return p
         raise FileNotFoundError(f"Specified fixtures file not found: {cli_path}")
 
-    # Check mock_game/fixtures/game1_samples.json first
-    p_mock = Path("mock_game/fixtures/game1_samples.json")
+    filename = "game2_samples.json" if str(game).lower() in ("2048", "game2") else "game1_samples.json"
+
+    # Check mock_game/fixtures first
+    p_mock = Path("mock_game/fixtures") / filename
     if p_mock.exists():
         return p_mock
 
-    # Fallback to experiments/fixtures/game1_samples.json
-    p_exp = Path("experiments/fixtures/game1_samples.json")
+    # Fallback to experiments/fixtures
+    p_exp = Path("experiments/fixtures") / filename
     if p_exp.exists():
         return p_exp
 
     raise FileNotFoundError(
-        "Could not find game1 sample states. Looked for:\n"
+        f"Could not find sample states for {game}. Looked for:\n"
         f"  - {p_mock.resolve()}\n"
         f"  - {p_exp.resolve()}"
     )
@@ -240,18 +335,26 @@ def main() -> None:
         description="Run candidate QuestionSets on recorded game states offline."
     )
     parser.add_argument(
+        "--game",
+        "-g",
+        type=str,
+        default="snake",
+        choices=["snake", "2048", "game1", "game2"],
+        help="Target game to replay (snake or 2048, default: snake).",
+    )
+    parser.add_argument(
         "--fixtures",
         "-f",
         type=str,
         default=None,
-        help="Path to game1_samples.json fixtures file.",
+        help="Path to sample fixtures file (default: auto-detected for game).",
     )
     parser.add_argument(
         "--variants",
         "-v",
         nargs="+",
-        default=DEFAULT_VARIANTS,
-        help=f"List of QuestionSet identifiers to evaluate (default: {DEFAULT_VARIANTS}).",
+        default=None,
+        help="List of QuestionSet identifiers to evaluate (default: game candidates).",
     )
     parser.add_argument(
         "--fake",
@@ -267,10 +370,18 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    fixtures_path = resolve_fixtures_path(args.fixtures)
+    fixtures_path = resolve_fixtures_path(args.fixtures, game=args.game)
+
+    if args.variants:
+        variants = args.variants
+    elif args.game in ("2048", "game2"):
+        variants = DEFAULT_VARIANTS_2048
+    else:
+        variants = DEFAULT_VARIANTS_SNAKE
+
     exit_code = replay(
         fixtures_path=fixtures_path,
-        variants=args.variants,
+        variants=variants,
         fake=args.fake,
         model_checkpoint=args.model,
     )

@@ -347,4 +347,27 @@ In `game1_v3_hazard_gates`, we also implemented explicit suppression ($0.05\time
   - `game1_v2_direct_action` demonstrated lowest decision latency (738 ms vs 1473 ms), but exhibited lower discriminative confidence and higher vulnerability to wall traps during offline replay.
   - `game1_v1_perception` produced the highest confidence on safe clear corridors (0.815) when paired with affirmative, front-loaded corridor facts.
 
+---
+
+### 8.6 Game 2: 2048 Formulation & Evaluation
+- **Game:** 2048 (Stage 2 on TopGameAI Arena: `https://topgameai.com/arena/2048`)
+- **Key Mechanics:**
+  - 4x4 grid of numerical tiles ($0$ empty, powers of 2).
+  - Legal Actions: Cardinal slides (`up`, `down`, `left`, `right`).
+  - Terminal Conditions: Grid full with zero valid horizontal or vertical merges remaining, or step cap reached (max 2000 steps).
+  - Scoring: Accumulated tile merge values.
+- **Candidate QuestionSets ([`bot/questions/game2.py`](../bot/questions/game2.py)):**
+  1. `game2_v1_perception` (Merge Availability & Corner Monotonicity):
+     - Evaluates `best_merge_direction` (choice) and `corner_preservation` (choice).
+     - Formula: $S_d = \max(0.05, P(\text{corner}))^{1.5} \cdot (1 + 1.25 P(\text{merge}))$.
+     - Prevents dislodging high-value tiles while picking the direction of highest merge density.
+  2. `game2_v2_direct_action` (Direct Slide Policy Control):
+     - Poses a single question asking Laya which slide move to make.
+     - Acts as an unassisted baseline; tends to swipe high-value tiles away from corner anchors when merge opportunities appear elsewhere.
+  3. `game2_v3_corner_anchor` (Binary Anchor Stability Gate):
+     - Uses a binary `noul` gate `displaces_max_tile` ($P(\text{displace}) \ge 0.40$ penalizes the move down to $0.1\times$).
+     - Evaluates `merge_corridor` among safe non-displacing moves to ensure strictly monotonic row/column consolidation.
+- **Offline Sample States:** [`experiments/fixtures/game2_samples.json`](./fixtures/game2_samples.json) (5 states: open board merge, corner anchor defense, monotonic row lock, high-value consolidation, dense board survival).
+- **Offline Replay CLI:** `python experiments/replay_states.py --game 2048 --fake` verified with 100% valid decision probability distributions.
+
 
