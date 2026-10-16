@@ -10,14 +10,14 @@ export const gameConfig = {
   // Website Branding
   brandName: "LayaMind",
 
-  // Game Branding
-  gameId: "mock-runner-v1",
-  gameName: "CYBER RUNNER",
+  // Game Branding (Stage 1: Snake, Stage 2: 2048)
+  gameId: "snake",
+  gameName: "TOPGAMEAI ARENA — SNAKE & 2048",
   gameSubtitle: "LayaMind // Autonomous Game Decision Layer",
-  gameTagline: "High-speed 3-lane tactical navigation guided by Laya typed probabilities",
-  gameDescription: "Autonomous decision layer that normalizes game observations, queries Laya with typed questions, validates move legality, and submits actions with immutable audit proofs.",
+  gameTagline: "Stage 1: Snake (12x12 Grid) & Stage 2: 2048 (4x4 Sliding Tiles) guided by Laya typed probabilities",
+  gameDescription: "Autonomous decision layer that normalizes game observations from TopGameAI Arena, queries Laya with typed questions, validates move legality, and submits actions with immutable audit proofs.",
   
-  // Custom Visual Identity (null uses default cyber lightning symbol)
+  // Custom Visual Identity
   logoPath: null,
   
   // Theme Color Palette
@@ -31,10 +31,11 @@ export const gameConfig = {
 
   // Game Rules & Qualifying Criteria
   rules: {
-    maxSteps: 40,
-    qualifyingScore: 1200,
-    lanes: 3,
-    initialSpeed: 1.0
+    maxSteps: 300,
+    qualifyingScore: 1000,
+    snakeGrid: 12,
+    targetFood: 15,
+    maxSteps2048: 2000
   },
 
   // Model & Hackathon Details

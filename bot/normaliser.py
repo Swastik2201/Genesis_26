@@ -283,6 +283,143 @@ class MockNormaliser(StateNormaliser):
         return state
 
 
+class SnakeNormaliser(StateNormaliser):
+    """Normaliser for Stage 1: Snake game."""
+
+    @property
+    def game_id(self) -> str:
+        return "snake"
+
+    def normalise(
+        self,
+        raw: dict[str, Any],
+        legal_actions: list[dict[str, str]],
+        step: int,
+        session_id: str,
+        game_id: str,
+        score: float | None,
+        done: bool,
+    ) -> dict[str, Any]:
+        st = raw.get("state", {})
+        snake_body = st.get("snake", [])
+        head = snake_body[0] if snake_body else {"x": 6, "y": 6}
+        food = st.get("food", {"x": 6, "y": 2})
+        direction = st.get("direction", "right")
+        food_eaten = st.get("foodEaten", 0)
+        width = st.get("width", 12)
+        height = st.get("height", 12)
+
+        # Plain English fact construction (front-load clear corridors)
+        dx = food.get("x", 0) - head.get("x", 0)
+        dy = food.get("y", 0) - head.get("y", 0)
+        food_desc = []
+        if dy < 0:
+            food_desc.append("upward")
+        elif dy > 0:
+            food_desc.append("downward")
+        if dx < 0:
+            food_desc.append("leftward")
+        elif dx > 0:
+            food_desc.append("rightward")
+        food_direction_str = "-".join(food_desc) or "at head"
+
+        state_text = (
+            f"The snake head is at row {head.get('y')}, col {head.get('x')} moving {direction}. "
+            f"Food is located {food_direction_str}. "
+            f"Foods eaten: {food_eaten} of 15. "
+            f"Legal moves: {', '.join(a['id'] for a in legal_actions)}."
+        )
+
+        facts = {
+            "head": [head.get("y"), head.get("x")],
+            "direction": direction,
+            "food": [food.get("y"), food.get("x")],
+            "food_eaten": food_eaten,
+            "grid_size": [height, width],
+            "body_length": len(snake_body),
+        }
+
+        clean_actions = [
+            {"id": str(a["id"]), "label": str(a.get("label", a["id"])), **({"hint": str(a["hint"])} if "hint" in a else {})}
+            for a in legal_actions
+        ]
+
+        state = {
+            "game_id": game_id,
+            "session_id": session_id,
+            "step": step,
+            "state_text": state_text,
+            "facts": facts,
+            "legal_actions": clean_actions,
+            "score": float(score or raw.get("score", 0)),
+            "done": done,
+        }
+        _validate_state(state)
+        return state
+
+
+class Game2048Normaliser(StateNormaliser):
+    """Normaliser for Stage 2: 2048 game."""
+
+    @property
+    def game_id(self) -> str:
+        return "2048"
+
+    def normalise(
+        self,
+        raw: dict[str, Any],
+        legal_actions: list[dict[str, str]],
+        step: int,
+        session_id: str,
+        game_id: str,
+        score: float | None,
+        done: bool,
+    ) -> dict[str, Any]:
+        st = raw.get("state", {})
+        grid = st.get("grid", [[0] * 4 for _ in range(4)])
+        max_val = 0
+        max_pos = [0, 0]
+        for r in range(len(grid)):
+            for c in range(len(grid[r])):
+                val = grid[r][c]
+                if val > max_val:
+                    max_val = val
+                    max_pos = [r, c]
+
+        state_text = (
+            f"The 2048 board has sixteen tiles. "
+            f"The largest tile is {max_val} at row {max_pos[0] + 1} column {max_pos[1] + 1}. "
+            f"Current score: {st.get('score', 0)}. "
+            f"Sliding moves available: {', '.join(a['id'] for a in legal_actions)}."
+        )
+
+        facts = {
+            "grid": grid,
+            "max_tile": max_val,
+            "max_tile_pos": max_pos,
+            "score": float(st.get("score", 0)),
+            "best": float(st.get("best", max_val)),
+        }
+
+        clean_actions = [
+            {"id": str(a["id"]), "label": str(a.get("label", a["id"])), **({"hint": str(a["hint"])} if "hint" in a else {})}
+            for a in legal_actions
+        ]
+
+        state = {
+            "game_id": game_id,
+            "session_id": session_id,
+            "step": step,
+            "state_text": state_text,
+            "facts": facts,
+            "legal_actions": clean_actions,
+            "score": float(score or st.get("score", 0)),
+            "done": done,
+        }
+        _validate_state(state)
+        return state
+
+
 # ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
@@ -291,10 +428,21 @@ def _load_mock_normaliser() -> type[StateNormaliser]:
     return MockNormaliser
 
 
+def _load_snake_normaliser() -> type[StateNormaliser]:
+    return SnakeNormaliser
+
+
+def _load_2048_normaliser() -> type[StateNormaliser]:
+    return Game2048Normaliser
+
+
 _NORMALISER_REGISTRY: dict[str, Any] = {
     "mock-v1": _load_mock_normaliser,
-    "mock":    _load_mock_normaliser,   # alias
-    # "game1": _load_game1_normaliser,  ← add on hackathon day
+    "mock":    _load_mock_normaliser,
+    "snake":   _load_snake_normaliser,
+    "game1":   _load_snake_normaliser,
+    "2048":    _load_2048_normaliser,
+    "game2":   _load_2048_normaliser,
 }
 
 

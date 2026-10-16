@@ -33,10 +33,23 @@ def _load_mock() -> type[GameAdapter]:
     return MockAdapter
 
 
+def _load_snake() -> type[GameAdapter]:
+    from bot.adapters.game1 import SnakeAdapter  # noqa: PLC0415
+    return SnakeAdapter
+
+
+def _load_2048() -> type[GameAdapter]:
+    from bot.adapters.game2 import Game2048Adapter  # noqa: PLC0415
+    return Game2048Adapter
+
+
 _REGISTRY: dict[str, Any] = {
     # name        loader callable
     "mock":       _load_mock,
-    # "game1":   _load_game1,   ← add on hackathon day
+    "snake":      _load_snake,
+    "game1":      _load_snake,
+    "2048":       _load_2048,
+    "game2":      _load_2048,
 }
 
 
