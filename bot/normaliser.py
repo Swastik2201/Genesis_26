@@ -205,6 +205,68 @@ class SnakeNormaliser(StateNormaliser):
         return state
 
 
+class Game2048Normaliser(StateNormaliser):
+    """Normaliser for Stage 2: 2048 game."""
+
+    @property
+    def game_id(self) -> str:
+        return "2048"
+
+    def normalise(
+        self,
+        raw: dict[str, Any],
+        legal_actions: list[dict[str, str]],
+        step: int,
+        session_id: str,
+        game_id: str,
+        score: float | None,
+        done: bool,
+    ) -> dict[str, Any]:
+        st = raw.get("state", {})
+        grid = st.get("grid", [[0] * 4 for _ in range(4)])
+        max_val = 0
+        max_pos = [0, 0]
+        for r in range(len(grid)):
+            for c in range(len(grid[r])):
+                val = grid[r][c]
+                if val > max_val:
+                    max_val = val
+                    max_pos = [r, c]
+
+        state_text = (
+            f"The 2048 board has sixteen tiles. "
+            f"The largest tile is {max_val} at row {max_pos[0] + 1} column {max_pos[1] + 1}. "
+            f"Current score: {st.get('score', 0)}. "
+            f"Sliding moves available: {', '.join(a['id'] for a in legal_actions)}."
+        )
+
+        facts = {
+            "grid": grid,
+            "max_tile": max_val,
+            "max_tile_pos": max_pos,
+            "score": float(st.get("score", 0)),
+            "best": float(st.get("best", max_val)),
+        }
+
+        clean_actions = [
+            {"id": str(a["id"]), "label": str(a.get("label", a["id"])), **({"hint": str(a["hint"])} if "hint" in a else {})}
+            for a in legal_actions
+        ]
+
+        state = {
+            "game_id": game_id,
+            "session_id": session_id,
+            "step": step,
+            "state_text": state_text,
+            "facts": facts,
+            "legal_actions": clean_actions,
+            "score": float(score if score is not None else st.get("score", 0)),
+            "done": done,
+        }
+        _validate_state(state)
+        return state
+
+
 # ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
@@ -213,11 +275,17 @@ def _load_snake_normaliser() -> type[StateNormaliser]:
     return SnakeNormaliser
 
 
+def _load_2048_normaliser() -> type[StateNormaliser]:
+    return Game2048Normaliser
+
+
 _NORMALISER_REGISTRY: dict[str, Any] = {
     "snake":   _load_snake_normaliser,
     "game1":   _load_snake_normaliser,
     "mock":    _load_snake_normaliser,
     "mock-v1": _load_snake_normaliser,
+    "2048":    _load_2048_normaliser,
+    "game2":   _load_2048_normaliser,
 }
 
 
@@ -227,9 +295,8 @@ def list_normalisers() -> list[str]:
 
 
 def get_normaliser(game_name: str) -> StateNormaliser:
-    """Return a fresh normaliser instance for game_name.
-
-    Defaults to SnakeNormaliser if unknown to ensure only Snake logic exists.
-    """
-    cls = _NORMALISER_REGISTRY.get(game_name, _load_snake_normaliser)()
+    """Return a fresh normaliser instance for game_name."""
+    loader = _NORMALISER_REGISTRY.get(game_name, _load_snake_normaliser)
+    cls = loader()
     return cls()
+

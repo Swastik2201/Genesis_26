@@ -21,6 +21,7 @@ from typing import AsyncGenerator, Optional
 import asyncio
 import hashlib
 import json
+import threading
 import time
 
 from fastapi import FastAPI, Header, Query, Request, Response
@@ -484,131 +485,181 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
             "message": f"Attached to session {session_id} for team '{agent_name}'. Streaming to dashboard.",
         }
 
-    _arena_step_loggers = {}
+    _laya_engines = {}
+    _laya_engine_lock = threading.Lock()
 
-    @app.post("/api/arena/step")
-    async def record_arena_step(request: Request):
-        """Records an incoming step from the browser on topgameai.com."""
+    def _get_laya_engine(question_set_id: str):
+        with _laya_engine_lock:
+            if question_set_id not in _laya_engines:
+                from bot.laya.engine import LayaEngine
+                _laya_engines[question_set_id] = LayaEngine(question_set=question_set_id)
+            return _laya_engines[question_set_id]
+
+    @app.post("/api/laya/decide")
+    async def decide_laya_move(request: Request):
+        """Pure Laya decision endpoint: evaluates state, validates legality, logs JSONL event, returns decision."""
         try:
             body = await request.json()
-        except Exception:
-            return json_error(400, "INVALID_JSON", "Invalid JSON payload")
+        except Exception as e:
+            return json_error(400, "INVALID_JSON", f"Invalid JSON payload: {e}")
+
+        game = str(body.get("game", "snake")).lower()
+        if "2048" in game:
+            game = "2048"
+        else:
+            game = "snake"
 
         session_id = body.get("session_id")
         if not session_id:
             return json_error(400, "MISSING_SESSION_ID", "session_id is required")
 
         step = int(body.get("step", 0))
-        st = body.get("state", {})
-        action = body.get("action")
-        agent_name = body.get("agent_name", "4-Goats")
+        raw_state = body.get("state", {})
         score = float(body.get("score", 0.0))
         done = bool(body.get("done", False))
         won = bool(body.get("won", False))
-        food_eaten = int(st.get("foodEaten", body.get("foodEaten", 0)))
-        snake = st.get("snake", [])
-        food = st.get("food", {})
-        direction = st.get("direction", "right")
+        agent_name = body.get("agent_name", "4-Goats")
 
+        default_qs = "game2_v1_perception" if game == "2048" else "game1_v1_perception"
+        qs_id = body.get("question_set") or default_qs
+
+        # 1. Normalise state
+        from bot.normaliser import get_normaliser
+        normaliser = get_normaliser(game)
+
+        if game == "2048":
+            legal_actions = [
+                {"id": "up", "label": "Slide Up"},
+                {"id": "down", "label": "Slide Down"},
+                {"id": "left", "label": "Slide Left"},
+                {"id": "right", "label": "Slide Right"},
+            ]
+        else:
+            cur_dir = str(body.get("direction") or raw_state.get("direction") or "right").lower()
+            opposites = {"up": "down", "down": "up", "left": "right", "right": "left"}
+            opp = opposites.get(cur_dir, "")
+            legal_actions = [
+                {"id": d, "label": d.capitalize()}
+                for d in ("up", "down", "left", "right")
+                if d != opp
+            ]
+
+        normalised_state = normaliser.normalise(
+            raw={"state": raw_state, "score": score, "done": done, "won": won},
+            legal_actions=legal_actions,
+            step=step,
+            session_id=session_id,
+            game_id=game,
+            score=score,
+            done=done,
+        )
+
+        # 2. Get Laya decision (using LayaEngine)
+        try:
+            engine = _get_laya_engine(qs_id)
+            loop = asyncio.get_running_loop()
+            decision = await loop.run_in_executor(
+                None, engine.decide, normalised_state, legal_actions
+            )
+        except Exception as e:
+            return json_error(500, "LAYA_DECISION_FAILED", f"Laya decision failed: {e}")
+
+        # 3. Validate decision
+        chosen_action = decision.chosen_action
+        scores = decision.action_scores
+
+        cardinal_probs = {}
+        for d in ("up", "down", "left", "right"):
+            cardinal_probs[d] = round(float(scores.get(d, 0.0)), 4)
+        sum_p = sum(cardinal_probs.values())
+        if sum_p > 0:
+            cardinal_probs = {d: round(v / sum_p, 4) for d, v in cardinal_probs.items()}
+            diff = round(1.0 - sum(cardinal_probs.values()), 4)
+            target_k = chosen_action if chosen_action in cardinal_probs else "right"
+            cardinal_probs[target_k] = round(cardinal_probs[target_k] + diff, 4)
+        else:
+            cardinal_probs = {"up": 0.25, "down": 0.25, "left": 0.25, "right": 0.25}
+
+        conf = float(cardinal_probs.get(chosen_action, 0.25))
+
+        # 4. Log to session JSONL
         from bot.logger import RunLogger
-
         if session_id not in _arena_step_loggers:
             _arena_step_loggers[session_id] = RunLogger(
-                game_id="snake",
+                game_id=game,
                 session_id=session_id,
                 logs_dir=app.state.logs_dir,
             )
-
         logger = _arena_step_loggers[session_id]
 
-        probs = {"up": 0.05, "down": 0.05, "left": 0.05, "right": 0.05}
-        if action in probs:
-            probs[action] = 0.85
-            rem = (1.0 - 0.85) / 3.0
-            for d in probs:
-                if d != action:
-                    probs[d] = round(rem, 3)
-
+        now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
         event_data = {
-            "step": step,
+            "schema": 1,
             "session_id": session_id,
-            "game_id": "snake",
-            "state": {
-                "game_id": "snake",
-                "session_id": session_id,
-                "step": step,
-                "state_text": f"Team {agent_name} | Snake head at ({snake[0]['x'] if snake else '?'}, {snake[0]['y'] if snake else '?'}) heading {direction}. Progress: {food_eaten}/15 foods.",
-                "facts": {
-                    "agent_name": agent_name,
-                    "snake": snake,
-                    "food": food,
-                    "direction": direction,
-                    "food_eaten": food_eaten,
-                    "body_length": len(snake),
-                    "grid_size": [12, 12],
-                    "grid": st.get("grid", []),
-                },
-                "legal_actions": [
-                    {"id": "up", "label": "Up"},
-                    {"id": "down", "label": "Down"},
-                    {"id": "left", "label": "Left"},
-                    {"id": "right", "label": "Right"},
-                ],
-                "score": score,
-                "done": done,
-            },
+            "game_id": game,
+            "game": game,
+            "ts": now_iso,
+            "timestamp": now_iso,
+            "step": step,
+            "state": normalised_state,
+            "state_before": normalised_state,
+            "action": chosen_action,
+            "final_action": chosen_action,
+            "state_after": None,
             "laya_calls": [
                 {
-                    "question_set": "game1_v1_perception",
-                    "questions": [
-                        {
-                            "id": "safest_direction",
-                            "type": "choice",
-                            "text": "Which adjacent tile is completely clear and advances toward food?",
-                            "options": ["up", "down", "left", "right"],
-                        }
-                    ],
-                    "raw": {"probabilities": [probs["up"], probs["down"], probs["left"], probs["right"]], "predicted_token": action or "right"},
-                    "action_scores": probs,
-                    "chosen_action": action or "right",
-                    "latency_ms": 28.0,
+                    "question_set": decision.question_set,
+                    "questions": decision.questions,
+                    "raw": decision.raw,
+                    "action_scores": cardinal_probs,
+                    "chosen_action": chosen_action,
+                    "latency_ms": round(decision.latency_ms, 2),
                     "accepted": True,
                     "excluded": False,
                     "legal": True,
-                    "reason": f"Live lockstep move from topgameai.com as team {agent_name}",
+                    "reason": decision.reason,
                 }
-            ] if action else [],
-            "validator": {"retries": 0, "fallback": False, "rejections": []},
-            "final_action": action,
+            ],
+            "validator": {
+                "retries": 0,
+                "fallback": False,
+                "rejections": [],
+            },
+            "decision": {
+                "chosen": chosen_action,
+                "confidence": conf,
+                "probabilities": cardinal_probs,
+            },
+            "timing": {
+                "inference_ms": round(decision.latency_ms, 2),
+                "total_ms": round(decision.latency_ms, 2),
+            },
             "game_response": {
                 "good": True,
-                "score_before": max(0.0, score - (60.0 if food_eaten > 0 else 0.0)),
-                "score_after": score,
+                "score_before": float(score),
+                "score_after": float(score),
                 "done": done,
-                "message": "Step recorded from topgameai.com",
+                "message": f"Real Laya decision applied on {game}",
             },
-            "outcome": f"Step {step}: {(action or 'START').upper()} | Foods: {food_eaten}/15 | Score: {score}",
+            "result": {
+                "good": True,
+                "score": float(score),
+                "done": done,
+            },
+            "outcome": f"Step {step}: {chosen_action.upper()} (p={conf:.2f})",
         }
 
         logger.event(event_data)
 
         if done:
-            now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
             try:
                 logger.close(
                     summary={
                         "session_id": session_id,
-                        "game_id": "snake",
-                        "started_at": now_iso,
-                        "ended_at": now_iso,
-                        "steps": step,
+                        "game_id": game,
                         "final_score": score,
-                        "invalid_moves": 0,
-                        "fallbacks": 0,
-                        "average_laya_latency_ms": 28.0,
-                        "laya_call_count": step,
-                        "completion_status": "completed" if won else "failed",
-                        "qualifying_score": score if score >= 600 else None,
+                        "completion_status": "completed" if won else "finished",
+                        "qualifying_score": score,
                         "verified": None,
                     }
                 )
@@ -616,7 +667,63 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
                 pass
             _arena_step_loggers.pop(session_id, None)
 
-        return {"status": "ok", "step": step, "session_id": session_id}
+        return {
+            "status": "ok",
+            "action": chosen_action,
+            "confidence": conf,
+            "probabilities": cardinal_probs,
+            "latency_ms": round(decision.latency_ms, 2),
+            "question_set": decision.question_set,
+            "reason": decision.reason,
+            "step": step,
+            "session_id": session_id,
+            "game": game,
+        }
+
+    @app.post("/api/laya/reject")
+    async def reject_laya_move(request: Request):
+        """Records a rejected move event in compliance with the participant guide."""
+        try:
+            body = await request.json()
+        except Exception as e:
+            return json_error(400, "INVALID_JSON", f"Invalid JSON payload: {e}")
+
+        session_id = body.get("session_id")
+        if not session_id:
+            return json_error(400, "MISSING_SESSION_ID", "session_id is required")
+
+        step = int(body.get("step", 0))
+        game = str(body.get("game", "snake")).lower()
+        if "2048" in game:
+            game = "2048"
+        else:
+            game = "snake"
+        action = str(body.get("action", ""))
+        reason = str(body.get("reason", "Action rejected by game engine"))
+        state_before = body.get("state_before", {})
+
+        from bot.logger import RunLogger
+        if session_id not in _arena_step_loggers:
+            _arena_step_loggers[session_id] = RunLogger(
+                game_id=game,
+                session_id=session_id,
+                logs_dir=app.state.logs_dir,
+            )
+        logger = _arena_step_loggers[session_id]
+        clean_event = logger.log_rejected_move(
+            step=step,
+            state_before=state_before,
+            action=action,
+            reason=reason,
+        )
+        return {"status": "ok", "event": clean_event}
+
+    _arena_step_loggers = {}
+
+    @app.post("/api/arena/step")
+    async def record_arena_step(request: Request):
+        """Records an incoming step telemetry from the browser on topgameai.com."""
+        return await decide_laya_move(request)
 
     @app.get("/api/arena/leaderboard")
     async def get_arena_leaderboard():
