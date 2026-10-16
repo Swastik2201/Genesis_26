@@ -52,10 +52,9 @@ flowchart TD
 
 ---
 
-## 4. Four Core Unique Selling Points (USPs)
+## 4. Three Core Unique Selling Points (USPs)
 
 1. **Decision Autopsy (USP 1):** Turns every failed move into an empirical investigation, classifying outcomes into six deterministic verdicts (`illegal_move`, `game_over`, `confident_miss`, `uncertain_miss`, `lucky_hit`, `as_predicted`) with testable explanatory hypotheses.
-2. **Question Lab (USP 2):** Benchmarks alternative prompt formulations (e.g. perception-first *"Which lane is blocked?"* vs direct-action control *"Which move to take?"*) across identical game seeds and evaluates measurable score and latency gains.
 3. **Reproducible Run Replay (USP 3):** Enables step-by-step forensic replay of any recorded run, backing up claims with SHA-256 hashes, exact line numbers in raw `.jsonl` files, and full move-to-Laya traceability.
 4. **Confidence Reality Check (USP 4):** Measures whether Laya's reported probabilities correlate with actual game success using Expected Calibration Error (ECE) and reliability diagrams, explicitly warning against small-sample overconfidence.
 
@@ -186,8 +185,3 @@ Genesis_26/
 
 ---
 
-## 10. Credits & Licences
-
-- **Laya Model**: Developed by **Nandakishor M** (Convai Innovations). Licensed under **Apache-2.0**.
-- **Visual Design & State-Questions-Probabilities Paradigm**: Inspired by **laya-playground** and [brainfunctioncollapse.com/laya](https://brainfunctioncollapse.com/laya) by **brain function collapse** (MIT License).
-- **Beat the Bot Platform**: MIT License &copy; 2026 Beat the Bot Team.
