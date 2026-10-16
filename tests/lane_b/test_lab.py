@@ -55,9 +55,9 @@ class FakeLabAdapter:
 
     def list_actions(self, raw: dict[str, Any]) -> list[dict[str, str]]:
         return [
-            {"id": "move_left", "label": "Left"},
-            {"id": "stay", "label": "Stay"},
-            {"id": "move_right", "label": "Right"},
+            {"id": "up", "label": "Up"},
+            {"id": "down", "label": "Down"},
+            {"id": "right", "label": "Right"},
         ]
 
     def submit_move(self, action_id: str, params: Any = None) -> dict[str, Any]:
@@ -69,13 +69,20 @@ class FakeLabAdapter:
 
     def _state(self) -> dict[str, Any]:
         return {
-            "game_id": "mock-v1",
+            "game_id": "snake",
             "session_id": self.session_id,
             "step": self.step,
-            "lane": 2,
-            "score": float(self.step * 10),
+            "state_text": "Snake moving right toward food.",
+            "facts": {
+                "snake": [{"x": 5 + self.step, "y": 5}, {"x": 4 + self.step, "y": 5}],
+                "food": {"x": 8, "y": 5},
+                "direction": "right",
+                "food_eaten": self.step,
+                "body_length": 2,
+                "grid_size": [12, 12],
+            },
+            "score": float(self.step * 60),
             "done": self.step >= 3,
-            "obstacles": [{"lane": 2, "distance": 2}],
             "legal_actions": self.list_actions({}),
         }
 

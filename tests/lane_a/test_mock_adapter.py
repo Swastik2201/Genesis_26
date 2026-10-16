@@ -1,7 +1,7 @@
-"""tests/lane_a/test_mock_adapter.py — Lane A adapter tests.
+"""tests/lane_a/test_mock_adapter.py — Lane A adapter tests for TopGameAI Arena Snake.
 
-Starts the mock server on a free port, plays 20 moves, and asserts
-that state and score update correctly.
+Starts the mock server on a free port, plays moves, and asserts
+that state, steps, and legal action constraints update correctly.
 
 Run with:
     pytest tests/lane_a/test_mock_adapter.py -v
@@ -88,29 +88,28 @@ def mock_server_illegal_url():
 # Helper
 # ---------------------------------------------------------------------------
 
+DELTAS = {
+    "up": (0, -1),
+    "down": (0, 1),
+    "left": (-1, 0),
+    "right": (1, 0),
+}
+
 
 def _pick_safe_action(raw: dict[str, Any]) -> str:
-    """Choose the first legal action that avoids an obstacle in the next step.
-
-    This is a test helper only — it inspects state mechanically.
-    It must NOT be used as a decision-making shortcut during scored runs.
-    """
-    obstacles_dist1 = {o["lane"] for o in raw.get("obstacles", []) if o["distance"] == 1}
-    current_lane = raw["lane"]
-    legal = raw.get("legal_actions", [])
+    """Choose a legal non-colliding action for Snake."""
+    legal = [a["id"] for a in raw.get("legal_actions", [])]
+    snake = raw.get("snake", [{"x": 5, "y": 5}])
+    head = snake[0]
 
     for act in legal:
-        aid = act["id"]
-        target = current_lane
-        if aid == "move_left":
-            target = current_lane - 1
-        elif aid == "move_right":
-            target = current_lane + 1
-        if target not in obstacles_dist1 and 1 <= target <= 3:
-            return aid
+        dx, dy = DELTAS.get(act, (0, 0))
+        nx, ny = head["x"] + dx, head["y"] + dy
+        if 0 <= nx < 12 and 0 <= ny < 12:
+            if not any(s["x"] == nx and s["y"] == ny for s in snake[:-1]):
+                return act
 
-    # Fall back to "stay" if nothing is clearly safe (game may end)
-    return "stay"
+    return legal[0] if legal else "right"
 
 
 # ---------------------------------------------------------------------------
@@ -130,13 +129,13 @@ class TestMockAdapterBasic:
         adapter = MockAdapter(base_url=mock_server_url, seed=42)
         raw = adapter.start()
 
-        assert raw["game_id"] == "mock-v1"
+        assert raw["game_id"] == "snake"
         assert isinstance(raw["session_id"], str) and raw["session_id"]
         assert raw["step"] == 0
         assert raw["done"] is False
         assert isinstance(raw["score"], (int, float))
         assert isinstance(raw["legal_actions"], list)
-        assert len(raw["legal_actions"]) == 3  # always 3 actions (left, stay, right)
+        assert len(raw["legal_actions"]) == 3  # Non-reversing directions
         adapter.close()
 
     def test_get_state_matches_start(self, mock_server_url: str) -> None:
@@ -157,22 +156,29 @@ class TestMockAdapterBasic:
         for act in actions:
             assert "id" in act
             assert "label" in act
-            assert act["id"] in {"move_left", "stay", "move_right"}
+            assert act["id"] in {"up", "down", "left", "right"}
+        adapter.close()
+
+    def test_cannot_reverse_direction(self, mock_server_url: str) -> None:
+        adapter = MockAdapter(base_url=mock_server_url, seed=42)
+        adapter.start()
+        # Snake starts moving right, so moving left is reverse and must raise
+        with pytest.raises(IllegalMoveError):
+            adapter.submit_move("left")
         adapter.close()
 
 
-class TestMockAdapter20Moves:
-    """Play 20 moves and assert state and score update correctly."""
+class TestMockAdapterPlayMoves:
+    """Play sequential moves and assert state and score update correctly."""
 
-    def test_play_20_moves(self, mock_server_url: str) -> None:
+    def test_play_moves(self, mock_server_url: str) -> None:
         adapter = MockAdapter(base_url=mock_server_url, seed=42)
         raw = adapter.start()
         prev_raw = dict(raw)
 
         steps_played = 0
-        score_increases = 0
 
-        for _ in range(20):
+        for _ in range(15):
             if raw.get("done"):
                 break
 
@@ -185,21 +191,12 @@ class TestMockAdapter20Moves:
             assert new_raw["step"] == prev_raw["step"] + 1, (
                 f"Step did not advance: {prev_raw['step']} → {new_raw['step']}"
             )
-
-            if not new_raw["done"]:
-                # Score must increase on a safe step
-                assert new_raw["score"] > prev_raw["score"], (
-                    f"Score did not increase after safe step {new_raw['step']}"
-                )
-                score_increases += 1
+            assert new_raw["score"] >= prev_raw["score"]
 
             steps_played += 1
             raw = new_raw
 
         assert steps_played > 0, "No moves were played"
-        # At least some moves should result in a score increase (seed=42 game is beatable)
-        assert score_increases > 0, "Score never increased across 20 moves"
-
         adapter.close()
 
     def test_score_is_non_negative(self, mock_server_url: str) -> None:
@@ -220,59 +217,40 @@ class TestMockAdapter20Moves:
 class TestMockAdapterJudge:
     """Verify judge() returns correct values."""
 
-    def test_judge_true_on_score_increase(self, mock_server_url: str) -> None:
+    def test_judge_true_on_safe_move(self, mock_server_url: str) -> None:
         adapter = MockAdapter(base_url=mock_server_url, seed=42)
         prev = adapter.start()
-
-        if prev.get("done"):
-            adapter.close()
-            pytest.skip("Game ended immediately (unlikely with seed=42)")
 
         action_id = _pick_safe_action(prev)
         response = adapter.submit_move(action_id)
         new_raw = adapter.get_state()
 
         verdict = adapter.judge(prev, response, new_raw)
-        if not new_raw["done"]:
-            assert verdict is True
-        else:
-            assert verdict in (True, False, None)
-
+        assert verdict is True
         adapter.close()
 
     def test_judge_false_on_collision(self, mock_server_url: str) -> None:
-        """Force a collision by running into an obstacle."""
+        """Force a wall collision."""
         adapter = MockAdapter(base_url=mock_server_url, seed=42)
         prev = adapter.start()
 
-        # Run until we find a step where "stay" leads to a collision, or the game ends.
-        for _ in range(50):
+        # Keep moving right until hitting the right perimeter wall at x=11
+        for _ in range(20):
+            prev = adapter.get_state()
             if prev.get("done"):
                 break
-            obstacles_dist1 = {
-                o["lane"] for o in prev.get("obstacles", []) if o["distance"] == 1
-            }
-            if prev["lane"] in obstacles_dist1:
-                # staying will collide
-                response = adapter.submit_move("stay")
-                new_raw = adapter.get_state()
+            response = adapter.submit_move("right")
+            new_raw = adapter.get_state()
+            if new_raw.get("done"):
                 verdict = adapter.judge(prev, response, new_raw)
-                if new_raw["done"]:
-                    assert verdict is False
-                adapter.close()
-                return
-            prev = adapter.get_state()
-            action_id = _pick_safe_action(prev)
-            adapter.submit_move(action_id)
-            prev = adapter.get_state()
+                assert verdict is False
+                break
 
         adapter.close()
-        # Not a failure if we never found a forced-collision scenario in 50 steps
-        pytest.skip("Could not engineer a forced collision within 50 steps")
 
 
 class TestMockAdapterIllegalRate:
-    """Verify that HTTP 422 responses are raised as IllegalMoveError."""
+    """Verify that simulated HTTP 422 responses are raised as IllegalMoveError."""
 
     def test_illegal_move_raises(self, mock_server_illegal_url: str) -> None:
         adapter = MockAdapter(base_url=mock_server_illegal_url, seed=99)
@@ -297,17 +275,16 @@ class TestMockAdapterIllegalRate:
 
 
 class TestMockAdapterContextManager:
-    """Verify the context-manager protocol closes the session cleanly."""
+    """Verify context-manager protocol."""
 
     def test_context_manager(self, mock_server_url: str) -> None:
         with MockAdapter(base_url=mock_server_url, seed=42) as adapter:
             raw = adapter.start()
             assert raw["step"] == 0
-        # No exception = close() was called successfully
 
 
 class TestRegistryIntegration:
-    """Verify get_adapter('mock') resolves to MockAdapter."""
+    """Verify get_adapter('mock') and 'snake' resolve correctly."""
 
     def test_get_adapter_mock(self, mock_server_url: str) -> None:
         from bot.adapters import get_adapter

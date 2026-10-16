@@ -127,40 +127,40 @@ export function initDecisionSimulator(config) {
 
   const scenarios = [
     {
-      state: "Step 14: Runner at Lane 2. Obstacle detected in Lane 2 at distance 12m. Lane 1 is unobstructed with gold coin (+10). Lane 3 has mud patch.",
-      question: "Which lane offers the safest high-yield passage?",
+      state: "Step 14: Snake length 5. Head at col 5, row 5 moving right. Target food at col 5, row 2. Up is open corridor directly toward food. Right wall in 6 tiles. Down is clear. Left is reverse into body.",
+      question: "Which cardinal move guarantees zero collision while advancing directly toward the target food?",
       qType: "choice",
       options: [
-        { label: "LANE 1 (Gold Coin)", prob: 0.84, isWinner: true },
-        { label: "LANE 2 (Obstacle)", prob: 0.04, isWinner: false },
-        { label: "LANE 3 (Mud Patch)", prob: 0.12, isWinner: false }
+        { label: "UP (Clear path to food)", prob: 0.88, isWinner: true },
+        { label: "RIGHT (Ahead away from food)", prob: 0.08, isWinner: false },
+        { label: "DOWN (Away from food)", prob: 0.04, isWinner: false }
       ],
-      action: "MOVE_LANE_1",
-      reason: "Laya prioritised zero collision risk with +10 coin reward (prob 0.84).",
+      action: "UP",
+      reason: "Laya selected UP: safe open corridor directly closing distance to food target (prob 0.88).",
       response: {
         badge: "GOOD",
         badgeClass: "badge-good",
-        message: "Action accepted. Clean dodge + coin collected.",
-        scoreDelta: 10,
-        scoreBefore: 420
+        message: "Action accepted. Clean turn + food collected (+60 pts).",
+        scoreDelta: 60,
+        scoreBefore: 360
       }
     },
     {
-      state: "Step 28: Boss laser targeting Lanes 1 & 2. Lane 3 shield generator active for 3 seconds. Speed bonus expiring.",
-      question: "Will moving to Lane 3 protect against incoming fire?",
+      state: "Step 28: Snake length 8. Head at col 11, row 3 moving up. North-east wall corner imminent at row 0. Left corridor is unobstructed. Down is 180° reverse into body.",
+      question: "Will executing a LEFT turn avert wall collision and preserve open maneuver space?",
       qType: "score",
       options: [
-        { label: "YES (Safe in Lane 3)", prob: 0.92, isWinner: true },
-        { label: "NO (Hazard persists)", prob: 0.08, isWinner: false }
+        { label: "YES (Safe left corridor)", prob: 0.94, isWinner: true },
+        { label: "NO (Perimeter danger persists)", prob: 0.06, isWinner: false }
       ],
-      action: "DASH_TO_LANE_3",
-      reason: "High score probability on Lane 3 shield protection (prob 0.92).",
+      action: "LEFT",
+      reason: "High safety confidence on LEFT evasive turn to avoid perimeter wall (prob 0.94).",
       response: {
         badge: "GOOD",
         badgeClass: "badge-good",
-        message: "Shield engaged. Laser avoided with 0 damage.",
-        scoreDelta: 25,
-        scoreBefore: 530
+        message: "Evasive turn successful. Snake alive with open corridor.",
+        scoreDelta: 0,
+        scoreBefore: 420
       }
     }
   ];

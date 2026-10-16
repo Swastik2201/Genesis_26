@@ -38,18 +38,11 @@ def _load_snake() -> type[GameAdapter]:
     return SnakeAdapter
 
 
-def _load_2048() -> type[GameAdapter]:
-    from bot.adapters.game2 import Game2048Adapter  # noqa: PLC0415
-    return Game2048Adapter
-
-
 _REGISTRY: dict[str, Any] = {
     # name        loader callable
     "mock":       _load_mock,
     "snake":      _load_snake,
     "game1":      _load_snake,
-    "2048":       _load_2048,
-    "game2":      _load_2048,
 }
 
 

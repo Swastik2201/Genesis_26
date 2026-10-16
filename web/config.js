@@ -1,8 +1,7 @@
 /**
  * ==========================================================================
  * LAYAMIND — CENTRAL GAME CONFIGURATION (web/config.js)
- * Single source of truth for game branding, theme accents, and parameters.
- * Retheme on hackathon game day by editing only this configuration file.
+ * Single source of truth for TopGameAI Arena Snake game.
  * ==========================================================================
  */
 
@@ -10,32 +9,36 @@ export const gameConfig = {
   // Website Branding
   brandName: "LayaMind",
 
-  // Game Branding (Stage 1: Snake, Stage 2: 2048)
+  // Game Branding: TopGameAI Arena Snake ONLY
   gameId: "snake",
-  gameName: "TOPGAMEAI ARENA — SNAKE & 2048",
+  gameName: "TOPGAMEAI ARENA — SNAKE",
   gameSubtitle: "LayaMind // Autonomous Game Decision Layer",
-  gameTagline: "Stage 1: Snake (12x12 Grid) & Stage 2: 2048 (4x4 Sliding Tiles) guided by Laya typed probabilities",
-  gameDescription: "Autonomous decision layer that normalizes game observations from TopGameAI Arena, queries Laya with typed questions, validates move legality, and submits actions with immutable audit proofs.",
+  gameTagline: "TopGameAI Arena Snake (12x12 Grid) guided by Laya typed probability reasoning",
+  gameDescription: "Autonomous decision layer that normalizes 12x12 game observations from TopGameAI Arena (https://topgameai.com/arena/snake), queries Laya with typed spatial questions, validates move legality, prevents reverse suicides, and submits actions with immutable audit proofs.",
   
   // Custom Visual Identity
   logoPath: null,
   
-  // Theme Color Palette
+  // Theme Color Palette (Matching TopGameAI Snake arena)
   theme: {
-    primaryAccent: "#22e6ff",    // Neon Cyan — Primary UI accents, focus, and legal moves
-    secondaryAccent: "#ff3df2",  // Neon Magenta — Laya reasoning, question sets, and game over
-    successAccent: "#39ff88",    // Neon Green — Positive reward, verified calibration, correct moves
-    warningAccent: "#ffb020",    // Amber — Validator rejections, auto-retries, preliminary sample warning
-    dangerAccent: "#ff4d6d"      // Crimson Red — Damage collisions, misses, and critical alerts
+    primaryAccent: "#4ade80",    // Green-400 (TopGameAI Snake Head)
+    secondaryAccent: "#16a34a",  // Green-600 (TopGameAI Snake Body)
+    successAccent: "#39ff88",    // Victory Green
+    warningAccent: "#ffb020",    // Amber — Reversal rejection warning
+    dangerAccent: "#ef4444"      // Red-500 (TopGameAI Food)
   },
 
-  // Game Rules & Qualifying Criteria
+  // Game Rules & Qualifying Criteria (Exact TopGameAI Arena Snake rules)
   rules: {
+    gridWidth: 12,
+    gridHeight: 12,
+    cellSize: 28,
     maxSteps: 300,
-    qualifyingScore: 1000,
-    snakeGrid: 12,
     targetFood: 15,
-    maxSteps2048: 2000
+    pointsPerFood: 60,
+    victoryBonus: 100,
+    qualifyingScore: 1000,
+    reverseAllowed: false
   },
 
   // Model & Hackathon Details
