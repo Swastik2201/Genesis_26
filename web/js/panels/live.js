@@ -272,15 +272,6 @@ function renderShell(container) {
           <button id="btn-arena-start-match" class="btn btn-sm" style="background: linear-gradient(135deg, #7c3aed, #2563eb); color: #fff; border: 1px solid #9333ea; font-weight: 600;">
             <span>▶ PLAY NOW (4-GOATS)</span>
           </button>
-          <div style="display: flex; align-items: center; gap: 6px; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 10px;">
-            <input type="text" id="arena-session-attach-input" placeholder="Paste session_id to attach..." style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-family: monospace; font-size: 11px; padding: 5px 10px; border-radius: 4px; width: 180px;" aria-label="Session ID to attach">
-            <button id="btn-arena-attach-session" class="btn btn-sm btn-secondary">
-              <span>🔗 ATTACH</span>
-            </button>
-          </div>
-          <button id="btn-arena-copy-hook" class="btn btn-sm btn-ghost" title="Copy 1-line script for topgameai.com DevTools Console">
-            <span>📋 BROWSER HOOK</span>
-          </button>
         </div>
       </div>
 
@@ -434,53 +425,6 @@ function bindControls(container) {
     });
   }
 
-  const attachBtn = container.querySelector('#btn-arena-attach-session');
-  const attachInput = container.querySelector('#arena-session-attach-input');
-  if (attachBtn) {
-    attachBtn.addEventListener('click', async () => {
-      const sId = (attachInput?.value || '').trim();
-      if (!sId) {
-        attachInput.focus();
-        return;
-      }
-      const team = (cardTeamInput?.value || '4-Goats').trim();
-      attachBtn.disabled = true;
-      attachBtn.innerHTML = '<span>⏳ ATTACHING...</span>';
-      try {
-        const resp = await fetch('/api/arena/hook', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_id: sId, agent_name: team, delay: 0.10 })
-        });
-        const data = await resp.json();
-        attachBtn.innerHTML = '<span>✓ ATTACHED!</span>';
-        setTimeout(() => {
-          startStream();
-          attachBtn.disabled = false;
-          attachBtn.innerHTML = '<span>🔗 ATTACH</span>';
-        }, 1000);
-      } catch (err) {
-        console.error('Attach session failed:', err);
-        attachBtn.disabled = false;
-        attachBtn.innerHTML = '<span>❌ FAILED</span>';
-      }
-    });
-  }
-
-  const copyHookBtn = container.querySelector('#btn-arena-copy-hook');
-  if (copyHookBtn) {
-    copyHookBtn.addEventListener('click', () => {
-      const scriptCode = `fetch('http://localhost:8000/relay.js').then(r=>r.text()).then(eval);`;
-      navigator.clipboard.writeText(scriptCode).then(() => {
-        copyHookBtn.innerHTML = '<span>✓ COPIED! PASTE IN F12</span>';
-        setTimeout(() => {
-          copyHookBtn.innerHTML = '<span>📋 BROWSER HOOK</span>';
-        }, 2500);
-      }).catch(() => {
-        prompt('Copy this hook script and paste in topgameai.com Console:', scriptCode);
-      });
-    });
-  }
 }
 
 /**
