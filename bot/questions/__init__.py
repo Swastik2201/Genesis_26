@@ -5,12 +5,20 @@ from __future__ import annotations
 from typing import Any, Callable
 
 from bot.questions.base import QuestionSet
+from bot.questions.game1 import (
+    Game1V1PerceptionQuestionSet,
+    Game1V2DirectActionQuestionSet,
+    Game1V3HazardGatesQuestionSet,
+)
 from bot.questions.v1_perception import V1PerceptionQuestionSet
 from bot.questions.v2_direct_action import V2DirectActionQuestionSet
 from bot.questions.v3_hybrid_gates import V3HybridGatesQuestionSet
 from bot.questions.v4_terse_state import V4TerseStateQuestionSet
 
 __all__ = [
+    "Game1V1PerceptionQuestionSet",
+    "Game1V2DirectActionQuestionSet",
+    "Game1V3HazardGatesQuestionSet",
     "QuestionSet",
     "V1PerceptionQuestionSet",
     "V2DirectActionQuestionSet",
@@ -60,3 +68,10 @@ register_question_set("v1_perception", V1PerceptionQuestionSet)
 register_question_set("v2_direct_action", V2DirectActionQuestionSet)
 register_question_set("v3_hybrid_gates", V3HybridGatesQuestionSet)
 register_question_set("v4_terse_state", V4TerseStateQuestionSet)
+
+# Pre-register Game 1 (Snake) candidates
+register_question_set("game1_v1_perception", Game1V1PerceptionQuestionSet)
+register_question_set("game1_v2_direct_action", Game1V2DirectActionQuestionSet)
+register_question_set("game1_v3_hazard_gates", Game1V3HazardGatesQuestionSet)
+register_question_set("game1", Game1V1PerceptionQuestionSet)  # Default game1 candidate
+

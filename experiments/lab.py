@@ -128,9 +128,94 @@ def _get_adapter_instance(adapter_name: str, seed: int) -> Any:
         except Exception:
             # Fall back to in-process MockGame adapter
             return _InProcessMockAdapter(seed=seed)
+    elif adapter_name in ("game1", "snake", "fixtures"):
+        try:
+            from bot.adapters import get_adapter
+            return get_adapter(adapter_name, seed=seed)
+        except Exception:
+            return _FixtureGameAdapter(seed=seed)
     else:
         from bot.adapters import get_adapter
         return get_adapter(adapter_name, seed=seed)
+
+
+class _FixtureGameAdapter:
+    name = "game1"
+
+    def __init__(self, seed: int = 42) -> None:
+        self.seed = seed
+        self.session_id = f"lab-fixture-{seed}"
+        from experiments.replay_states import resolve_fixtures_path
+
+        path = resolve_fixtures_path()
+        with open(path, "r", encoding="utf-8") as f:
+            self._states = json.load(f)
+        # Shift or cycle states according to seed for varied test states
+        offset = seed % max(1, len(self._states))
+        self._states = self._states[offset:] + self._states[:offset]
+        self._idx = 0
+        self._score = 0.0
+
+    def start(self) -> dict[str, Any]:
+        self._idx = 0
+        state = dict(self._states[0])
+        self._score = float(state.get("score", 0.0))
+        return state
+
+    def get_state(self) -> dict[str, Any]:
+        if self._idx < len(self._states):
+            return dict(self._states[self._idx])
+        last = dict(self._states[-1])
+        last["done"] = True
+        return last
+
+    def list_actions(self, raw: dict[str, Any]) -> list[dict[str, str]]:
+        return raw.get("legal_actions", [])
+
+    def submit_move(self, action_id: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+        from bot.adapters.base import IllegalMoveError
+
+        current = self.get_state()
+        legals = [a["id"] for a in current.get("legal_actions", [])]
+        if action_id not in legals:
+            raise IllegalMoveError(action_id, f"Action '{action_id}' not legal in {legals}")
+
+        self._idx += 1
+        hint = ""
+        for a in current.get("legal_actions", []):
+            if a["id"] == action_id:
+                hint = str(a.get("hint", "")).lower()
+
+        if "fatal" in hint or "collision" in hint or "reverse" in hint:
+            return {
+                "done": True,
+                "score": self._score,
+                "step": self._idx,
+                "collision": True,
+            }
+
+        self._score += 60.0
+        if self._idx < len(self._states):
+            nxt = dict(self._states[self._idx])
+            nxt["score"] = self._score
+            return nxt
+
+        return {
+            "done": True,
+            "score": self._score,
+            "step": self._idx,
+            "completion": True,
+        }
+
+    def judge(
+        self,
+        prev_raw: dict[str, Any],
+        response: dict[str, Any],
+        new_raw: dict[str, Any],
+    ) -> bool | None:
+        if new_raw.get("collision", False):
+            return False
+        return True
 
 
 class _InProcessMockAdapter:
