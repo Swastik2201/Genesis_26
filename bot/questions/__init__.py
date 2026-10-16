@@ -10,11 +10,6 @@ from bot.questions.game1 import (
     Game1V2DirectActionQuestionSet,
     Game1V3HazardGatesQuestionSet,
 )
-from bot.questions.game2 import (
-    Game2V1PerceptionQuestionSet,
-    Game2V2DirectActionQuestionSet,
-    Game2V3CornerAnchorQuestionSet,
-)
 
 V1PerceptionQuestionSet = Game1V1PerceptionQuestionSet
 V2DirectActionQuestionSet = Game1V2DirectActionQuestionSet
@@ -82,11 +77,3 @@ register_question_set("v1_perception", Game1V1PerceptionQuestionSet)
 register_question_set("v2_direct_action", Game1V2DirectActionQuestionSet)
 register_question_set("v3_hybrid_gates", Game1V3HazardGatesQuestionSet)
 register_question_set("v4_terse_state", Game1V1PerceptionQuestionSet)
-
-# Register Game 2 (TopGameAI 2048) question sets
-register_question_set("game2_v1_perception", Game2V1PerceptionQuestionSet)
-register_question_set("game2_v2_direct_action", Game2V2DirectActionQuestionSet)
-register_question_set("game2_v3_corner_anchor", Game2V3CornerAnchorQuestionSet)
-register_question_set("2048", Game2V1PerceptionQuestionSet)
-register_question_set("game2", Game2V1PerceptionQuestionSet)
-

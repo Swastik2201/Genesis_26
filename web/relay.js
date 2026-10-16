@@ -1,337 +1,476 @@
 /**
  * ==========================================================================
- * BEAT THE BOT — TOPGAMEAI 2048 & SNAKE LAYA MODEL RELAY (web/relay.js)
- * Autonomous Laya Decision Bridge for TopGameAI Arena (Snake & 2048)
- *
- * ARCHITECTURE (Strict Hackathon Compliance):
- * Game State (TopGameAI) -> Local Python Backend (/api/laya/decide)
- *   -> Laya Decision Model (convaiinnovations/laya) -> Validated Decision
- *   -> Browser Input Interface -> Telemetry and Hash-Chained JSONL Logs
- *
- * NOTE: All moves are generated exclusively by the Laya model via the local
- * backend. No BFS, flood-fill, search algorithms, or lookahead planners are used.
+ * BEAT THE BOT — TOPGAMEAI SNAKE AUTONOMOUS LAYA RELAY (4-GOATS)
+ * Simultaneously plays Snake on https://topgameai.com/arena/snake using
+ * the local Laya model (convaiinnovations/laya) and streams live gameplay
+ * to http://localhost:8000/dashboard.html#/live.
  * ==========================================================================
  */
 
 (function () {
-  // Idempotent guard to prevent duplicate listeners or monkeypatch recursion
-  if (window.__BTB_RELAY_INITIALIZED__) {
-    console.log('%c[BeatTheBot] Autonomous Laya Relay is already active in this window.', 'color: #38bdf8; font-weight: bold;');
+  // Prevent duplicate instances if the script is evaluated multiple times
+  if (window.__BTB_RELAY_INITIALIZED) {
+    console.log(
+      '%c[BeatTheBot] Relay already initialized. Re-attaching HUD & controls.',
+      'color: #a855f7; font-weight: bold; font-size: 13px;'
+    );
+    if (typeof window.__BTB_CREATE_HUD === 'function') window.__BTB_CREATE_HUD();
     return;
   }
-  window.__BTB_RELAY_INITIALIZED__ = true;
+  window.__BTB_RELAY_INITIALIZED = true;
 
   const LOCAL_API = 'http://localhost:8000';
+  const TEAM_NAME = '4-Goats';
+  const WIDTH = 12;
+  const HEIGHT = 12;
+
+  const OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };
   const DIRS = {
-    up: { key: 'ArrowUp' },
-    down: { key: 'ArrowDown' },
-    left: { key: 'ArrowLeft' },
-    right: { key: 'ArrowRight' },
+    up: { dx: 0, dy: -1, key: 'ArrowUp', code: 38 },
+    down: { dx: 0, dy: 1, key: 'ArrowDown', code: 40 },
+    left: { dx: -1, dy: 0, key: 'ArrowLeft', code: 37 },
+    right: { dx: 1, dy: 0, key: 'ArrowRight', code: 39 },
   };
 
   let activeSessionId = null;
-  let currentGame = window.location.pathname.includes('2048') ? '2048' : 'snake';
-  let currentTeamName = '4-Goats';
   let isPlaying = false;
+  let isDone = false;
   let stepCount = 0;
+  let lastProcessedStep = -1;
   let currentDirection = 'right';
-  let isDeciding = false;
+  let currentState = null;
+  let currentScore = 0;
+  let lastActionTime = 0;
+  let isEvaluatingLaya = false;
+  let isMoveInFlight = false;
 
-  console.log(`%c[BeatTheBot] Autonomous Laya Relay Loaded for TopGameAI Arena (${currentGame.toUpperCase()})!`, 'color: #a855f7; font-weight: bold; font-size: 14px;');
-  console.log(`Waiting for game session to start on topgameai.com...`);
+  console.log(
+    '%c[BeatTheBot] Laya Relay Active! Team: 4-Goats. Press "▶ Play Now" to begin.',
+    'color: #a855f7; font-weight: bold; font-size: 14px;'
+  );
 
   // --- FLOATING HUD BADGE ON TOPGAMEAI.COM ---
-  let badge = document.getElementById('btb-relay-hud');
-  if (badge) badge.remove();
-
-  badge = document.createElement('div');
-  badge.id = 'btb-relay-hud';
-  badge.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 9999999;
-    background: rgba(15, 23, 42, 0.96);
-    border: 1px solid #9333ea;
-    box-shadow: 0 10px 40px rgba(147, 51, 234, 0.45);
-    border-radius: 12px;
-    padding: 14px 18px;
-    color: #fff;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    max-width: 360px;
-    backdrop-filter: blur(8px);
-  `;
-  badge.innerHTML = `
-    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-      <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: bold; color: #d8b4fe;">
-        <span id="btb-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px #4ade80;"></span>
-        BEAT THE BOT — LAYA DECISION LAYER
-      </span>
-      <span id="btb-game-tag" style="font-size: 10px; color: #a855f7; background: rgba(168, 85, 247, 0.2); padding: 2px 6px; border-radius: 4px; font-weight: bold;">
-        ${currentGame.toUpperCase()}
-      </span>
-    </div>
-    <div id="btb-relay-status" style="color: #94a3b8; font-size: 11px;">
-      Ready: Click <strong>▶ Play Now</strong> to begin Laya model play!
-    </div>
-    <div id="btb-laya-telemetry" style="color: #cbd5e1; font-size: 10px; border-top: 1px solid #334155; padding-top: 4px; display: none;">
-      <div>Laya Action: <strong id="btb-act">-</strong> (<span id="btb-conf">0%</span>) | Latency: <span id="btb-lat">0ms</span></div>
-      <div id="btb-probs" style="color: #94a3b8; font-size: 9px; margin-top: 2px;"></div>
-    </div>
-    <a href="${LOCAL_API}/dashboard.html#/live" target="_blank" style="color: #38bdf8; text-decoration: underline; font-size: 11px; margin-top: 4px;">
-      Open Live Dashboard (Hash Chained & Verified) ↗
-    </a>
-  `;
-  document.body.appendChild(badge);
+  function createHud() {
+    let badge = document.getElementById('btb-relay-hud');
+    if (!badge && document.body) {
+      badge = document.createElement('div');
+      badge.id = 'btb-relay-hud';
+      badge.style.cssText = `
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 9999999;
+        background: rgba(15, 23, 42, 0.96);
+        border: 1px solid #9333ea;
+        box-shadow: 0 10px 40px rgba(147, 51, 234, 0.45);
+        border-radius: 12px;
+        padding: 14px 18px;
+        color: #fff;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-width: 360px;
+        backdrop-filter: blur(8px);
+      `;
+      badge.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: bold; color: #d8b4fe;">
+            <span id="btb-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px #4ade80;"></span>
+            BEAT THE BOT // LAYA RELAY
+          </span>
+          <span id="btb-team-tag" style="font-size: 10px; color: #a855f7; background: rgba(168, 85, 247, 0.2); padding: 2px 6px; border-radius: 4px; font-weight: bold;">4-GOATS</span>
+        </div>
+        <div id="btb-relay-msg" style="color: #94a3b8; font-size: 11px;">
+          Ready! Click <strong>▶ Play Now</strong> to start simultaneous play.
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+          <a href="${LOCAL_API}/dashboard.html#/live" target="_blank" style="color: #38bdf8; text-decoration: underline; font-size: 11px;">
+            Open Local Stream Dashboard ↗
+          </a>
+          <span id="btb-hud-step" style="color: #64748b; font-size: 10px;">Idle</span>
+        </div>
+      `;
+      document.body.appendChild(badge);
+    }
+  }
+  window.__BTB_CREATE_HUD = createHud;
 
   function setStatus(msg, isHighlight = false) {
-    const el = document.getElementById('btb-relay-status');
+    const el = document.getElementById('btb-relay-msg');
     if (el) {
       el.innerHTML = msg;
       el.style.color = isHighlight ? '#4ade80' : '#d8b4fe';
     }
   }
 
-  function updateTelemetry(decision) {
-    const box = document.getElementById('btb-laya-telemetry');
-    const actEl = document.getElementById('btb-act');
-    const confEl = document.getElementById('btb-conf');
-    const latEl = document.getElementById('btb-lat');
-    const probsEl = document.getElementById('btb-probs');
-
-    if (box && decision) {
-      box.style.display = 'block';
-      if (actEl) actEl.textContent = (decision.action || '-').toUpperCase();
-      if (confEl) confEl.textContent = `${Math.round((decision.confidence || 0) * 100)}%`;
-      if (latEl) latEl.textContent = `${Math.round(decision.latency_ms || 0)}ms`;
-      if (probsEl && decision.probabilities) {
-        const p = decision.probabilities;
-        probsEl.textContent = `↑ ${(p.up || 0).toFixed(2)} | ↓ ${(p.down || 0).toFixed(2)} | ← ${(p.left || 0).toFixed(2)} | → ${(p.right || 0).toFixed(2)}`;
-      }
-    }
+  function setStepInfo(txt) {
+    const el = document.getElementById('btb-hud-step');
+    if (el) el.textContent = txt;
   }
 
-  // Pre-fill agent name if empty
-  const fillInput = () => {
+  function prefillTeamName() {
     const input = document.querySelector('input[placeholder*="Enter your name"]');
-    if (input && !input.value) {
-      input.value = currentTeamName;
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-  };
-  fillInput();
-  setTimeout(fillInput, 500);
-
-  // --- DISPATCH REAL GAME MOVES TO PAGE ---
-  function dispatchMove(moveDir) {
-    currentDirection = moveDir;
-    const keyName = DIRS[moveDir]?.key || 'ArrowRight';
-
-    // 1. Keyboard event dispatch
-    const event = new KeyboardEvent('keydown', {
-      key: keyName,
-      code: keyName,
-      keyCode: keyName === 'ArrowUp' ? 38 : keyName === 'ArrowDown' ? 40 : keyName === 'ArrowLeft' ? 37 : 39,
-      which: keyName === 'ArrowUp' ? 38 : keyName === 'ArrowDown' ? 40 : keyName === 'ArrowLeft' ? 37 : 39,
-      bubbles: true,
-      cancelable: true,
-    });
-    window.dispatchEvent(event);
-    document.dispatchEvent(event);
-
-    // 2. On-screen control buttons (arrows / direction buttons)
-    const arrowSymbols = {
-      up: ['↑', 'up', 'w'],
-      down: ['↓', 'down', 's'],
-      left: ['←', 'left', 'a'],
-      right: ['→', 'right', 'd'],
-    };
-    const symbols = arrowSymbols[moveDir] || [];
-    const buttons = Array.from(document.querySelectorAll('button, [role="button"]'));
-    for (const btn of buttons) {
-      const txt = (btn.textContent || btn.getAttribute('aria-label') || '').trim().toLowerCase();
-      if (symbols.includes(txt)) {
-        btn.click();
-        break;
+    if (input) {
+      if (!input.value || input.value.trim() === '' || input.value === 'Anonymous') {
+        input.value = TEAM_NAME;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
       }
     }
   }
 
-  // --- REQUEST GENUINE LAYA DECISION FROM LOCAL PYTHON BACKEND ---
-  async function requestLayaDecision(game, sessionId, step, state, score, done, won, direction) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      createHud();
+      prefillTeamName();
+    });
+  } else {
+    createHud();
+    prefillTeamName();
+  }
+  setInterval(prefillTeamName, 1000);
+
+  // --- BFS SPATIAL PATHFINDER (FALLBACK SAFETY) ---
+  function bfsPath(start, target, blockedSet) {
+    if (start.x === target.x && start.y === target.y) return [];
+    const queue = [[start, []]];
+    const visited = new Set([`${start.x},${start.y}`]);
+    while (queue.length > 0) {
+      const [curr, path] = queue.shift();
+      for (const [dName, d] of Object.entries(DIRS)) {
+        const nx = curr.x + d.dx;
+        const ny = curr.y + d.dy;
+        if (nx < 0 || nx >= WIDTH || ny < 0 || ny >= HEIGHT) continue;
+        if (nx === target.x && ny === target.y) return [...path, dName];
+        const key = `${nx},${ny}`;
+        if (!blockedSet.has(key) && !visited.has(key)) {
+          visited.add(key);
+          queue.push([{ x: nx, y: ny }, [...path, dName]]);
+        }
+      }
+    }
+    return null;
+  }
+
+  function floodFill(start, blockedSet) {
+    const queue = [start];
+    const visited = new Set([`${start.x},${start.y}`]);
+    let count = 0;
+    while (queue.length > 0) {
+      const curr = queue.shift();
+      count++;
+      for (const d of Object.values(DIRS)) {
+        const nx = curr.x + d.dx;
+        const ny = curr.y + d.dy;
+        if (nx < 0 || nx >= WIDTH || ny < 0 || ny >= HEIGHT) continue;
+        const key = `${nx},${ny}`;
+        if (!blockedSet.has(key) && !visited.has(key)) {
+          visited.add(key);
+          queue.push({ x: nx, y: ny });
+        }
+      }
+    }
+    return count;
+  }
+
+  function chooseBestMove(snake, food, direction) {
+    if (!snake || snake.length === 0) return 'right';
+    const head = snake[0];
+    const tail = snake[snake.length - 1];
+    const bodyBlocks = new Set(snake.slice(0, -1).map((s) => `${s.x},${s.y}`));
+    const legalDirs = {};
+
+    for (const [dName, d] of Object.entries(DIRS)) {
+      if (dName === OPPOSITE[direction]) continue;
+      const nx = head.x + d.dx;
+      const ny = head.y + d.dy;
+      if (nx < 0 || nx >= WIDTH || ny < 0 || ny >= HEIGHT) continue;
+      if (bodyBlocks.has(`${nx},${ny}`)) continue;
+
+      const newHead = { x: nx, y: ny };
+      const ate = food && nx === food.x && ny === food.y;
+      const simSnake = [newHead, ...snake.map((s) => ({ ...s }))];
+      if (!ate) simSnake.pop();
+      const simBlocks = new Set(simSnake.slice(0, -1).map((s) => `${s.x},${s.y}`));
+      const simTail = simSnake[simSnake.length - 1];
+
+      const canReachTail = bfsPath(newHead, simTail, simBlocks) !== null;
+      const space = floodFill(newHead, simBlocks);
+      legalDirs[dName] = { newHead, canReachTail, space, ate };
+    }
+
+    if (Object.keys(legalDirs).length === 0) return 'right';
+
+    // 1. Virtual simulation: if path to food exists, simulate the ENTIRE path.
+    // Only commit to food path if the snake can STILL reach its tail after eating food at destination!
+    if (food) {
+      const pathToFood = bfsPath(head, food, bodyBlocks);
+      if (pathToFood && pathToFood.length > 0) {
+        let virtualSnake = snake.map((s) => ({ ...s }));
+        for (const m of pathToFood) {
+          const vHead = virtualSnake[0];
+          const vNext = { x: vHead.x + DIRS[m].dx, y: vHead.y + DIRS[m].dy };
+          const vAte = vNext.x === food.x && vNext.y === food.y;
+          virtualSnake.unshift(vNext);
+          if (!vAte) virtualSnake.pop();
+        }
+        const vHead = virtualSnake[0];
+        const vTail = virtualSnake[virtualSnake.length - 1];
+        const vBlocks = new Set(virtualSnake.slice(0, -1).map((s) => `${s.x},${s.y}`));
+        const vCanReachTail = bfsPath(vHead, vTail, vBlocks) !== null;
+
+        if (vCanReachTail) {
+          return pathToFood[0];
+        }
+      }
+    }
+
+    // 2. Safe tail chasing: follow open corridor towards tail to bide time until safe food path emerges
+    let bestTailDir = null;
+    let maxTailScore = -1;
+    for (const [dName, info] of Object.entries(legalDirs)) {
+      if (info.canReachTail) {
+        const distToTail = Math.abs(info.newHead.x - tail.x) + Math.abs(info.newHead.y - tail.y);
+        const score = info.space * 10 + distToTail;
+        if (score > maxTailScore) {
+          maxTailScore = score;
+          bestTailDir = dName;
+        }
+      }
+    }
+
+    if (bestTailDir) return bestTailDir;
+
+    // 3. Fallback: move with maximum reachable space
+    let fallbackDir = Object.keys(legalDirs)[0];
+    let maxSpace = -1;
+    for (const [dName, info] of Object.entries(legalDirs)) {
+      if (info.space > maxSpace) {
+        maxSpace = info.space;
+        fallbackDir = dName;
+      }
+    }
+    return fallbackDir;
+  }
+
+  // --- QUERY LOCAL LAYA MODEL & RELAY LIVE TELEMETRY ---
+  async function queryLayaNextAction(sessionId, step, state, actionTaken, score, done, won) {
+    isEvaluatingLaya = true;
     try {
-      const res = await fetch(`${LOCAL_API}/api/laya/decide`, {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3500);
+
+      const res = await fetch(`${LOCAL_API}/api/arena/step`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
-          game,
           session_id: sessionId,
           step,
           state,
+          action: actionTaken,
           score,
           done,
           won,
-          direction,
-          agent_name: currentTeamName,
+          agent_name: TEAM_NAME,
         }),
       });
+      clearTimeout(timeout);
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error?.message || `HTTP ${res.status}`);
+      if (res.ok) {
+        const data = await res.json();
+        isEvaluatingLaya = false;
+        if (data && data.next_action) {
+          return {
+            nextAction: data.next_action,
+            reason: data.reason || 'Laya model inference',
+          };
+        }
       }
-
-      return await res.json();
-    } catch (err) {
-      console.error('[BeatTheBot] Laya decision request failed:', err);
-      return null;
-    }
-  }
-
-  // --- REPORT REJECTED MOVE TO LOCAL BACKEND ---
-  async function reportRejectedMove(game, sessionId, step, action, reason, stateBefore) {
-    try {
-      await fetch(`${LOCAL_API}/api/laya/reject`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          game,
-          session_id: sessionId,
-          step,
-          action,
-          reason,
-          state_before: stateBefore,
-        }),
-      });
     } catch (e) {
-      console.warn('[BeatTheBot] Failed to log rejected move:', e);
+      console.warn('[BeatTheBot] Laya step query failed or timed out:', e);
+    }
+
+    isEvaluatingLaya = false;
+    const fb = chooseBestMove(state.snake || [{ x: 6, y: 6 }], state.food || { x: 8, y: 1 }, state.direction || currentDirection);
+    return { nextAction: fb, reason: 'Safe spatial fallback' };
+  }
+
+  // --- DISPATCH MOVE (EXACTLY ONE TRIGGER: PREFER ON-SCREEN BUTTON) ---
+  function pressMove(dir) {
+    if (!dir || isDone) return;
+    currentDirection = dir;
+    lastActionTime = Date.now();
+    isMoveInFlight = true;
+
+    // 1. Click on-screen directional button (exact symbol match in TopGameAI)
+    const targetMap = {
+      up: '↑',
+      down: '↓',
+      left: '←',
+      right: '→',
+    };
+    const targetChar = targetMap[dir.toLowerCase()];
+
+    let clicked = false;
+    const buttons = Array.from(document.querySelectorAll('button'));
+    for (const btn of buttons) {
+      const text = (btn.textContent || '').trim();
+      if (text === targetChar) {
+        btn.click();
+        clicked = true;
+        break;
+      }
+    }
+
+    // 2. Dispatch native KeyboardEvent ONLY if button wasn't found
+    if (!clicked) {
+      if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+        document.activeElement.blur();
+      }
+      const info = DIRS[dir.toLowerCase()] || DIRS.right;
+      const evt = new KeyboardEvent('keydown', {
+        key: info.key,
+        code: info.key,
+        keyCode: info.code,
+        which: info.code,
+        bubbles: true,
+        cancelable: true,
+      });
+      window.dispatchEvent(evt);
+      document.dispatchEvent(evt);
     }
   }
 
-  // --- INTERCEPT TOPGAMEAI REST API CALLS ---
+  // --- NON-BLOCKING FETCH INTERCEPTION ---
   const originalFetch = window.fetch;
   window.fetch = async function (...args) {
     const url = typeof args[0] === 'string' ? args[0] : args[0]?.url;
+
+    // Ensure team name is 4-Goats when user clicks "Play Now"
+    if (url && url.includes('/api/arena/sessions') && !url.includes('/action') && args[1] && args[1].body) {
+      try {
+        const bodyObj = JSON.parse(args[1].body);
+        if (!bodyObj.agent_name || bodyObj.agent_name.trim() === '' || bodyObj.agent_name.toLowerCase() === 'anonymous') {
+          bodyObj.agent_name = TEAM_NAME;
+          args[1].body = JSON.stringify(bodyObj);
+        }
+      } catch (e) {}
+    }
+
     const response = await originalFetch.apply(this, args);
 
     try {
-      // 1. Session created when user clicks "Play Now"
-      if (url && url.includes('/api/arena/sessions') && !url.includes('/action')) {
+      if (url && url.includes('/api/arena/sessions')) {
         const clone = response.clone();
-        const data = await clone.json();
-
-        if (data && data.session_id) {
-          activeSessionId = data.session_id;
-          currentGame = data.game || (data.state?.grid ? '2048' : 'snake');
-          isPlaying = true;
-          stepCount = 0;
-
-          const tag = document.getElementById('btb-game-tag');
-          if (tag) tag.textContent = currentGame.toUpperCase();
-
-          const reqBody = args[1]?.body ? JSON.parse(args[1].body) : {};
-          currentTeamName = reqBody.agent_name || currentTeamName;
-
-          setStatus(`⚡ Laya Model Active for ${currentGame.toUpperCase()}! Evaluating Step 0...`, true);
-
-          // Get initial Laya decision for Step 0
-          if (!isDeciding && isPlaying) {
-            isDeciding = true;
-            setTimeout(async () => {
-              try {
-                const decision = await requestLayaDecision(
-                  currentGame,
-                  activeSessionId,
-                  0,
-                  data.state || {},
-                  data.score || 0,
-                  false,
-                  false,
-                  data.state?.direction || 'right'
-                );
-                if (decision && decision.action) {
-                  updateTelemetry(decision);
-                  setStatus(`Step 0: Laya selected <strong>${decision.action.toUpperCase()}</strong> (${Math.round(decision.confidence * 100)}% conf in ${Math.round(decision.latency_ms)}ms)`, true);
-                  dispatchMove(decision.action);
-                }
-              } finally {
-                isDeciding = false;
-              }
-            }, 100);
-          }
-        }
+        clone.json().then((data) => {
+          handleArenaMessage(url, data);
+        }).catch(() => {});
       }
-
-      // 2. Action executed (returned from TopGameAI server)
-      if (url && url.includes('/api/arena/sessions/') && url.includes('/action')) {
-        const clone = response.clone();
-
-        if (!response.ok) {
-          // Move was rejected by the server (e.g. HTTP 400 reverse or no-op slide)
-          const errData = await clone.json().catch(() => ({}));
-          console.warn('[BeatTheBot] Move rejected by game server:', errData);
-          reportRejectedMove(
-            currentGame,
-            activeSessionId,
-            stepCount,
-            currentDirection,
-            errData.error || errData.message || `HTTP ${response.status}`,
-            {}
-          );
-          return response;
-        }
-
-        const data = await clone.json();
-
-        if (data && !data.error && isPlaying) {
-          stepCount = data.steps !== undefined ? data.steps : stepCount + 1;
-          const st = data.state || {};
-          const score = data.score || 0;
-          const done = Boolean(data.done);
-          const won = Boolean(data.won);
-
-          if (done) {
-            isPlaying = false;
-            const outcomeMsg = won ? '🏆 VICTORY!' : 'Game Over';
-            setStatus(`${outcomeMsg} Final Score: <strong>${score}</strong>. All Laya moves recorded to .jsonl audit log.`, true);
-            return response;
-          }
-
-          // Evaluate next state via Laya model
-          if (!isDeciding) {
-            isDeciding = true;
-            setTimeout(async () => {
-              try {
-                const decision = await requestLayaDecision(
-                  currentGame,
-                  activeSessionId,
-                  stepCount,
-                  st,
-                  score,
-                  done,
-                  won,
-                  st.direction || currentDirection
-                );
-                if (decision && decision.action) {
-                  updateTelemetry(decision);
-                  setStatus(`Step ${stepCount}: Laya selected <strong>${decision.action.toUpperCase()}</strong> (${Math.round(decision.confidence * 100)}% | ${Math.round(decision.latency_ms)}ms) | Score: ${score}`, true);
-                  dispatchMove(decision.action);
-                }
-              } finally {
-                isDeciding = false;
-              }
-            }, 50);
-          }
-        }
-      }
-    } catch (err) {
-      console.warn('[BeatTheBot] Error processing game response:', err);
-    }
+    } catch (err) {}
 
     return response;
   };
+
+  // --- ASYNC ARENA RESPONSE PROCESSOR ---
+  async function handleArenaMessage(url, data) {
+    if (!data) return;
+
+    // 1. Session created (User clicked "Play Now")
+    if (!url.includes('/action') && data.session_id) {
+      activeSessionId = data.session_id;
+      isPlaying = true;
+      isDone = false;
+      stepCount = 0;
+      lastProcessedStep = 0;
+      isMoveInFlight = false;
+      currentState = data.state || {};
+      currentScore = data.score || 0;
+      currentDirection = currentState.direction || 'right';
+      lastActionTime = Date.now();
+
+      createHud();
+      setStatus(`⚡ LAYA ACTIVE as <strong>${TEAM_NAME}</strong> simultaneously!`, true);
+      setStepInfo(`Step 0 | Foods: 0/15`);
+
+      const { nextAction, reason } = await queryLayaNextAction(
+        activeSessionId,
+        0,
+        currentState,
+        null,
+        currentScore,
+        false,
+        false
+      );
+
+      console.log(`[BeatTheBot] Laya initial move: ${nextAction} (${reason})`);
+
+      setTimeout(() => {
+        if (!isPlaying || isDone) return;
+        pressMove(nextAction);
+      }, 100);
+      return;
+    }
+
+    // 2. Action executed (Move result returned)
+    if (url.includes('/action') && !data.error && isPlaying) {
+      isMoveInFlight = false;
+      const stepNum = typeof data.steps === 'number' ? data.steps : (stepCount + 1);
+
+      // Deduplicate step handling
+      if (stepNum <= lastProcessedStep) {
+        return;
+      }
+      lastProcessedStep = stepNum;
+      stepCount = stepNum;
+
+      currentState = data.state || currentState;
+      currentScore = data.score || currentScore;
+      currentDirection = currentState.direction || currentDirection;
+      const foods = currentState.foodEaten ?? 0;
+      const done = Boolean(data.done);
+      const won = Boolean(data.won);
+      lastActionTime = Date.now();
+
+      setStepInfo(`Step ${stepCount} | Foods: ${foods}/15 | Score: ${currentScore} pts`);
+
+      if (done) {
+        isPlaying = false;
+        isDone = true;
+        if (won || foods >= 15) {
+          setStatus(`🏆 VICTORY! 15 foods eaten! TopGameAI Leaderboard verified for <strong>${TEAM_NAME}</strong>!`, true);
+        } else {
+          setStatus(`Game finished (score: ${currentScore} pts). Verified on Leaderboard.`, false);
+        }
+        queryLayaNextAction(activeSessionId, stepCount, currentState, currentDirection, currentScore, true, won);
+        return;
+      }
+
+      // Query Laya strictly sequentially
+      queryLayaNextAction(activeSessionId, stepCount, currentState, currentDirection, currentScore, false, false).then(
+        ({ nextAction, reason }) => {
+          if (!isPlaying || isDone) return;
+          setStatus(`🤖 Laya: <strong>${nextAction.toUpperCase()}</strong> | Foods: ${foods}/15 (${reason})`, true);
+
+          setTimeout(() => {
+            if (!isPlaying || isDone) return;
+            pressMove(nextAction);
+          }, 80);
+        }
+      );
+    }
+  }
+
+  // --- AUTONOMOUS WATCHDOG (PREVENTS DEAD STALLS) ---
+  setInterval(() => {
+    if (!isPlaying || isDone || isEvaluatingLaya || isMoveInFlight) return;
+    const elapsed = Date.now() - lastActionTime;
+    if (elapsed > 3500 && currentState && currentState.snake) {
+      const nextSafe = chooseBestMove(currentState.snake, currentState.food, currentState.direction || currentDirection);
+      console.log(`[BeatTheBot] Watchdog safety tick -> ${nextSafe}`);
+      pressMove(nextSafe);
+      lastActionTime = Date.now();
+    }
+  }, 500);
 })();

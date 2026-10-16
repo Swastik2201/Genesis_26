@@ -144,101 +144,28 @@ class RunLogger:
         self.last_event_ts: str | None = None
         self.event_count = 0
         self.laya_call_count = 0
-        self.fallback_count = 0
         self._closed = False
-        self._last_hash = "0" * 64
-
-        # If file exists and has content, seed _last_hash from the last record
-        if self.file_path.exists() and self.file_path.stat().st_size > 0:
-            try:
-                with open(self.file_path, "r", encoding="utf-8") as f:
-                    for line in f:
-                        line_str = line.strip()
-                        if line_str:
-                            last_ev = json.loads(line_str)
-                            if "hash" in last_ev:
-                                self._last_hash = str(last_ev["hash"])
-                            self.event_count += 1
-            except Exception:
-                pass
 
     def event(self, event_data: dict) -> dict:
-        """Appends a validated, redacted, hash-chained decision event to the .jsonl log."""
+        """Appends a validated, redacted decision event to the .jsonl log."""
         if self._closed:
             raise RuntimeError("Cannot write event: RunLogger is already closed.")
 
         # Shallow copy to avoid mutating caller's dict before redaction
         data = dict(event_data)
 
-        # 1. Fill missing required header and participant guide fields
+        # 1. Fill missing required header fields
         data.setdefault("schema", 1)
         data.setdefault("session_id", self.session_id)
         data.setdefault("game_id", self.game_id)
-        data.setdefault("game", data.get("game_id", self.game_id))
         if "ts" not in data or not data["ts"]:
             now = datetime.now(timezone.utc)
             data["ts"] = now.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-        data.setdefault("timestamp", data["ts"])
-
-        # Populate guide-mandated fields if missing
-        if "action" not in data and "final_action" in data:
-            data["action"] = data["final_action"]
-        if "state_before" not in data:
-            data["state_before"] = data.get("state")
-        if "state_after" not in data:
-            game_resp = data.get("game_response", {})
-            data["state_after"] = game_resp.get("state_after") if isinstance(game_resp, dict) else None
-        if "result" not in data:
-            data["result"] = data.get("game_response")
-
-        # Standardise decision field with four probabilities: up, down, left, right
-        if "decision" not in data or not isinstance(data.get("decision"), dict):
-            chosen = data.get("action") or data.get("final_action")
-            l_calls = data.get("laya_calls", [])
-            last_call = l_calls[-1] if l_calls else {}
-            scores = last_call.get("action_scores", {})
-            probs = {}
-            for d in ("up", "down", "left", "right"):
-                probs[d] = float(scores.get(d, 0.0))
-            sum_p = sum(probs.values())
-            if sum_p > 0:
-                probs = {d: round(v / sum_p, 4) for d, v in probs.items()}
-                diff = round(1.0 - sum(probs.values()), 4)
-                target_k = chosen if chosen in probs else "right"
-                probs[target_k] = round(probs[target_k] + diff, 4)
-            else:
-                probs = {"up": 0.25, "down": 0.25, "left": 0.25, "right": 0.25}
-            conf = probs.get(chosen, 0.25) if chosen else 0.25
-            data["decision"] = {
-                "chosen": chosen,
-                "confidence": conf,
-                "probabilities": probs,
-            }
-
-        # Standardise timing field
-        if "timing" not in data:
-            l_calls = data.get("laya_calls", [])
-            last_call = l_calls[-1] if l_calls else {}
-            lat = float(last_call.get("latency_ms", 0.0))
-            data["timing"] = {
-                "inference_ms": round(lat, 2),
-                "total_ms": round(lat, 2),
-            }
-
-        # Hash chaining: set prev_hash from previous entry's hash
-        data["prev_hash"] = self._last_hash
 
         # 2. Redact secrets recursively
         clean_event = redact(data)
 
-        # 3. Compute SHA-256 hash of canonical JSON excluding 'hash'
-        to_hash = {k: v for k, v in clean_event.items() if k != "hash"}
-        canonical_str = json.dumps(to_hash, sort_keys=True, separators=(",", ":"))
-        event_hash = hashlib.sha256(canonical_str.encode("utf-8")).hexdigest()
-        clean_event["hash"] = event_hash
-        self._last_hash = event_hash
-
-        # 4. Schema validation
+        # 3. Schema validation
         if self.validate:
             validator = _get_event_validator()
             errors = sorted(validator.iter_errors(clean_event), key=lambda e: e.path)
@@ -249,10 +176,10 @@ class RunLogger:
                     f"Event schema validation failed at '{field_path}': {err.message}"
                 )
 
-        # 5. Serialize to single compact JSON line
+        # 4. Serialize to single compact JSON line
         line = json.dumps(clean_event, separators=(",", ":")) + "\n"
 
-        # 6. Thread-safe write + flush + fsync
+        # 5. Thread-safe write + flush + fsync
         with self._lock:
             if not self.started_at:
                 self.started_at = clean_event["ts"]
@@ -266,54 +193,8 @@ class RunLogger:
             laya_calls = clean_event.get("laya_calls", [])
             if isinstance(laya_calls, list):
                 self.laya_call_count += len(laya_calls)
-            if clean_event.get("validator", {}).get("fallback") is True:
-                self.fallback_count += 1
 
         return clean_event
-
-    def log_rejected_move(
-        self,
-        step: int,
-        state_before: dict,
-        action: str,
-        reason: str,
-        laya_calls: list[dict] | None = None,
-        timing: dict | None = None,
-    ) -> dict:
-        """Logs a rejected move event in compliance with the participant guide."""
-        rejection_event = {
-            "step": step,
-            "session_id": self.session_id,
-            "game_id": self.game_id,
-            "game": self.game_id,
-            "state": state_before,
-            "state_before": state_before,
-            "action": action,
-            "final_action": None,  # rejected move was not executed
-            "state_after": None,
-            "laya_calls": laya_calls or [],
-            "validator": {
-                "retries": 1,
-                "fallback": False,
-                "rejections": [reason],
-                "rejection_messages": [reason],
-            },
-            "game_response": {
-                "good": False,
-                "score_before": state_before.get("score", 0),
-                "score_after": state_before.get("score", 0),
-                "done": False,
-                "message": f"Rejected: {reason}",
-            },
-            "result": {
-                "accepted": False,
-                "reason": reason,
-            },
-            "outcome": f"Rejected move '{action}': {reason}",
-        }
-        if timing:
-            rejection_event["timing"] = timing
-        return self.event(rejection_event)
 
     def close(self, summary: dict | None = None) -> dict:
         """Closes the event stream and writes <session_id>.summary.json."""

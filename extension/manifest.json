@@ -1,19 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "Beat the Bot — TopGameAI Arena Lockstep Relay",
+  "name": "Beat the Bot - TopGameAI Arena Relay (4-Goats)",
   "version": "1.0.0",
-  "description": "Simultaneously plays TopGameAI Snake when Play Now is clicked and streams to local dashboard",
+  "description": "Simultaneously plays Snake on TopGameAI Arena as 4-Goats using Laya and relays live gameplay to our local dashboard.",
   "permissions": [],
   "host_permissions": [
     "https://topgameai.com/*",
-    "http://localhost:8000/*"
+    "http://localhost:8000/*",
+    "http://127.0.0.1:8000/*"
   ],
   "content_scripts": [
     {
-      "matches": [
-        "https://topgameai.com/arena/snake*",
-        "https://topgameai.com/arena/*"
-      ],
+      "matches": ["https://topgameai.com/arena/snake*"],
       "js": ["content.js"],
       "run_at": "document_start",
       "world": "MAIN"
