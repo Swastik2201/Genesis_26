@@ -1,6 +1,6 @@
 # Question Lab Experiment: test-lab-run
 
-- **Timestamp:** `2026-10-16T08:03:09.239Z`
+- **Timestamp:** `2026-10-16T08:59:20.572Z`
 - **Adapter:** `mock`
 - **Evaluated Variants:** v1_perception, v2_direct_action
 

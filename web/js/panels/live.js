@@ -10,7 +10,7 @@ import { store } from '../store.js';
 import * as api from '../api.js';
 import { typewriter, animateCounter, triggerGlitch } from '../fx.js';
 import { renderDecisionGrid, renderSplitDecision } from '../components/decisionCard.js';
-import { GameViewport } from '../components/gameCanvas.js?v=20261014_v5';
+import { GameViewport } from '../components/gameCanvas.js?v=20261016_v6';
 import * as sound from '../sound.js';
 
 let streamController = null;
@@ -46,6 +46,10 @@ export async function mount(container) {
     gameViewport = new GameViewport(viewportMount, {
       onRestart: () => {
         restartLiveRun();
+      },
+      onStep: (event) => {
+        hideWaitingState();
+        store.addEvent(event);
       }
     });
   }

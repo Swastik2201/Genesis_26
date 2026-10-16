@@ -7,7 +7,7 @@
 
 const initialState = {
   currentSession: null,
-  gameId: 'mock-runner-v1',
+  gameId: 'snake',
   sessions: [],
   events: [],
   selectedStep: null,
