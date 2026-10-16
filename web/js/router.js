@@ -12,7 +12,6 @@ import * as labPanel from './panels/lab.js?v=20261014_v5';
 import * as replayPanel from './panels/replay.js?v=20261014_v5';
 import * as calibrationPanel from './panels/calibration.js?v=20261014_v5';
 import * as logsPanel from './panels/logs.js?v=20261014_v5';
-import * as aboutPanel from './panels/about.js?v=20261014_v5';
 import { triggerWarpPipeTransition, triggerMarioBlockBump } from './fx.js';
 import { playMarioPipeSound } from './sound.js';
 
@@ -23,8 +22,7 @@ const routes = {
   'lab': labPanel,
   'replay': replayPanel,
   'calibration': calibrationPanel,
-  'logs': logsPanel,
-  'about': aboutPanel
+  'logs': logsPanel
 };
 
 let currentPanel = null;
