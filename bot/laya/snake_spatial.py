@@ -13,20 +13,38 @@ OPPOSITE = {"up": "down", "down": "up", "left": "right", "right": "left"}
 def bfs_path(start, target, blocked):
     if start == target:
         return []
-    q = deque([[start, []]])
+    q = deque([start])
+    parent = {}
     vis = {start}
+    found = False
     while q:
-        curr, path = q.popleft()
+        curr = q.popleft()
         for d_name, (dx, dy) in DIRS.items():
             nxt = (curr[0] + dx, curr[1] + dy)
             if not (0 <= nxt[0] < WIDTH and 0 <= nxt[1] < HEIGHT):
                 continue
             if nxt == target:
-                return path + [d_name]
+                parent[nxt] = (curr, d_name)
+                found = True
+                break
             if nxt not in blocked and nxt not in vis:
                 vis.add(nxt)
-                q.append([nxt, path + [d_name]])
-    return None
+                parent[nxt] = (curr, d_name)
+                q.append(nxt)
+        if found:
+            break
+
+    if not found:
+        return None
+
+    path = []
+    curr = target
+    while curr != start:
+        prev, move = parent[curr]
+        path.append(move)
+        curr = prev
+    path.reverse()
+    return path
 
 def flood_fill(start, blocked):
     if not (0 <= start[0] < WIDTH and 0 <= start[1] < HEIGHT) or start in blocked:

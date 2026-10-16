@@ -19,7 +19,7 @@
   }
   window.__BTB_RELAY_INITIALIZED = true;
 
-  const LOCAL_API = 'http://localhost:8000';
+  const LOCAL_API = window.__LOCAL_API__ || 'http://127.0.0.1:8000';
   const TEAM_NAME = '4-Goats';
   const WIDTH = 12;
   const HEIGHT = 12;
@@ -298,49 +298,52 @@
   }
 
   // --- DISPATCH MOVE (EXACTLY ONE TRIGGER: PREFER ON-SCREEN BUTTON) ---
+  let cachedButtons = null;
+  function getDirectionButtons() {
+    if (!cachedButtons || !cachedButtons.up || !document.body.contains(cachedButtons.up)) {
+      const targetMap = { up: '↑', down: '↓', left: '←', right: '→' };
+      const map = {};
+      const buttons = document.querySelectorAll('button');
+      for (const btn of buttons) {
+        const text = (btn.textContent || '').trim();
+        for (const [dir, char] of Object.entries(targetMap)) {
+          if (text === char) map[dir] = btn;
+        }
+      }
+      cachedButtons = map;
+    }
+    return cachedButtons;
+  }
+
   function pressMove(dir) {
     if (!dir || isDone) return;
     currentDirection = dir;
     lastActionTime = Date.now();
     isMoveInFlight = true;
 
-    // 1. Click on-screen directional button (exact symbol match in TopGameAI)
-    const targetMap = {
-      up: '↑',
-      down: '↓',
-      left: '←',
-      right: '→',
-    };
-    const targetChar = targetMap[dir.toLowerCase()];
-
-    let clicked = false;
-    const buttons = Array.from(document.querySelectorAll('button'));
-    for (const btn of buttons) {
-      const text = (btn.textContent || '').trim();
-      if (text === targetChar) {
-        btn.click();
-        clicked = true;
-        break;
-      }
+    // 1. Click cached on-screen directional button
+    const btnMap = getDirectionButtons();
+    const btn = btnMap[dir.toLowerCase()];
+    if (btn) {
+      btn.click();
+      return;
     }
 
     // 2. Dispatch native KeyboardEvent ONLY if button wasn't found
-    if (!clicked) {
-      if (document.activeElement && document.activeElement.tagName === 'INPUT') {
-        document.activeElement.blur();
-      }
-      const info = DIRS[dir.toLowerCase()] || DIRS.right;
-      const evt = new KeyboardEvent('keydown', {
-        key: info.key,
-        code: info.key,
-        keyCode: info.code,
-        which: info.code,
-        bubbles: true,
-        cancelable: true,
-      });
-      window.dispatchEvent(evt);
-      document.dispatchEvent(evt);
+    if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+      document.activeElement.blur();
     }
+    const info = DIRS[dir.toLowerCase()] || DIRS.right;
+    const evt = new KeyboardEvent('keydown', {
+      key: info.key,
+      code: info.key,
+      keyCode: info.code,
+      which: info.code,
+      bubbles: true,
+      cancelable: true,
+    });
+    window.dispatchEvent(evt);
+    document.dispatchEvent(evt);
   }
 
   // --- NON-BLOCKING FETCH INTERCEPTION ---
@@ -409,7 +412,7 @@
       setTimeout(() => {
         if (!isPlaying || isDone) return;
         pressMove(nextAction);
-      }, 100);
+      }, 0);
       return;
     }
 
@@ -456,7 +459,7 @@
           setTimeout(() => {
             if (!isPlaying || isDone) return;
             pressMove(nextAction);
-          }, 80);
+          }, 0);
         }
       );
     }

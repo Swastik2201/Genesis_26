@@ -65,7 +65,7 @@ export class GameViewport {
 
     // Timing
     this.moveTimer = 0;
-    this.moveInterval = 650; // ms per step in simulation for readable live inference
+    this.moveInterval = 140; // Responsive ~7 moves/sec for snappy arcade gameplay
     this.particles = [];
     this.floatingTexts = [];
 

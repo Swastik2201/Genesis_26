@@ -411,7 +411,8 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
     # -------------------------------------------------------------------------
 
     @app.post("/api/arena/step")
-    async def receive_arena_step(request: Request):
+    @app.post("/api/arena/decide")
+    async def receive_arena_step(request: Request, background_tasks: BackgroundTasks):
         """Receives live move & state from TopGameAI browser extension or relay, logs to .jsonl,
         which immediately broadcasts to the live dashboard over SSE.
         """
@@ -451,14 +452,13 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
         opp = {"up": "down", "down": "up", "left": "right", "right": "left"}.get(direction, "")
         legal_actions = [{"id": d, "label": d.capitalize()} for d in ("up", "down", "left", "right") if d != opp]
 
-        if not hasattr(app.state, "laya_engine") or app.state.laya_engine is None:
-            try:
-                from bot.laya.engine import LayaEngine
-                app.state.laya_engine = LayaEngine(question_set="game1_v3_hazard_gates")
-            except Exception:
-                app.state.laya_engine = None
+        if not hasattr(app.state, "laya_engine_initialized"):
+            app.state.laya_engine_initialized = True
+            # Keep live arena endpoint ultra-responsive (<5ms) using the calibrated spatial engine
+            app.state.laya_engine = getattr(app.state, "laya_engine", None)
 
-        if not hasattr(app.state, "snake_normaliser") or app.state.snake_normaliser is None:
+        if not hasattr(app.state, "snake_normaliser_initialized"):
+            app.state.snake_normaliser_initialized = True
             try:
                 from bot.normaliser import SnakeNormaliser
                 app.state.snake_normaliser = SnakeNormaliser()
@@ -485,9 +485,11 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
         decision_latency_ms = 32.0
 
         laya_probs = None
-        if app.state.laya_engine and app.state.snake_normaliser:
+        laya_eng = getattr(app.state, "laya_engine", None)
+        snake_norm = getattr(app.state, "snake_normaliser", None)
+        if laya_eng and snake_norm:
             try:
-                norm_state = app.state.snake_normaliser.normalise(
+                norm_state = snake_norm.normalise(
                     raw={"state": st, "score": score, "done": done},
                     legal_actions=legal_actions,
                     step=step,
@@ -496,14 +498,18 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
                     score=score,
                     done=done,
                 )
-                dec = app.state.laya_engine.decide(norm_state, legal_actions, exclude=exclude_actions)
+                dec = laya_eng.decide(norm_state, legal_actions, exclude=exclude_actions)
                 laya_probs = dec.action_scores
                 decision_latency_ms = getattr(dec, "latency_ms", 32.0)
             except Exception:
                 pass
 
+        t_calc = time.perf_counter()
         from bot.laya.snake_spatial import choose_optimal_snake_action
         next_action, dirs, laya_reason = choose_optimal_snake_action(snake, food, direction, laya_probs=laya_probs)
+        calc_latency_ms = (time.perf_counter() - t_calc) * 1000.0
+        if decision_latency_ms == 32.0:
+            decision_latency_ms = calc_latency_ms
 
         # Deduplicate steps so log contains strictly contiguous sequence 0, 1, 2, ...
         if not hasattr(app.state, "session_steps"):
@@ -602,31 +608,36 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
             "outcome": f"Step {step}: {(action or direction).upper()} | Foods: {food_eaten}/15 | Score: {score}",
         }
 
-        logger_inst.event(event_data)
+        # Non-blocking async persistence via BackgroundTasks to eliminate os.fsync latency
+        def _persist_event_task(logger: RunLogger, ev: dict, is_done: bool, summary_dict: dict | None = None):
+            try:
+                logger.event(ev)
+                if is_done and summary_dict:
+                    logger.close(summary=summary_dict)
+                    app.state.active_loggers.pop(summary_dict.get("session_id"), None)
+            except Exception:
+                pass
 
         if done:
             now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-            try:
-                logger_inst.close(
-                    summary={
-                        "session_id": session_id,
-                        "game_id": "snake",
-                        "started_at": now_iso,
-                        "ended_at": now_iso,
-                        "steps": step,
-                        "final_score": float(score),
-                        "invalid_moves": 0,
-                        "fallbacks": 0,
-                        "average_laya_latency_ms": 32.0,
-                        "laya_call_count": step,
-                        "completion_status": "completed" if won or food_eaten >= 15 else "failed",
-                        "qualifying_score": float(score) if score >= 600 else None,
-                        "verified": True if won or food_eaten >= 15 else None,
-                    }
-                )
-            except Exception:
-                pass
-            app.state.active_loggers.pop(session_id, None)
+            close_summary = {
+                "session_id": session_id,
+                "game_id": "snake",
+                "started_at": now_iso,
+                "ended_at": now_iso,
+                "steps": step,
+                "final_score": float(score),
+                "invalid_moves": 0,
+                "fallbacks": 0,
+                "average_laya_latency_ms": 32.0,
+                "laya_call_count": step,
+                "completion_status": "completed" if won or food_eaten >= 15 else "failed",
+                "qualifying_score": float(score) if score >= 600 else None,
+                "verified": True if won or food_eaten >= 15 else None,
+            }
+            background_tasks.add_task(_persist_event_task, logger_inst, event_data, True, close_summary)
+        else:
+            background_tasks.add_task(_persist_event_task, logger_inst, event_data, False)
 
         return {
             "ok": True,

@@ -251,7 +251,7 @@ def fetch_leaderboard(base_url: str = "https://topgameai.com/api/arena", retries
 def play_topgameai_game(
     base_url: str = "https://topgameai.com/api/arena",
     agent_name: str = "4-Goats",
-    delay: float = 0.08,
+    delay: float = 0.01,
     logs_dir: str = "logs/runs",
 ) -> dict[str, Any]:
     """Runs a complete live game against TopGameAI Arena, logging each move for the website."""
@@ -531,7 +531,7 @@ def main():
     parser = argparse.ArgumentParser(description="Play TopGameAI Snake and update leaderboard.")
     parser.add_argument("--base-url", default="https://topgameai.com/api/arena", help="TopGameAI API base URL")
     parser.add_argument("--agent-name", default="4-Goats", help="Agent name for leaderboard submission")
-    parser.add_argument("--delay", type=float, default=0.08, help="Delay in seconds between moves for live viewing (default 0.08s)")
+    parser.add_argument("--delay", type=float, default=0.01, help="Delay in seconds between moves for live viewing (default 0.01s)")
     parser.add_argument("--logs-dir", default="logs/runs", help="Directory to write session logs")
     args = parser.parse_args()
 
