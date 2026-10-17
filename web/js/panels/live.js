@@ -141,8 +141,7 @@ export function restartLiveRun() {
     gameViewport.setPaused(false);
   }
 
-  const followToggle = document.getElementById('live-follow-toggle');
-  if (followToggle) followToggle.checked = true;
+
 
   const playBtn = document.getElementById('live-btn-play');
   if (playBtn) playBtn.innerHTML = '<span>⏸ PAUSE</span>';
@@ -255,7 +254,7 @@ function updateBroadcastCard() {
   const title = document.getElementById('arena-broadcast-title');
   const sub = document.getElementById('arena-broadcast-sub');
   const startBtn = document.getElementById('btn-arena-start-match');
-  const team = document.getElementById('arena-card-team-input')?.value || '4-Goats';
+  const team = document.getElementById('live-team-name-input')?.value || '4-Goats';
 
   if (selectedGame === '2048') {
     if (icon) icon.textContent = '🔢';
@@ -316,27 +315,13 @@ function renderShell(container) {
           <button id="live-btn-play" class="btn btn-primary btn-sm" aria-label="Toggle live stream and game simulation playback">
             <span>▶ PLAY LIVE</span>
           </button>
-          <button id="live-btn-step" class="btn btn-secondary btn-sm" aria-label="Step forward one event">
-            <span>⏭ STEP</span>
-          </button>
-          <button id="live-btn-restart" class="btn btn-secondary btn-sm" aria-label="Restart decision step timeline and simulation from step 0">
-            <span>🔄 RESTART</span>
-          </button>
           <div class="arena-team-picker" style="display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; border-left: 1px solid rgba(255,255,255,0.15); padding-left: 10px;">
             <span style="font-size: 11px; font-weight: 700; color: #a855f7;">TEAM:</span>
             <input type="text" id="live-team-name-input" value="4-Goats" style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(168, 85, 247, 0.4); color: #fff; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 12px; width: 95px;" placeholder="4-Goats" aria-label="Team name">
-            <button id="live-btn-launch-arena" class="btn btn-sm" style="background: linear-gradient(135deg, #7c3aed, #2563eb); color: #fff; border: 1px solid #9333ea; font-weight: 600;" title="Simultaneously play on TopGameAI Arena and stream here">
-              <span>⚔️ PLAY ARENA MATCH</span>
-            </button>
           </div>
         </div>
 
         <div style="display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap;">
-          <label class="follow-toggle-label" for="live-follow-toggle">
-            <input type="checkbox" id="live-follow-toggle" class="follow-checkbox" checked>
-            <span>FOLLOW LIVE</span>
-          </label>
-
           <span id="inspecting-indicator" class="badge badge-cyan" style="display: none;">
             INSPECTING HISTORIC STEP
           </span>
@@ -362,15 +347,7 @@ function renderShell(container) {
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="font-size: 11px; color: #a855f7; font-weight: 700;">TEAM:</span>
-            <input type="text" id="arena-card-team-input" value="4-Goats" style="background: rgba(0,0,0,0.6); border: 1px solid rgba(168,85,247,0.5); color: #fff; font-family: monospace; font-size: 12px; padding: 5px 10px; border-radius: 4px; width: 90px;" aria-label="Team name">
-          </div>
-          <button id="btn-arena-start-match" class="btn btn-sm" style="background: linear-gradient(135deg, #7c3aed, #2563eb); color: #fff; border: 1px solid #9333ea; font-weight: 600;">
-            <span>▶ PLAY NOW (4-GOATS)</span>
-          </button>
-        </div>
+
       </div>
 
       <!-- Live Split Arena: Visual Game Viewport (Left) + Laya Decisions (Right) -->
@@ -410,9 +387,6 @@ function renderShell(container) {
  */
 function bindControls(container) {
   const playBtn = container.querySelector('#live-btn-play');
-  const stepBtn = container.querySelector('#live-btn-step');
-  const restartBtn = container.querySelector('#live-btn-restart');
-  const followToggle = container.querySelector('#live-follow-toggle');
   const reconnectBtn = container.querySelector('#btn-reconnect-stream');
 
   // Game Selector Tabs & Dropdown
@@ -461,29 +435,7 @@ function bindControls(container) {
     });
   }
 
-  if (stepBtn) {
-    stepBtn.addEventListener('click', () => {
-      advanceOneStep();
-    });
-  }
 
-  if (restartBtn) {
-    restartBtn.addEventListener('click', () => {
-      restartLiveRun();
-    });
-  }
-
-  if (followToggle) {
-    followToggle.addEventListener('change', (e) => {
-      isFollowLive = e.target.checked;
-      const indicator = document.getElementById('inspecting-indicator');
-      if (isFollowLive) {
-        if (indicator) indicator.style.display = 'none';
-        const latest = store.getState().latestEvent;
-        if (latest) renderStep(latest.step, false);
-      }
-    });
-  }
 
   if (reconnectBtn) {
     reconnectBtn.addEventListener('click', () => {
@@ -492,62 +444,7 @@ function bindControls(container) {
     });
   }
 
-  const launchBtn = container.querySelector('#live-btn-launch-arena');
-  const teamInput = container.querySelector('#live-team-name-input');
-  if (launchBtn) {
-    launchBtn.addEventListener('click', async () => {
-      const team = (teamInput?.value || '4-Goats').trim();
-      launchBtn.disabled = true;
-      launchBtn.innerHTML = '<span>⏳ CONNECTING...</span>';
-      try {
-        const resp = await fetch('/api/arena/play', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ agent_name: team, game: selectedGame, delay: 0.10 })
-        });
-        const data = await resp.json();
-        launchBtn.innerHTML = `<span>⚔️ PLAYING ${selectedGame.toUpperCase()}</span>`;
-        setTimeout(() => {
-          startStream();
-          launchBtn.disabled = false;
-          launchBtn.innerHTML = '<span>⚔️ PLAY ARENA MATCH</span>';
-        }, 1200);
-      } catch (err) {
-        console.error('Launch arena match failed:', err);
-        launchBtn.disabled = false;
-        launchBtn.innerHTML = '<span>❌ RETRY MATCH</span>';
-      }
-    });
-  }
 
-  // TopGameAI Arena Broadcast Card Controls
-  const cardStartBtn = container.querySelector('#btn-arena-start-match');
-  const cardTeamInput = container.querySelector('#arena-card-team-input');
-  if (cardStartBtn) {
-    cardStartBtn.addEventListener('click', async () => {
-      const team = (cardTeamInput?.value || '4-Goats').trim();
-      cardStartBtn.disabled = true;
-      cardStartBtn.innerHTML = '<span>⏳ STARTING ARENA...</span>';
-      try {
-        const resp = await fetch('/api/arena/play', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ agent_name: team, game: selectedGame, delay: 0.10 })
-        });
-        const data = await resp.json();
-        cardStartBtn.innerHTML = `<span>⚡ PLAYING (${team})</span>`;
-        setTimeout(() => {
-          startStream();
-          cardStartBtn.disabled = false;
-          cardStartBtn.innerHTML = `<span>▶ PLAY ${selectedGame.toUpperCase()} (${team.toUpperCase()})</span>`;
-        }, 1000);
-      } catch (err) {
-        console.error('Start arena match failed:', err);
-        cardStartBtn.disabled = false;
-        cardStartBtn.innerHTML = '<span>❌ RETRY</span>';
-      }
-    });
-  }
 }
 
 /**
@@ -745,8 +642,7 @@ function updateTimelineStrip(events, activeStep) {
     pip.addEventListener('click', (e) => {
       const step = Number(pip.getAttribute('data-step'));
       isFollowLive = false;
-      const followCheckbox = document.getElementById('live-follow-toggle');
-      if (followCheckbox) followCheckbox.checked = false;
+
       renderStep(step, false);
     });
   });
@@ -776,7 +672,7 @@ function showWaitingState(container) {
         WAITING FOR ARENA TELEMETRY...
       </h3>
       <p style="color: var(--text-secondary); font-size: var(--text-sm); max-width: 440px; margin: 0 auto var(--space-md);">
-        Click <strong>⚔️ PLAY ARENA MATCH</strong> above or copy the inspect snippet to play live on TopGameAI Arena.
+        Copy the inspect snippet or launch game on TopGameAI Arena to stream live telemetry.
       </p>
       <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 10px 14px; font-family: monospace; font-size: 11px; color: #a855f7; display: inline-block;">
         fetch('http://localhost:8000/relay.js').then(r=>r.text()).then(eval)

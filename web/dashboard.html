@@ -38,22 +38,10 @@
         </button>
       </div>
 
-      <!-- Global Session Picker -->
-      <div class="sidebar-session-picker">
-        <label for="session-select" class="session-select-label">WORLD / SESSION</label>
-        <select id="session-select" class="session-select-input" aria-label="Select Game Run Session">
-          <option value="demo-runner-20261013-001">Loading worlds...</option>
-        </select>
-      </div>
+
 
       <!-- Navigation Tabs -->
       <nav class="sidebar-nav" role="tablist">
-        <div class="nav-item">
-          <a href="#/overview" class="nav-link-btn" data-route="overview" id="nav-overview" aria-label="Overview Tab">
-            <span class="nav-icon" aria-hidden="true">📊</span>
-            <span class="nav-label">Overview</span>
-          </a>
-        </div>
 
         <div class="nav-item">
           <a href="#/live" class="nav-link-btn" data-route="live" id="nav-live" aria-label="Live Run Tab">
@@ -113,13 +101,7 @@
           <span>▶ SHOW</span>
         </button>
 
-        <!-- Session ID & Game ID -->
-        <div class="topbar-item">
-          <span class="topbar-label">WORLD / SESSION</span>
-          <span id="status-session" class="topbar-value" style="color: var(--neon-cyan); font-family: var(--font-mono); font-size: 13px;">
-            demo-runner-20261013-001
-          </span>
-        </div>
+
 
         <div class="topbar-item">
           <span class="topbar-label">WORLD ADAPTER</span>
@@ -137,19 +119,7 @@
             </span>
           </div>
 
-          <div class="topbar-item">
-            <span class="topbar-label">🪙 COINS / PTS</span>
-            <span id="status-score" class="topbar-value" style="color: var(--mario-yellow);">
-              000000
-            </span>
-          </div>
 
-          <div class="topbar-item">
-            <span class="topbar-label">LAYA LATENCY</span>
-            <span id="status-latency" class="topbar-value" style="font-family: var(--font-mono);">
-              -- ms
-            </span>
-          </div>
         </div>
       </div>
 
@@ -288,16 +258,18 @@
       // Inject / Show Top Demo Mode Ribbon if server unreachable or mock active
       renderDemoModeRibbon(isMockActive);
 
-      // 6. Load available runs and populate global session picker
+      // 6. Load available runs
       try {
         const sessionRuns = await api.runs();
         if (Array.isArray(sessionRuns) && sessionRuns.length > 0) {
           store.setSessions(sessionRuns);
-          sessionSelect.innerHTML = sessionRuns.map(r => `
-            <option value="${r.session_id}" ${r.session_id === (requestedSession || store.getState().currentSession) ? 'selected' : ''}>
-              ${r.session_id} (${r.final_score ?? 0} pts)
-            </option>
-          `).join('');
+          if (sessionSelect) {
+            sessionSelect.innerHTML = sessionRuns.map(r => `
+              <option value="${r.session_id}" ${r.session_id === (requestedSession || store.getState().currentSession) ? 'selected' : ''}>
+                ${r.session_id} (${r.final_score ?? 0} pts)
+              </option>
+            `).join('');
+          }
 
           // Select requested session or default to first
           const targetSession = requestedSession || sessionRuns[0].session_id;
@@ -307,11 +279,13 @@
         console.error('Failed to load runs:', err);
       }
 
-      // Handle session dropdown changes
-      sessionSelect.addEventListener('change', (e) => {
-        const selectedId = e.target.value;
-        store.setSession(selectedId);
-      });
+      // Handle session dropdown changes if present
+      if (sessionSelect) {
+        sessionSelect.addEventListener('change', (e) => {
+          const selectedId = e.target.value;
+          store.setSession(selectedId);
+        });
+      }
 
       // 7. Subscribe to Store updates to reflect telemetry in Topbar and Screen Reader
       let lastAnnounceTime = 0;

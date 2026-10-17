@@ -198,9 +198,6 @@ export class GameViewport {
             <button id="btn-toggle-manual-play" class="btn btn-ghost btn-xs" aria-label="Switch between Laya driving and manual player control">
               <span>🎮 TAKE OVER</span>
             </button>
-            <button id="btn-restart-game" class="btn btn-secondary btn-xs" aria-label="Restart game simulation">
-              <span>🔄 RESTART</span>
-            </button>
           </div>
         </div>
       </div>
@@ -225,16 +222,6 @@ export class GameViewport {
       });
     }
 
-    const btnRestart = this.container.querySelector('#btn-restart-game');
-    if (btnRestart) {
-      btnRestart.addEventListener('click', () => {
-        if (typeof this.options.onRestart === 'function') {
-          this.options.onRestart();
-        } else {
-          this.resetGame();
-        }
-      });
-    }
 
     const touchUp = this.container.querySelector('#touch-up');
     const touchDown = this.container.querySelector('#touch-down');
