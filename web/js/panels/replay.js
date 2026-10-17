@@ -45,7 +45,7 @@ export async function mount(container, params = {}) {
 
   try {
     const [eventsRes, runsRes, verifyRes] = await Promise.all([
-      api.events(currentSessionId, 0, 200),
+      api.events(currentSessionId, 0, 2500),
       api.runs(),
       api.verify(currentSessionId)
     ]);
