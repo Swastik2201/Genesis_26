@@ -87,10 +87,6 @@ export async function mount(container) {
         : '<span>▶ PLAY LIVE</span>';
     }
   });
-
-  if (!state.isStreaming) {
-    startStream();
-  }
 }
 
 /**

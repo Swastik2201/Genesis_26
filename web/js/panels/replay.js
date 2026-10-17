@@ -105,18 +105,7 @@ function renderReplayDeck(container, allRuns, verifyData) {
       </div>
 
       <div style="display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap;">
-        <!-- Session Selector Dropdown -->
-        <select id="replay-session-dropdown" class="session-select-input" style="width: auto; min-width: 220px;" aria-label="Select session to replay">
-          ${(allRuns || []).map(r => `
-            <option value="${r.session_id}" ${r.session_id === currentSessionId ? 'selected' : ''}>
-              [${(r.game_id || 'game').toUpperCase()}] ${r.session_id.slice(0, 16)}... (${r.steps} steps | ${r.final_score ?? 0} pts)
-            </option>
-          `).join('')}
-        </select>
 
-        <a href="#/autopsy?session=${encodeURIComponent(currentSessionId)}" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #a855f7, #6366f1); border-color: #a855f7; color: #fff; font-weight: 700; text-decoration: none;">
-          <span>🔬 AUTOPSY</span>
-        </a>
 
         <a href="${api.downloadUrl(currentSessionId)}" download="${currentSessionId}.jsonl" class="btn btn-secondary btn-sm" id="btn-download-jsonl">
           <span>DOWNLOAD .JSONL</span>
@@ -126,23 +115,8 @@ function renderReplayDeck(container, allRuns, verifyData) {
 
     <!-- 1. Audit Proof Banner -->
     <div class="replay-proof-banner">
-      <div class="proof-banner-left">
-        <div class="proof-banner-icon" aria-hidden="true">🛡</div>
-        <div>
-          <div class="proof-banner-title">
-            "EVERY MOVE BELOW WAS PRODUCED BY A LOGGED LAYA CALL"
-          </div>
-          <p class="proof-banner-subtitle">
-            Immutable log verification • Zero heuristic overrides • 100% action-to-call auditability
-          </p>
-        </div>
-      </div>
-
       <div class="proof-badges-group">
-        <span class="badge badge-cyan" id="proof-session-badge">SESSION: ${currentSessionId}</span>
         <span class="badge badge-good">${totalLayaCalls} LAYA CALLS</span>
-        <span class="badge badge-good">${verifyData.steps_contiguous ? 'STEPS CONTIGUOUS' : 'AUDITED'}</span>
-        <span class="badge badge-demo">SHA-256 VERIFIED</span>
       </div>
     </div>
 
@@ -218,7 +192,6 @@ function renderReplayDeck(container, allRuns, verifyData) {
  * Binds event listeners for the Replay UI deck.
  */
 function bindReplayDeckControls(container) {
-  const sessionDropdown = container.querySelector('#replay-session-dropdown');
   const slider = container.querySelector('#replay-slider');
   const playBtn = container.querySelector('#btn-replay-play');
   const prevBtn = container.querySelector('#btn-replay-prev');
@@ -226,14 +199,6 @@ function bindReplayDeckControls(container) {
   const speedBtns = container.querySelectorAll('.speed-btn');
   const tabHud = container.querySelector('#tab-btn-hud');
   const tabRaw = container.querySelector('#tab-btn-raw');
-
-  if (sessionDropdown) {
-    sessionDropdown.addEventListener('change', (e) => {
-      const newSession = e.target.value;
-      store.setSession(newSession);
-      window.location.hash = `#/replay?session=${encodeURIComponent(newSession)}&step=0`;
-    });
-  }
 
   if (slider) {
     slider.addEventListener('input', (e) => {
