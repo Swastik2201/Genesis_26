@@ -377,10 +377,19 @@ export class GameViewport {
       this.points2048 = event.state?.score ?? calcPoints2048(this.bestTile, this.inGameScore);
       this.steps2048 = event.step || 0;
       this.direction = event.final_action || this.direction;
-      this.done = Boolean(event.state?.done);
+      this.sessionId = event.session_id || this.sessionId;
+      const isDone = Boolean(event.state?.done || event.game_response?.done);
 
       if (event.laya_calls?.[0]?.action_scores) {
         this.probabilities = event.laya_calls[0].action_scores;
+      }
+
+      if (isDone && !this.done) {
+        const won = Boolean(event.game_response?.won || this.bestTile >= 2048);
+        const reason = won ? '2048 VICTORY REACHED!' : (this.steps2048 >= 2000 ? '2000 STEP CAP REACHED' : '2048 SESSION COMPLETED');
+        this.handleGameOver(won, reason);
+      } else {
+        this.done = isDone;
       }
     } else {
       const facts = event.state?.facts || {};
@@ -390,12 +399,21 @@ export class GameViewport {
       this.score = event.state?.score ?? this.score;
       this.steps = event.step || 0;
       this.direction = facts.direction || event.final_action || this.direction;
-      this.done = Boolean(event.state?.done);
+      this.sessionId = event.session_id || this.sessionId;
+      const isDone = Boolean(event.state?.done || event.game_response?.done);
 
       if (event.laya_calls?.[0]?.action_scores) {
         this.probabilities = event.laya_calls[0].action_scores;
       }
       this.rebuildGrid();
+
+      if (isDone && !this.done) {
+        const won = Boolean(event.game_response?.won || this.foodEaten >= 15);
+        const reason = won ? '15 FOODS EATEN — VICTORY!' : 'SNAKE GAME OVER';
+        this.handleGameOver(won, reason);
+      } else {
+        this.done = isDone;
+      }
     }
 
     this.updateHUDStats();
@@ -618,8 +636,21 @@ export class GameViewport {
     }
 
     if (this.steps2048 >= this.maxSteps2048) {
-      this.done = true;
-      this.addFloatingText('2000 STEPS LIMIT REACHED', this.canvas.width / 4, 110, '#38bdf8');
+      this.handleGameOver(this.bestTile >= 2048, '2000 STEP CAP REACHED');
+      return;
+    }
+
+    // Check if any legal moves remain on 4x4 board
+    let hasLegalMoves = false;
+    for (const d of ['up', 'down', 'left', 'right']) {
+      if (this.simulate2048(this.grid2048, d).changed) {
+        hasLegalMoves = true;
+        break;
+      }
+    }
+    if (!hasLegalMoves) {
+      this.handleGameOver(this.bestTile >= 2048, 'BOARD LOCKED — NO LEGAL MOVES');
+      return;
     }
 
     this.updateHUDStats();
@@ -799,6 +830,7 @@ export class GameViewport {
   handleGameOver(won, reason) {
     this.done = true;
     this.won = won;
+    this.isPaused = true;
     this.updateHUDStats();
 
     if (won) {
@@ -809,11 +841,18 @@ export class GameViewport {
       try { sound.playCollisionSound?.(); } catch (e) {}
     }
 
-    setTimeout(() => {
-      if (this.done && this.mode === 'laya' && !this.isPaused) {
-        this.resetGame();
-      }
-    }, 2400);
+    if (typeof this.options.onGameOver === 'function') {
+      this.options.onGameOver({
+        gameType: this.gameType,
+        won: this.won,
+        reason,
+        score: this.gameType === '2048' ? this.inGameScore : this.score,
+        points: this.points2048,
+        bestTile: this.bestTile,
+        steps: this.gameType === '2048' ? this.steps2048 : this.steps,
+        sessionId: this.sessionId,
+      });
+    }
   }
 
   // --- RENDERING LOOP ---

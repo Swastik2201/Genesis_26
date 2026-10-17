@@ -39,13 +39,16 @@ export async function mount(container) {
   renderShell(container);
   bindControls(container);
 
-  // Initialize visual game canvas viewport with restart handler
+  // Initialize visual game canvas viewport with restart and game-over handlers
   const viewportMount = container.querySelector('#live-game-viewport-mount');
   if (viewportMount) {
     gameViewport = new GameViewport(viewportMount, {
       gameType: selectedGame,
       onRestart: () => {
         restartLiveRun();
+      },
+      onGameOver: (info) => {
+        showGameOverBanner(info);
       },
       onStep: (event) => {
         hideWaitingState();
@@ -96,6 +99,7 @@ export function restartLiveRun() {
     streamController = null;
   }
 
+  hideGameOverBanner();
   store.setState({
     events: [],
     selectedStep: null,
@@ -596,6 +600,27 @@ function renderStep(stepNumber, shouldAnimate = true) {
 
   updateTimelineStrip(events, stepNumber);
 
+  // Check terminal completion condition
+  const isDone = Boolean(event.state?.done || event.game_response?.done);
+  if (isDone) {
+    if (streamController) {
+      streamController.close();
+      streamController = null;
+    }
+    const is2048 = event.game_id === '2048' || selectedGame === '2048';
+    const won = Boolean(event.game_response?.won || (is2048 ? (event.state?.facts?.best >= 2048) : (event.state?.facts?.food_eaten >= 15)));
+    showGameOverBanner({
+      gameType: is2048 ? '2048' : 'snake',
+      won,
+      reason: won ? (is2048 ? '2048 VICTORY REACHED!' : '15 FOODS EATEN — VICTORY!') : 'GAME OVER',
+      score: event.state?.facts?.score ?? event.state?.score ?? 0,
+      points: event.state?.score ?? 0,
+      bestTile: event.state?.facts?.best ?? (event.state?.facts?.grid ? Math.max(...event.state.facts.grid.flat()) : 2),
+      steps: event.step,
+      sessionId: event.session_id || store.getState().currentSession,
+    });
+  }
+
   if (shouldAnimate) {
     if (event.validator?.retries > 0 || event.validator?.rejections?.length > 0) {
       sound.playIllegalMoveSound();
@@ -605,6 +630,88 @@ function renderStep(stepNumber, shouldAnimate = true) {
       sound.playBadMoveSound();
     }
   }
+}
+
+/**
+ * Renders the prominent Game Completion / Terminal Banner with Autopsy and Replay action buttons.
+ */
+function showGameOverBanner(info) {
+  const container = document.getElementById('live-hero-root');
+  if (!container) return;
+
+  let banner = document.getElementById('game-completed-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'game-completed-banner';
+    const toolbar = container.querySelector('.live-toolbar');
+    if (toolbar && toolbar.nextSibling) {
+      container.insertBefore(banner, toolbar.nextSibling);
+    } else {
+      container.prepend(banner);
+    }
+  }
+
+  const sid = info.sessionId || store.getState().currentSession || 'latest';
+  store.setState({ currentSession: sid, status: 'completed' });
+
+  const is2048 = info.gameType === '2048';
+  const badgeColor = info.won ? '#39ff88' : '#22e6ff';
+  const title = info.won ? `🏆 ${is2048 ? '2048 ARENA' : 'SNAKE ARENA'} VICTORY!` : `🏁 ${is2048 ? '2048 ARENA' : 'SNAKE ARENA'} SESSION COMPLETED`;
+  const subtext = is2048
+    ? `Best Tile: <strong style="color: #ffd000;">${info.bestTile || 2}</strong> | In-Game Score: <strong style="color: #38bdf8;">${info.score || 0}</strong> | Arena Points: <strong style="color: #4ade80;">${info.points || 0} PTS</strong> | Steps: ${info.steps || 0}/2000`
+    : `Foods Eaten: <strong style="color: #4ade80;">${Math.round(info.score / 60) || 15}/15</strong> | Final Score: <strong style="color: #ffd000;">${info.score || 0} PTS</strong> | Steps: ${info.steps || 0}/300`;
+
+  banner.className = 'hud-card game-completed-banner';
+  banner.style.cssText = `
+    margin-bottom: var(--space-md);
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(26, 16, 48, 0.95));
+    border: 2px solid ${info.won ? 'var(--neon-green)' : 'var(--neon-cyan)'};
+    box-shadow: 0 0 24px rgba(34, 230, 255, 0.25);
+    border-radius: 8px;
+  `;
+
+  banner.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+          <span style="font-size: 1.4rem;">${info.won ? '🏆' : '🏁'}</span>
+          <h3 style="margin: 0; font-size: 16px; color: ${badgeColor}; letter-spacing: 0.5px;">${title}</h3>
+          <span class="badge ${info.won ? 'badge-good' : 'badge-cyan'}" style="font-size: 10px;">SESSION: ${sid.slice(0, 18)}</span>
+        </div>
+        <div style="font-size: 12px; color: #cbd5e1; font-family: var(--font-mono); margin-left: 32px;">
+          ${subtext}
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <a href="#/autopsy?session=${encodeURIComponent(sid)}" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #a855f7, #6366f1); border-color: #a855f7; color: #fff; font-weight: 700; text-decoration: none;">
+          <span>🔬 DECISION AUTOPSY</span>
+        </a>
+        <a href="#/replay?session=${encodeURIComponent(sid)}" class="btn btn-secondary btn-sm" style="border-color: var(--neon-cyan); color: var(--neon-cyan); font-weight: 700; text-decoration: none;">
+          <span>⏪ REPLAY ALL STEPS</span>
+        </a>
+        <a href="#/logs?session=${encodeURIComponent(sid)}" class="btn btn-secondary btn-sm" style="border-color: rgba(255,255,255,0.25); color: #fff; text-decoration: none;">
+          <span>📜 AUDIT LOGS</span>
+        </a>
+        <button id="btn-banner-new-run" class="btn btn-sm" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+          <span>🔄 NEW RUN</span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  const newRunBtn = banner.querySelector('#btn-banner-new-run');
+  if (newRunBtn) {
+    newRunBtn.addEventListener('click', () => {
+      restartLiveRun();
+    });
+  }
+}
+
+function hideGameOverBanner() {
+  const banner = document.getElementById('game-completed-banner');
+  if (banner) banner.remove();
 }
 
 /**

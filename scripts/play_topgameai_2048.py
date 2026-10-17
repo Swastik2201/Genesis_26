@@ -310,7 +310,9 @@ def play_topgameai_2048(
 
     print("\n" + "=" * 70)
     print(f"[OK] 2048 Match Finished! Best Tile: {best_tile} | In-game Score: {in_score} | Arena Points: {arena_points}")
-    print(f"     Replay URL: http://localhost:8000/dashboard.html#/replay?session={session_id}")
+    print(f"     Autopsy: http://localhost:8000/dashboard.html#/autopsy?session={session_id}")
+    print(f"     Replay:  http://localhost:8000/dashboard.html#/replay?session={session_id}")
+    print(f"     Logs:    http://localhost:8000/dashboard.html#/logs?session={session_id}")
     print("=" * 70)
 
     # Check TopGameAI 2048 leaderboard

@@ -618,14 +618,14 @@
               action: currentDirection,
               score: pts,
               in_game_score: inScore,
-              done,
+              done: done || stepCount >= 2000,
               won,
               agent_name: currentTeamName,
             });
 
             if (done || stepCount >= 2000) {
               isPlaying = false;
-              setStatus(`🏆 2048 Finished! Best Tile: ${bestTile} | Score: ${inScore} | Points: ${pts} (${currentTeamName})`, true);
+              setStatus(`🏆 2048 Finished! Best Tile: ${bestTile} | Score: ${inScore} | Points: ${pts} (${currentTeamName})<br><a href="${LOCAL_API}/dashboard.html#/autopsy?session=${activeSessionId}" target="_blank" style="color: #4ade80; font-weight: bold; text-decoration: underline;">🔬 View Decision Autopsy</a> | <a href="${LOCAL_API}/dashboard.html#/replay?session=${activeSessionId}" target="_blank" style="color: #38bdf8; font-weight: bold; text-decoration: underline;">⏪ Replay Steps</a>`, true);
               return response;
             }
 

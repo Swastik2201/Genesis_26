@@ -34,6 +34,9 @@ export function renderDecisionGrid(container, event, options = {}) {
   const outcomeBadgeClass = isGood ? 'badge-good' : (isIllegal ? 'badge-illegal' : 'badge-bad');
   const outcomeBadgeText = isGood ? 'GOOD MOVE' : (isIllegal ? 'RETRY RESOLVED' : 'DAMAGE / LOSS');
 
+  const isGame2048 = event.game_id === '2048' || event.game === '2048' || (state.facts?.grid && state.facts.grid.length === 4) || (state.grid && state.grid.length === 4) || (state.facts?.best !== undefined);
+  const grid2048 = state.facts?.grid || state.grid;
+
   container.className = 'live-hero-grid';
   container.innerHTML = `
     <!-- COLUMN 1: STATE -->
@@ -58,13 +61,41 @@ export function renderDecisionGrid(container, event, options = {}) {
           </div>
         </div>
 
+        ${(isGame2048 && grid2048 && Array.isArray(grid2048) && grid2048.length === 4) ? `
+          <div style="margin-bottom: var(--space-sm);">
+            <div style="font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 4px;">
+              2048 TILE BOARD (STEP ${event.step}):
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: rgba(15, 23, 42, 0.95); padding: 8px; border-radius: 6px; border: 1px solid rgba(168, 85, 247, 0.35); max-width: 230px;">
+              ${grid2048.flat().map(val => {
+                const colors = {
+                  0: { bg: 'rgba(255,255,255,0.04)', fg: 'transparent' },
+                  2: { bg: '#334155', fg: '#f8fafc' },
+                  4: { bg: '#475569', fg: '#f8fafc' },
+                  8: { bg: '#d97706', fg: '#fff' },
+                  16: { bg: '#ea580c', fg: '#fff' },
+                  32: { bg: '#dc2626', fg: '#fff' },
+                  64: { bg: '#e11d48', fg: '#fff' },
+                  128: { bg: '#eab308', fg: '#000' },
+                  256: { bg: '#facc15', fg: '#000' },
+                  512: { bg: '#a855f7', fg: '#fff' },
+                  1024: { bg: '#9333ea', fg: '#fff' },
+                  2048: { bg: '#3b82f6', fg: '#fff' }
+                };
+                const c = colors[val] || (val > 2048 ? { bg: '#06b6d4', fg: '#fff' } : colors[0]);
+                return `<div style="aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: ${c.bg}; color: ${c.fg}; font-family: var(--font-mono); font-weight: 800; font-size: ${val >= 1024 ? '10px' : val >= 128 ? '11px' : '13px'}; border-radius: 4px; box-shadow: ${val >= 128 ? '0 0 6px ' + c.bg : 'none'};">${val > 0 ? val : ''}</div>`;
+              }).join('')}
+            </div>
+          </div>
+        ` : ''}
+
         <!-- Structured Facts -->
         <div>
           <div style="font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 4px;">
             STRUCTURED FACTS:
           </div>
           <div class="state-facts-grid">
-            ${event.game_id === '2048' ? `
+            ${isGame2048 ? `
               <div class="fact-badge">
                 <span class="fact-key">BEST TILE</span>
                 <span class="fact-val" style="color: #ffd000;">${state.facts?.best || 2}</span>
