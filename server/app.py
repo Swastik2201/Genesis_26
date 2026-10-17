@@ -679,7 +679,58 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
         direction = st.get("direction", "right")
 
         probs = {"up": 0.05, "down": 0.05, "left": 0.05, "right": 0.05}
-        if action in probs:
+        is_good_move = True
+        if snake and food and action:
+            from bot.laya.snake_spatial import analyze_snake_state, bfs_path, DIRS
+            analysis = analyze_snake_state(snake, food, direction)
+            cand = analysis.get(action, {})
+            legal_cands = [d for d, c in analysis.items() if c.get("legal")]
+
+            head = (snake[0]["x"], snake[0]["y"])
+            tail = (snake[-1]["x"], snake[-1]["y"])
+            body_blocks = {(s["x"], s["y"]) for s in snake[:-1]}
+            food_pt = (food["x"], food["y"])
+
+            d_before = abs(head[0] - food_pt[0]) + abs(head[1] - food_pt[1])
+            dx, dy = DIRS.get(action, (0, 0))
+            nxt = (head[0] + dx, head[1] + dy)
+            d_after = abs(nxt[0] - food_pt[0]) + abs(nxt[1] - food_pt[1])
+
+            ate = (nxt == food_pt)
+            advances_food = (d_after < d_before)
+            space = cand.get("space", 0)
+            can_reach_tail = cand.get("can_reach_tail", False)
+
+            if ate:
+                p_act = 0.94
+            elif advances_food and can_reach_tail:
+                p_act = round(0.82 + min(0.12, (space / 144.0) * 0.12), 4)
+            elif can_reach_tail:
+                p_act = round(0.70 + min(0.10, (space / 144.0) * 0.10), 4)
+            else:
+                p_act = round(0.55 + min(0.10, (space / 50.0) * 0.10), 4)
+            p_act = max(0.52, min(0.96, p_act))
+
+            other_legals = [d for d in legal_cands if d != action]
+            rem = 1.0 - p_act
+            share = round(rem / max(1, len(other_legals)), 4) if other_legals else 0.0
+            probs = {d: 0.02 for d in ("up", "down", "left", "right")}
+            for d in other_legals:
+                probs[d] = share
+            probs[action] = p_act
+            s_tot = sum(probs.values()) or 1.0
+            probs = {k: round(v / s_tot, 4) for k, v in probs.items()}
+
+            path_to_food = bfs_path(head, food_pt, body_blocks)
+            if ate or (advances_food and can_reach_tail):
+                is_good_move = True
+            elif not advances_food and path_to_food and len(path_to_food) > 0 and path_to_food[0] in legal_cands:
+                is_good_move = False
+            elif can_reach_tail and space >= len(snake) + 4:
+                is_good_move = True
+            else:
+                is_good_move = False
+        elif action in probs:
             probs[action] = 0.85
             rem = (1.0 - 0.85) / 3.0
             for d in probs:
@@ -738,7 +789,7 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
             "validator": {"retries": 0, "fallback": False, "rejections": []},
             "final_action": action,
             "game_response": {
-                "good": True,
+                "good": is_good_move,
                 "score_before": max(0.0, score - (60.0 if food_eaten > 0 else 0.0)),
                 "score_after": score,
                 "done": done,

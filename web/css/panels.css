@@ -178,7 +178,7 @@
 
 .log-line {
   display: grid;
-  grid-template-columns: 80px 70px 140px 100px 1fr;
+  grid-template-columns: 115px 65px 130px 100px 1fr;
   gap: var(--space-sm);
   padding: 4px 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
@@ -191,8 +191,8 @@
   background: rgba(252, 216, 0, 0.08);
 }
 
-.log-time { color: var(--text-muted); }
-.log-step { color: var(--neon-cyan); font-weight: 700; }
+.log-time { color: var(--text-muted); min-width: 105px; white-space: nowrap; }
+.log-step { color: var(--neon-cyan); font-weight: 700; white-space: nowrap; }
 .log-action { color: #fff; font-weight: 700; }
 .log-prob { color: var(--neon-magenta); }
 .log-outcome { color: var(--text-secondary); text-overflow: ellipsis; overflow: hidden; }
@@ -297,7 +297,7 @@
 
 .log-terminal-header {
   display: grid;
-  grid-template-columns: 85px 65px 130px 100px 1fr;
+  grid-template-columns: 115px 65px 130px 100px 1fr;
   gap: var(--space-sm);
   padding: 8px 12px;
   background: #0d122b;
@@ -322,7 +322,7 @@
 
 .log-line {
   display: grid;
-  grid-template-columns: 85px 65px 130px 100px 1fr;
+  grid-template-columns: 115px 65px 130px 100px 1fr;
   cursor: pointer;
 }
 
