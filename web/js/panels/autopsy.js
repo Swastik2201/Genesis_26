@@ -300,7 +300,10 @@ function renderCasesList(container, sortedItems) {
               PROBABILITY DISTRIBUTION:
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px;">
-              ${Object.entries(probabilities).map(([actId, prob]) => {
+              ${Object.entries(probabilities).filter(([actId]) => {
+                const a = actId.toLowerCase().trim();
+                return a !== 'none' && a !== 'neutral';
+              }).map(([actId, prob]) => {
                 const pct = Math.round(prob * 100);
                 const isTop = actId === (lastCall.chosen_action || event.final_action);
                 return `

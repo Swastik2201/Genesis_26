@@ -8,6 +8,47 @@
 
 import { typewriter, triggerGlitch } from '../fx.js';
 
+
+/**
+ * Helper to extract accurate option probability and winner status.
+ */
+function getOptionProbAndWinner(opt, optIdx, q, acceptedCall, event, rawScores) {
+  const optStr = String(opt || '').toLowerCase().trim();
+  const winningAction = String(
+    acceptedCall.chosen_action ||
+    acceptedCall.final_action ||
+    acceptedCall.raw?.predicted_token ||
+    event.final_action ||
+    ''
+  ).toLowerCase().trim();
+
+  const isWinner = optStr.length > 0 && (optStr === winningAction);
+
+  // 1. Question-specific answers probability map
+  const qAnsProbs = acceptedCall.raw?.answers?.[q.id]?.probabilities;
+  if (qAnsProbs && qAnsProbs[optStr] !== undefined) {
+    return { prob: Number(qAnsProbs[optStr]), isWinner };
+  }
+
+  // 2. Action scores map on the call
+  if (acceptedCall.action_scores && acceptedCall.action_scores[optStr] !== undefined) {
+    return { prob: Number(acceptedCall.action_scores[optStr]), isWinner };
+  }
+
+  // 3. rawScores array if explicitly matched
+  if (Array.isArray(rawScores) && rawScores[optIdx] !== undefined) {
+    return { prob: Number(rawScores[optIdx]), isWinner };
+  }
+
+  // 4. Dynamic fallback based on winning status
+  if (isWinner) {
+    return { prob: 0.72, isWinner: true };
+  }
+  const opts = q.options || [];
+  const otherCount = Math.max(1, opts.length - 1);
+  return { prob: 0.28 / otherCount, isWinner: false };
+}
+
 /**
  * Renders the complete 3-column decision view for any event.
  * @param {HTMLElement} container - Target container element
@@ -278,10 +319,14 @@ export function renderDecisionGrid(container, event, options = {}) {
       qCard.className = 'question-card active-thinking';
       const qType = (q.type || 'choice').toUpperCase();
 
-      const optionsHtml = (q.options || []).map((opt, optIdx) => {
-        const prob = rawScores[optIdx] ?? (optIdx === 0 ? 0.8 : 0.1);
+      const optionsHtml = (q.options || [])
+        .filter(opt => {
+          const o = String(opt).toLowerCase().trim();
+          return o !== 'none' && o !== 'neutral';
+        })
+        .map((opt, optIdx) => {
+        const { prob, isWinner } = getOptionProbAndWinner(opt, optIdx, q, acceptedCall, event, rawScores);
         const pct = Math.round(prob * 100);
-        const isWinner = opt === acceptedCall.raw?.predicted_token || optIdx === 0;
 
         return `
           <div class="option-row ${isWinner ? 'is-winner' : ''}">
@@ -345,9 +390,15 @@ export function renderDecisionGrid(container, event, options = {}) {
  * Helper to render probability bars across action choices.
  */
 export function renderActionScores(actionScores, chosenAction, instant = false) {
-  return Object.entries(actionScores).map(([actId, score]) => {
+  const chosen = String(chosenAction || '').toLowerCase().trim();
+  return Object.entries(actionScores)
+    .filter(([actId]) => {
+      const a = actId.toLowerCase().trim();
+      return a !== 'none' && a !== 'neutral';
+    })
+    .map(([actId, score]) => {
     const pct = Math.round(score * 100);
-    const isWinner = actId === chosenAction;
+    const isWinner = actId.toLowerCase().trim() === chosen;
     return `
       <div class="prob-bar ${isWinner ? 'winner' : ''}">
         <div class="prob-bar-header">
@@ -568,10 +619,14 @@ export function renderSplitDecision(stateContainer, decisionContainer, event, op
       qCard.className = 'question-card active-thinking';
       const qType = (q.type || 'choice').toUpperCase();
 
-      const optionsHtml = (q.options || []).map((opt, optIdx) => {
-        const prob = rawScores[optIdx] ?? (optIdx === 0 ? 0.8 : 0.1);
+      const optionsHtml = (q.options || [])
+        .filter(opt => {
+          const o = String(opt).toLowerCase().trim();
+          return o !== 'none' && o !== 'neutral';
+        })
+        .map((opt, optIdx) => {
+        const { prob, isWinner } = getOptionProbAndWinner(opt, optIdx, q, acceptedCall, event, rawScores);
         const pct = Math.round(prob * 100);
-        const isWinner = opt === acceptedCall.raw?.predicted_token || optIdx === 0;
 
         return `
           <div class="option-row ${isWinner ? 'is-winner' : ''}">

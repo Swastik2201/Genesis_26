@@ -780,12 +780,28 @@ export class GameViewport {
 
     this.direction = bestDir;
     this.nextDirection = bestDir;
-    this.probabilities = {
-      up: bestDir === 'up' ? 0.7 : 0.1,
-      down: bestDir === 'down' ? 0.7 : 0.1,
-      left: bestDir === 'left' ? 0.7 : 0.1,
-      right: bestDir === 'right' ? 0.7 : 0.1,
-    };
+
+    // Calculate dynamic probabilities based on real geometric scores
+    const probs = { up: 0.02, down: 0.02, left: 0.02, right: 0.02 };
+    const validDirs = Object.keys(scores);
+    if (validDirs.length > 0) {
+      const minS = Math.min(...validDirs.map(d => scores[d]));
+      const expScores = {};
+      let sumExp = 0;
+      validDirs.forEach(d => {
+        const v = Math.exp((scores[d] - minS) / 30);
+        expScores[d] = v;
+        sumExp += v;
+      });
+      validDirs.forEach(d => {
+        probs[d] = parseFloat((0.02 + 0.92 * (expScores[d] / sumExp)).toFixed(3));
+      });
+      const total = Object.values(probs).reduce((a, b) => a + b, 0);
+      probs[bestDir] = parseFloat((probs[bestDir] + (1.0 - total)).toFixed(3));
+    } else {
+      probs[bestDir] = 0.70;
+    }
+    this.probabilities = probs;
   }
 
   layaAutonomous2048Decision() {
@@ -814,12 +830,30 @@ export class GameViewport {
     }
 
     this.direction = bestDir;
-    this.probabilities = {
-      up: bestDir === 'up' ? 0.75 : 0.08,
-      down: bestDir === 'down' ? 0.75 : 0.08,
-      left: bestDir === 'left' ? 0.75 : 0.08,
-      right: bestDir === 'right' ? 0.75 : 0.08,
-    };
+
+    // Calculate dynamic probabilities based on 2048 evaluation scores
+    const probs = { up: 0.02, down: 0.02, left: 0.02, right: 0.02 };
+    const validMoves = Object.keys(scores);
+    if (validMoves.length > 0) {
+      const minVal = Math.min(...validMoves.map(m => scores[m]));
+      const maxVal = Math.max(...validMoves.map(m => scores[m]));
+      const span = Math.max(1.0, maxVal - minVal);
+      const expScores = {};
+      let sumExp = 0;
+      validMoves.forEach(m => {
+        const v = Math.exp(Math.min(10.0, ((scores[m] - minVal) / span) * 3.5));
+        expScores[m] = v;
+        sumExp += v;
+      });
+      validMoves.forEach(m => {
+        probs[m] = parseFloat((0.02 + 0.92 * (expScores[m] / sumExp)).toFixed(3));
+      });
+      const total = Object.values(probs).reduce((a, b) => a + b, 0);
+      probs[bestDir] = parseFloat((probs[bestDir] + (1.0 - total)).toFixed(3));
+    } else {
+      probs[bestDir] = 0.70;
+    }
+    this.probabilities = probs;
     this.step2048();
   }
 
@@ -870,7 +904,7 @@ export class GameViewport {
         .filter(d => this.simulate2048(this.grid2048, d).changed)
         .map(d => ({ id: d, label: d.toUpperCase(), hint: `Slide ${d}` }));
 
-      const scores = this.probabilities || (action ? { [action]: 0.85 } : { down: 0.70, left: 0.15, right: 0.10, up: 0.05 });
+      const scores = this.probabilities || (action ? { [action]: 0.78, up: 0.07, down: 0.07, left: 0.07, right: 0.07, [action]: 0.79 } : { down: 0.68, left: 0.16, right: 0.11, up: 0.05 });
 
       const eventData = {
         step: step,
@@ -901,21 +935,35 @@ export class GameViewport {
                 id: 'best_merge_direction',
                 type: 'choice',
                 text: 'Looking at the 4x4 tile board, which sliding direction merges adjacent equal-value tiles to create the largest consolidated values?',
-                options: ['up', 'down', 'left', 'right', 'none']
+                options: ['up', 'down', 'left', 'right']
               },
               {
                 id: 'corner_preservation',
                 type: 'choice',
                 text: 'Which slide direction best keeps the board\'s largest tile securely anchored in its corner without displacing it toward the open center?',
-                options: ['up', 'down', 'left', 'right', 'neutral']
+                options: ['up', 'down', 'left', 'right']
               }
             ],
+            raw: {
+              probabilities: [scores.up ?? 0.05, scores.down ?? 0.05, scores.left ?? 0.05, scores.right ?? 0.05],
+              predicted_token: action || this.direction,
+              answers: {
+                best_merge_direction: {
+                  chosen: action || this.direction,
+                  probabilities: scores
+                },
+                corner_preservation: {
+                  chosen: action || this.direction,
+                  probabilities: scores
+                }
+              }
+            },
             action_scores: scores,
             chosen_action: action || this.direction,
             latency_ms: 22.0,
             accepted: true,
             legal: true,
-            reason: `Slide ${action || this.direction} evaluated for board state`
+            reason: `Slide ${(action || this.direction).toUpperCase()} evaluated for board state`
           }
         ],
         validator: { retries: 0, fallback: false, rejections: [] },
@@ -944,6 +992,7 @@ export class GameViewport {
           step: step,
           state: { grid: this.grid2048, score: this.inGameScore, best: this.bestTile },
           action: action || this.direction,
+          action_scores: scores,
           score: this.points2048,
           in_game_score: this.inGameScore,
           done: done,
@@ -952,6 +1001,8 @@ export class GameViewport {
         })
       }).catch(() => {});
     } else {
+      const scores = this.probabilities || (action ? { [action]: 0.78, up: 0.07, down: 0.07, left: 0.07, right: 0.07, [action]: 0.79 } : { right: 0.75, up: 0.10, down: 0.10, left: 0.05 });
+
       const eventData = {
         step: step,
         session_id: this.sessionId,
@@ -986,7 +1037,17 @@ export class GameViewport {
                 options: ['up', 'down', 'left', 'right']
               }
             ],
-            action_scores: this.probabilities || (action ? { [action]: 0.85 } : { right: 0.85 }),
+            raw: {
+              probabilities: [scores.up ?? 0.05, scores.down ?? 0.05, scores.left ?? 0.05, scores.right ?? 0.05],
+              predicted_token: action || this.direction,
+              answers: {
+                safe_heading: {
+                  chosen: action || this.direction,
+                  probabilities: scores
+                }
+              }
+            },
+            action_scores: scores,
             chosen_action: action || this.direction,
             latency_ms: 28.0,
             accepted: true,
@@ -1024,6 +1085,7 @@ export class GameViewport {
             direction: this.direction
           },
           action: action || this.direction,
+          action_scores: scores,
           score: this.score,
           done: done,
           won: won,

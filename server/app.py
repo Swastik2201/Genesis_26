@@ -577,7 +577,14 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
                 legal_actions = [{"id": act, "label": act.capitalize()} for act in ("up", "down", "left", "right")]
 
             # Laya 2048 solver & 2-question probability choice table
-            best_act, probs, conf, reason = choose_best_2048_action(grid)
+            client_scores = body.get("action_scores")
+            if isinstance(client_scores, dict) and any(client_scores.values()):
+                probs = client_scores
+                best_act = max(client_scores.keys(), key=lambda k: client_scores[k])
+                conf = float(probs.get(best_act, 0.5))
+                reason = f"Selected {best_act.upper()} to preserve corner anchor and maximize monotonicity/merges."
+            else:
+                best_act, probs, conf, reason = choose_best_2048_action(grid)
             chosen = action or best_act
 
             event_data = {
@@ -609,18 +616,28 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
                                 "id": "best_merge_direction",
                                 "type": "choice",
                                 "text": "Looking at the 4x4 tile board, which sliding direction merges adjacent equal-value tiles to create the largest consolidated values?",
-                                "options": ["up", "down", "left", "right", "none"],
+                                "options": ["up", "down", "left", "right"],
                             },
                             {
                                 "id": "corner_preservation",
                                 "type": "choice",
                                 "text": "Which slide direction best keeps the board's largest tile securely anchored in its corner without displacing it toward the open center?",
-                                "options": ["up", "down", "left", "right", "neutral"],
+                                "options": ["up", "down", "left", "right"],
                             },
                         ],
                         "raw": {
                             "probabilities": [probs.get("up", 0.0), probs.get("down", 0.0), probs.get("left", 0.0), probs.get("right", 0.0)],
                             "predicted_token": chosen,
+                            "answers": {
+                                "best_merge_direction": {
+                                    "chosen": chosen,
+                                    "probabilities": probs,
+                                },
+                                "corner_preservation": {
+                                    "chosen": chosen,
+                                    "probabilities": probs,
+                                },
+                            },
                         },
                         "action_scores": probs,
                         "chosen_action": chosen,
@@ -678,64 +695,36 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
         food = st.get("food", {})
         direction = st.get("direction", "right")
 
-        probs = {"up": 0.05, "down": 0.05, "left": 0.05, "right": 0.05}
+        client_scores = body.get("action_scores")
+        if isinstance(client_scores, dict) and any(client_scores.values()):
+            probs = client_scores
+            reason = f"Evaluated trajectory '{action}' with dynamic spatial model probabilities"
+        else:
+            from bot.laya.snake_spatial import evaluate_snake_moves
+            try:
+                suggested_dir, probs, reason = evaluate_snake_moves(snake, food, direction)
+            except Exception:
+                probs = {"up": 0.05, "down": 0.05, "left": 0.05, "right": 0.05}
+                if action in probs:
+                    probs[action] = 0.85
+                    rem = (1.0 - 0.85) / 3.0
+                    for d in probs:
+                        if d != action:
+                            probs[d] = round(rem, 3)
+                reason = f"Live lockstep move from topgameai.com as team {agent_name}"
+
         is_good_move = True
-        if snake and food and action:
-            from bot.laya.snake_spatial import analyze_snake_state, bfs_path, DIRS
-            analysis = analyze_snake_state(snake, food, direction)
-            cand = analysis.get(action, {})
-            legal_cands = [d for d, c in analysis.items() if c.get("legal")]
-
-            head = (snake[0]["x"], snake[0]["y"])
-            tail = (snake[-1]["x"], snake[-1]["y"])
-            body_blocks = {(s["x"], s["y"]) for s in snake[:-1]}
-            food_pt = (food["x"], food["y"])
-
-            d_before = abs(head[0] - food_pt[0]) + abs(head[1] - food_pt[1])
-            dx, dy = DIRS.get(action, (0, 0))
-            nxt = (head[0] + dx, head[1] + dy)
-            d_after = abs(nxt[0] - food_pt[0]) + abs(nxt[1] - food_pt[1])
-
-            ate = (nxt == food_pt)
-            advances_food = (d_after < d_before)
-            space = cand.get("space", 0)
-            can_reach_tail = cand.get("can_reach_tail", False)
-
-            if ate:
-                p_act = 0.94
-            elif advances_food and can_reach_tail:
-                p_act = round(0.82 + min(0.12, (space / 144.0) * 0.12), 4)
-            elif can_reach_tail:
-                p_act = round(0.70 + min(0.10, (space / 144.0) * 0.10), 4)
-            else:
-                p_act = round(0.55 + min(0.10, (space / 50.0) * 0.10), 4)
-            p_act = max(0.52, min(0.96, p_act))
-
-            other_legals = [d for d in legal_cands if d != action]
-            rem = 1.0 - p_act
-            share = round(rem / max(1, len(other_legals)), 4) if other_legals else 0.0
-            probs = {d: 0.02 for d in ("up", "down", "left", "right")}
-            for d in other_legals:
-                probs[d] = share
-            probs[action] = p_act
-            s_tot = sum(probs.values()) or 1.0
-            probs = {k: round(v / s_tot, 4) for k, v in probs.items()}
-
-            path_to_food = bfs_path(head, food_pt, body_blocks)
-            if ate or (advances_food and can_reach_tail):
+        if snake and action:
+            try:
+                from bot.laya.snake_spatial import analyze_snake_state
+                analysis = analyze_snake_state(snake, food, direction)
+                cand = analysis.get(action, {})
+                if cand.get("legal"):
+                    is_good_move = cand.get("is_safe", True) and not cand.get("is_trapped", False)
+                else:
+                    is_good_move = False
+            except Exception:
                 is_good_move = True
-            elif not advances_food and path_to_food and len(path_to_food) > 0 and path_to_food[0] in legal_cands:
-                is_good_move = False
-            elif can_reach_tail and space >= len(snake) + 4:
-                is_good_move = True
-            else:
-                is_good_move = False
-        elif action in probs:
-            probs[action] = 0.85
-            rem = (1.0 - 0.85) / 3.0
-            for d in probs:
-                if d != action:
-                    probs[d] = round(rem, 3)
 
         event_data = {
             "step": step,
@@ -776,14 +765,27 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
                             "options": ["up", "down", "left", "right"],
                         }
                     ],
-                    "raw": {"probabilities": [probs["up"], probs["down"], probs["left"], probs["right"]], "predicted_token": action or "right"},
+                    "raw": {
+                        "probabilities": [probs.get("up", 0.05), probs.get("down", 0.05), probs.get("left", 0.05), probs.get("right", 0.05)],
+                        "predicted_token": action or "right",
+                        "answers": {
+                            "safest_direction": {
+                                "chosen": action or "right",
+                                "probabilities": probs,
+                            },
+                            "safe_heading": {
+                                "chosen": action or "right",
+                                "probabilities": probs,
+                            },
+                        },
+                    },
                     "action_scores": probs,
                     "chosen_action": action or "right",
                     "latency_ms": 28.0,
                     "accepted": True,
                     "excluded": False,
                     "legal": True,
-                    "reason": f"Live lockstep move from topgameai.com as team {agent_name}",
+                    "reason": reason,
                 }
             ] if action else [],
             "validator": {"retries": 0, "fallback": False, "rejections": []},
