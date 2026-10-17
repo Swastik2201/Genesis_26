@@ -622,7 +622,7 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
                                 "id": "corner_preservation",
                                 "type": "choice",
                                 "text": "Which slide direction best keeps the board's largest tile securely anchored in its corner without displacing it toward the open center?",
-                                "options": ["up", "down", "left", "right", "neutral"],
+                                "options": ["up", "down", "left", "right"],
                             },
                         ],
                         "raw": {
@@ -634,8 +634,8 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
                                     "probabilities": probs,
                                 },
                                 "corner_preservation": {
-                                    "chosen": chosen if chosen in ("down", "left") else "neutral",
-                                    "probabilities": {**probs, "neutral": 0.02},
+                                    "chosen": chosen,
+                                    "probabilities": probs,
                                 },
                             },
                         },

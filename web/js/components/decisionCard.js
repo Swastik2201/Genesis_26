@@ -320,7 +320,10 @@ export function renderDecisionGrid(container, event, options = {}) {
       const qType = (q.type || 'choice').toUpperCase();
 
       const optionsHtml = (q.options || [])
-        .filter(opt => String(opt).toLowerCase().trim() !== 'none')
+        .filter(opt => {
+          const o = String(opt).toLowerCase().trim();
+          return o !== 'none' && o !== 'neutral';
+        })
         .map((opt, optIdx) => {
         const { prob, isWinner } = getOptionProbAndWinner(opt, optIdx, q, acceptedCall, event, rawScores);
         const pct = Math.round(prob * 100);
@@ -389,7 +392,10 @@ export function renderDecisionGrid(container, event, options = {}) {
 export function renderActionScores(actionScores, chosenAction, instant = false) {
   const chosen = String(chosenAction || '').toLowerCase().trim();
   return Object.entries(actionScores)
-    .filter(([actId]) => actId.toLowerCase().trim() !== 'none')
+    .filter(([actId]) => {
+      const a = actId.toLowerCase().trim();
+      return a !== 'none' && a !== 'neutral';
+    })
     .map(([actId, score]) => {
     const pct = Math.round(score * 100);
     const isWinner = actId.toLowerCase().trim() === chosen;
@@ -614,7 +620,10 @@ export function renderSplitDecision(stateContainer, decisionContainer, event, op
       const qType = (q.type || 'choice').toUpperCase();
 
       const optionsHtml = (q.options || [])
-        .filter(opt => String(opt).toLowerCase().trim() !== 'none')
+        .filter(opt => {
+          const o = String(opt).toLowerCase().trim();
+          return o !== 'none' && o !== 'neutral';
+        })
         .map((opt, optIdx) => {
         const { prob, isWinner } = getOptionProbAndWinner(opt, optIdx, q, acceptedCall, event, rawScores);
         const pct = Math.round(prob * 100);
