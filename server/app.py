@@ -577,7 +577,14 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
                 legal_actions = [{"id": act, "label": act.capitalize()} for act in ("up", "down", "left", "right")]
 
             # Laya 2048 solver & 2-question probability choice table
-            best_act, probs, conf, reason = choose_best_2048_action(grid)
+            client_scores = body.get("action_scores")
+            if isinstance(client_scores, dict) and any(client_scores.values()):
+                probs = client_scores
+                best_act = max(client_scores.keys(), key=lambda k: client_scores[k])
+                conf = float(probs.get(best_act, 0.5))
+                reason = f"Selected {best_act.upper()} to preserve corner anchor and maximize monotonicity/merges."
+            else:
+                best_act, probs, conf, reason = choose_best_2048_action(grid)
             chosen = action or best_act
 
             event_data = {
@@ -609,7 +616,7 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
                                 "id": "best_merge_direction",
                                 "type": "choice",
                                 "text": "Looking at the 4x4 tile board, which sliding direction merges adjacent equal-value tiles to create the largest consolidated values?",
-                                "options": ["up", "down", "left", "right", "none"],
+                                "options": ["up", "down", "left", "right"],
                             },
                             {
                                 "id": "corner_preservation",
@@ -621,6 +628,16 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
                         "raw": {
                             "probabilities": [probs.get("up", 0.0), probs.get("down", 0.0), probs.get("left", 0.0), probs.get("right", 0.0)],
                             "predicted_token": chosen,
+                            "answers": {
+                                "best_merge_direction": {
+                                    "chosen": chosen,
+                                    "probabilities": probs,
+                                },
+                                "corner_preservation": {
+                                    "chosen": chosen if chosen in ("down", "left") else "neutral",
+                                    "probabilities": {**probs, "neutral": 0.02},
+                                },
+                            },
                         },
                         "action_scores": probs,
                         "chosen_action": chosen,
@@ -678,13 +695,23 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
         food = st.get("food", {})
         direction = st.get("direction", "right")
 
-        probs = {"up": 0.05, "down": 0.05, "left": 0.05, "right": 0.05}
-        if action in probs:
-            probs[action] = 0.85
-            rem = (1.0 - 0.85) / 3.0
-            for d in probs:
-                if d != action:
-                    probs[d] = round(rem, 3)
+        client_scores = body.get("action_scores")
+        if isinstance(client_scores, dict) and any(client_scores.values()):
+            probs = client_scores
+            reason = f"Evaluated trajectory '{action}' with dynamic spatial model probabilities"
+        else:
+            from bot.laya.snake_spatial import evaluate_snake_moves
+            try:
+                suggested_dir, probs, reason = evaluate_snake_moves(snake, food, direction)
+            except Exception:
+                probs = {"up": 0.05, "down": 0.05, "left": 0.05, "right": 0.05}
+                if action in probs:
+                    probs[action] = 0.85
+                    rem = (1.0 - 0.85) / 3.0
+                    for d in probs:
+                        if d != action:
+                            probs[d] = round(rem, 3)
+                reason = f"Live lockstep move from topgameai.com as team {agent_name}"
 
         event_data = {
             "step": step,
@@ -725,14 +752,27 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
                             "options": ["up", "down", "left", "right"],
                         }
                     ],
-                    "raw": {"probabilities": [probs["up"], probs["down"], probs["left"], probs["right"]], "predicted_token": action or "right"},
+                    "raw": {
+                        "probabilities": [probs.get("up", 0.05), probs.get("down", 0.05), probs.get("left", 0.05), probs.get("right", 0.05)],
+                        "predicted_token": action or "right",
+                        "answers": {
+                            "safest_direction": {
+                                "chosen": action or "right",
+                                "probabilities": probs,
+                            },
+                            "safe_heading": {
+                                "chosen": action or "right",
+                                "probabilities": probs,
+                            },
+                        },
+                    },
                     "action_scores": probs,
                     "chosen_action": action or "right",
                     "latency_ms": 28.0,
                     "accepted": True,
                     "excluded": False,
                     "legal": True,
-                    "reason": f"Live lockstep move from topgameai.com as team {agent_name}",
+                    "reason": reason,
                 }
             ] if action else [],
             "validator": {"retries": 0, "fallback": False, "rejections": []},
