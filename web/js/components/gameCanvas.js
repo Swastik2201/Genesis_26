@@ -941,7 +941,7 @@ export class GameViewport {
                 id: 'corner_preservation',
                 type: 'choice',
                 text: 'Which slide direction best keeps the board\'s largest tile securely anchored in its corner without displacing it toward the open center?',
-                options: ['up', 'down', 'left', 'right', 'neutral']
+                options: ['up', 'down', 'left', 'right']
               }
             ],
             raw: {
@@ -953,8 +953,8 @@ export class GameViewport {
                   probabilities: scores
                 },
                 corner_preservation: {
-                  chosen: (action || this.direction) === 'up' ? 'neutral' : (action || this.direction),
-                  probabilities: { ...scores, neutral: 0.02 }
+                  chosen: action || this.direction,
+                  probabilities: scores
                 }
               }
             },
