@@ -239,7 +239,7 @@ export class GameViewport {
     const rect = this.canvas.parentElement.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const targetW = Math.max(320, Math.floor(rect.width));
-    const targetH = Math.max(260, Math.min(420, Math.floor(rect.height || 360)));
+    const targetH = Math.max(280, Math.min(460, Math.floor(rect.height || 380)));
 
     if (this.canvas.width !== targetW * dpr || this.canvas.height !== targetH * dpr) {
       this.canvas.width = targetW * dpr;
@@ -1097,10 +1097,9 @@ export class GameViewport {
 
   drawTopGameAISnakeArena(w, h) {
     const ctx = this.ctx;
-    const isWide = w >= 640;
-    const cellSize = isWide ? 26 : Math.floor(Math.min((w - 40) / 12, (h - 40) / 12, 28));
+    const cellSize = Math.floor(Math.min((w - 40) / 12, (h - 40) / 12, 34));
     const totalSize = cellSize * 12;
-    const offsetX = isWide ? 22 : Math.floor((w - totalSize) / 2);
+    const offsetX = Math.floor((w - totalSize) / 2);
     const offsetY = Math.floor((h - totalSize) / 2);
 
     ctx.save();
@@ -1160,16 +1159,12 @@ export class GameViewport {
       }
     }
 
-    if (isWide) {
-      this.drawLayaHUD(w, h, offsetX, offsetY, totalSize, 'Q: Safest move advancing to food?');
-    }
   }
 
   drawTopGameAI2048Arena(w, h) {
     const ctx = this.ctx;
-    const isWide = w >= 640;
-    const boardSize = isWide ? 312 : Math.min(w - 30, h - 30, 312);
-    const offsetX = isWide ? 22 : Math.floor((w - boardSize) / 2);
+    const boardSize = Math.floor(Math.min(w - 40, h - 40, 360));
+    const offsetX = Math.floor((w - boardSize) / 2);
     const offsetY = Math.floor((h - boardSize) / 2);
 
     const gap = 8;
@@ -1215,147 +1210,6 @@ export class GameViewport {
         }
       }
     }
-    ctx.restore();
-
-    if (isWide) {
-      this.drawLayaHUD(w, h, offsetX, offsetY, boardSize, 'Q: Corner monotonicity & merges?');
-    }
-  }
-
-  drawLayaHUD(w, h, offsetX, offsetY, totalSize, questionText) {
-    const ctx = this.ctx;
-    const hudX = offsetX + totalSize + 22;
-    const hudY = offsetY;
-    const hudW = w - hudX - 20;
-    const hudH = totalSize;
-
-    ctx.save();
-    ctx.fillStyle = '#0b1120';
-    ctx.strokeStyle = 'rgba(34, 230, 255, 0.35)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.roundRect(hudX, hudY, hudW, hudH, 6);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = '#22e6ff';
-    ctx.shadowColor = '#22e6ff';
-    ctx.shadowBlur = 6;
-    ctx.beginPath();
-    ctx.arc(hudX + 16, hudY + 20, 3.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    ctx.font = 'bold 12px "Courier New", monospace';
-    ctx.fillStyle = '#22e6ff';
-    ctx.textAlign = 'left';
-    ctx.fillText(`${this.gameType.toUpperCase()} ARENA INFERENCE // 4-GOATS`, hudX + 26, hudY + 24);
-
-    ctx.font = '10px "Courier New", monospace';
-    ctx.fillStyle = '#64748b';
-    ctx.fillText('Model: convaiinnovations/laya', hudX + 16, hudY + 40);
-
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-    ctx.beginPath();
-    ctx.moveTo(hudX + 14, hudY + 48);
-    ctx.lineTo(hudX + hudW - 14, hudY + 48);
-    ctx.stroke();
-
-    ctx.font = '11px "Courier New", monospace';
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText(questionText, hudX + 16, hudY + 66);
-
-    const dirs = [
-      { id: 'up', label: '▲ UP' },
-      { id: 'down', label: '▼ DOWN' },
-      { id: 'left', label: '◀ LEFT' },
-      { id: 'right', label: '▶ RIGHT' },
-    ];
-
-    const probs = this.probabilities || { up: 0.1, down: 0.1, left: 0.1, right: 0.7 };
-    const startRowY = hudY + 76;
-    const rowH = 42;
-    const barX = hudX + 90;
-    const barW = Math.max(80, hudW - 176);
-    const barH = 12;
-
-    dirs.forEach((d, i) => {
-      const ry = startRowY + i * rowH;
-      const prob = probs[d.id] ?? 0.05;
-      const isChosen = d.id === this.direction;
-      const pct = Math.round(prob * 100);
-
-      if (isChosen) {
-        ctx.fillStyle = 'rgba(74, 222, 128, 0.12)';
-        ctx.strokeStyle = 'rgba(74, 222, 128, 0.4)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.roundRect(hudX + 10, ry + 2, hudW - 20, 36, 4);
-        ctx.fill();
-        ctx.stroke();
-      }
-
-      ctx.font = isChosen ? 'bold 12px "Courier New", monospace' : '11px "Courier New", monospace';
-      ctx.fillStyle = isChosen ? '#4ade80' : '#cbd5e1';
-      ctx.textAlign = 'left';
-      ctx.fillText(d.label, hudX + 16, ry + 24);
-
-      ctx.fillStyle = '#1e293b';
-      ctx.beginPath();
-      ctx.roundRect(barX, ry + 15, barW, barH, 3);
-      ctx.fill();
-
-      const fillW = Math.max(4, Math.min(barW, barW * prob));
-      ctx.fillStyle = isChosen ? '#4ade80' : '#0284c7';
-      if (isChosen) {
-        ctx.shadowColor = '#4ade80';
-        ctx.shadowBlur = 8;
-      }
-      ctx.beginPath();
-      ctx.roundRect(barX, ry + 15, fillW, barH, 3);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      ctx.font = 'bold 11px "Courier New", monospace';
-      ctx.fillStyle = isChosen ? '#4ade80' : '#94a3b8';
-      ctx.textAlign = 'right';
-      ctx.fillText(`${pct}%`, hudX + hudW - (isChosen ? 62 : 16), ry + 24);
-
-      if (isChosen) {
-        ctx.font = 'bold 9px "Courier New", monospace';
-        ctx.fillStyle = '#4ade80';
-        ctx.textAlign = 'right';
-        ctx.fillText('[CHOSEN]', hudX + hudW - 14, ry + 24);
-      }
-    });
-
-    // Telemetry Footer
-    const btmY = hudY + hudH - 34;
-    ctx.fillStyle = '#0f172a';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.roundRect(hudX + 10, btmY, hudW - 20, 26, 4);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.font = '10px "Courier New", monospace';
-    ctx.fillStyle = '#94a3b8';
-    ctx.textAlign = 'left';
-    const confPct = Math.round((this.lastConfidence || 0.70) * 100);
-    ctx.fillText(`CONF: ${confPct}%`, hudX + 18, btmY + 17);
-
-    ctx.fillStyle = '#38bdf8';
-    if (this.gameType === '2048') {
-      ctx.fillText(`BEST: ${this.bestTile} | PTS: ${this.points2048}`, hudX + 100, btmY + 17);
-    } else {
-      ctx.fillText(`FOOD: (${this.food?.x ?? 0}, ${this.food?.y ?? 0})`, hudX + 105, btmY + 17);
-    }
-
-    ctx.fillStyle = '#4ade80';
-    ctx.textAlign = 'right';
-    ctx.fillText(`LATENCY: ~24ms`, hudX + hudW - 18, btmY + 17);
-
     ctx.restore();
   }
 
