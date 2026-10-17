@@ -63,7 +63,7 @@ export class GameViewport {
 
     this.gameType = options.gameType || 'snake'; // 'snake' | '2048'
     this.mode = 'laya'; // 'laya' | 'manual'
-    this.isPaused = false;
+    this.isPaused = options.isPaused !== undefined ? options.isPaused : true;
 
     // --- SNAKE STATE (12x12) ---
     this.width = 12;
