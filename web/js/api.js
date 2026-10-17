@@ -105,7 +105,7 @@ export async function runs() {
 /**
  * Ordered event page for a session.
  */
-export async function events(id, from = 0, limit = 100) {
+export async function events(id, from = 0, limit = 2500) {
   if (isMockMode) {
     const all = await fetchMock('events.sample.json');
     const filtered = all.filter(e => !id || e.session_id === id || id === 'latest');

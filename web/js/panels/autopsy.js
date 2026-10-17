@@ -64,7 +64,7 @@ export async function mount(container, params = {}) {
   try {
     const [autopsyRes, eventsRes, runsRes] = await Promise.all([
       api.autopsy(sessionId),
-      api.events(sessionId, 0, 500),
+      api.events(sessionId, 0, 2500),
       api.runs().catch(() => ({ runs: [] }))
     ]);
 

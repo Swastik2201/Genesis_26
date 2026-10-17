@@ -458,7 +458,7 @@
     };
     const keyName = keyMap[moveDir] || 'ArrowDown';
 
-    // Dispatch to both window and document to ensure TopGameAI catches it
+    // Dispatch to window
     const event = new KeyboardEvent('keydown', {
       key: keyName,
       code: keyName,
@@ -468,7 +468,6 @@
       which: keyDirToKeyCode(moveDir),
     });
     window.dispatchEvent(event);
-    document.dispatchEvent(event);
   }
 
   function keyDirToKeyCode(dir) {
@@ -597,7 +596,7 @@
         const data = await clone.json();
 
         if (data && !data.error && isPlaying) {
-          stepCount = data.steps !== undefined ? data.steps : stepCount + 1;
+          stepCount = (data.steps !== undefined && data.steps > stepCount) ? data.steps : stepCount + 1;
           const st = data.state || {};
           const done = Boolean(data.done);
           const won = Boolean(data.won);

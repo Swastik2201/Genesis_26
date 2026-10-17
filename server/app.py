@@ -110,7 +110,7 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
     async def get_events(
         id: str,
         from_step: int = Query(0, alias="from", ge=0),
-        limit: int = Query(100, ge=1, le=500),
+        limit: int = Query(2500, ge=1, le=5000),
     ):
         """Ordered event page for a session."""
         logs_p: Path = app.state.logs_dir

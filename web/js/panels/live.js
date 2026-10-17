@@ -53,6 +53,9 @@ export async function mount(container) {
       onStep: (event) => {
         hideWaitingState();
         store.addEvent(event);
+        if (event.session_id) {
+          store.setState({ currentSession: event.session_id });
+        }
       }
     });
   }

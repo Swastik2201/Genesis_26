@@ -131,7 +131,7 @@ export async function mount(container, params = {}) {
   // Load events
   let events = [];
   try {
-    const evRes = await api.events(sessionId, 0, 1000);
+    const evRes = await api.events(sessionId, 0, 2500);
     events = evRes?.events || (Array.isArray(evRes) ? evRes : []);
     store.setEvents(events);
   } catch (e) {
