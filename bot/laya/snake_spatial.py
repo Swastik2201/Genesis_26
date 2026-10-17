@@ -1,4 +1,5 @@
 from collections import deque
+import math
 
 WIDTH = 12
 HEIGHT = 12
@@ -191,15 +192,30 @@ def choose_optimal_snake_action(snake, food, direction, laya_probs=None):
     if laya_probs:
         # Blend Laya model probabilities with spatial safety
         base_chosen_p = max(0.65, laya_probs.get(chosen_dir, 0.70))
+        probs[chosen_dir] = base_chosen_p
+        rem = round(1.0 - base_chosen_p, 4)
+        if other_legals:
+            share = round(rem / len(other_legals), 4)
+            for d in other_legals:
+                probs[d] = share
     else:
-        base_chosen_p = 0.85
+        # Calibrate dynamic probabilities reflecting spatial geometry and target proximity
+        cand_scores = {}
+        for d, info in legal_candidates.items():
+            dist = info.get("dist_food", 24)
+            space = info.get("space", 10)
+            score = (24 - min(24, dist)) * 3.0 + min(space, 30) * 0.5
+            if d == chosen_dir:
+                score += 25.0
+            cand_scores[d] = score
 
-    probs[chosen_dir] = base_chosen_p
-    rem = round(1.0 - base_chosen_p, 4)
-    if other_legals:
-        share = round(rem / len(other_legals), 4)
-        for d in other_legals:
-            probs[d] = share
+        min_s = min(cand_scores.values()) if cand_scores else 0.0
+        exp_s = {d: math.exp(min(10.0, (s - min_s) / 15.0)) for d, s in cand_scores.items()}
+        sum_exp = sum(exp_s.values()) if exp_s else 1.0
+
+        for d in cand_scores:
+            probs[d] = round(exp_s[d] / sum_exp, 4)
+
     # Fix residual to guarantee exact sum = 1.0000
     cur_sum = round(sum(probs.values()), 4)
     residual = round(1.0 - cur_sum, 4)
