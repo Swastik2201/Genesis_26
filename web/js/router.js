@@ -9,7 +9,7 @@ import * as livePanel from './panels/live.js?v=20261017_v2';
 import * as autopsyPanel from './panels/autopsy.js?v=20261014_v5';
 import * as replayPanel from './panels/replay.js?v=20261017_v3';
 import * as calibrationPanel from './panels/calibration.js?v=20261014_v5';
-import * as logsPanel from './panels/logs.js?v=20261014_v5';
+import * as logsPanel from './panels/logs.js?v=20261017_v6';
 import { triggerWarpPipeTransition, triggerMarioBlockBump } from './fx.js';
 import { playMarioPipeSound } from './sound.js';
 

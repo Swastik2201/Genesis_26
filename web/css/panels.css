@@ -178,21 +178,36 @@
 
 .log-line {
   display: grid;
-  grid-template-columns: 115px 65px 130px 100px 1fr;
+  grid-template-columns: 110px 65px 130px 100px 1fr;
   gap: var(--space-sm);
   padding: 4px 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   align-items: center;
   white-space: nowrap;
   transition: background var(--transition-fast);
+  cursor: pointer;
+}
+
+.log-line > * {
+  min-width: 0;
 }
 
 .log-line:hover {
   background: rgba(252, 216, 0, 0.08);
 }
 
-.log-time { color: var(--text-muted); min-width: 105px; white-space: nowrap; }
-.log-step { color: var(--neon-cyan); font-weight: 700; white-space: nowrap; }
+.log-time {
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.log-step {
+  color: var(--neon-cyan);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+}
 .log-action { color: #fff; font-weight: 700; }
 .log-prob { color: var(--neon-magenta); }
 .log-outcome { color: var(--text-secondary); text-overflow: ellipsis; overflow: hidden; }
@@ -297,7 +312,7 @@
 
 .log-terminal-header {
   display: grid;
-  grid-template-columns: 115px 65px 130px 100px 1fr;
+  grid-template-columns: 110px 65px 130px 100px 1fr;
   gap: var(--space-sm);
   padding: 8px 12px;
   background: #0d122b;
@@ -311,6 +326,10 @@
   min-width: 560px;
 }
 
+.log-terminal-header > * {
+  min-width: 0;
+}
+
 .log-terminal {
   border: 3px solid #000;
   border-top: none;
@@ -318,12 +337,6 @@
   min-width: 560px;
   background: #080612;
   box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9), 4px 4px 0 #000;
-}
-
-.log-line {
-  display: grid;
-  grid-template-columns: 115px 65px 130px 100px 1fr;
-  cursor: pointer;
 }
 
 .log-jump-pill {

@@ -424,7 +424,7 @@ function renderSingleLogLineHtml(ev) {
 
   return `
     <div class="log-line" data-step="${ev.step}" title="Click to inspect decision step ${ev.step} in Replay">
-      <span class="log-col-time log-time">${tsStr}</span>
+      <span class="log-col-time log-time" title="${ev.ts || ''}">${tsStr}</span>
       <span class="log-col-step log-step">${stepLabel}</span>
       <span class="log-col-action log-action">
         <span class="action-tag">${actionLabel}</span>
@@ -461,10 +461,9 @@ function formatTime(isoStr) {
     const h = String(d.getUTCHours()).padStart(2, '0');
     const m = String(d.getUTCMinutes()).padStart(2, '0');
     const s = String(d.getUTCSeconds()).padStart(2, '0');
-    const ms = String(d.getUTCMilliseconds()).padStart(3, '0');
-    return `${h}:${m}:${s}.${ms}`;
+    return `${h}:${m}:${s}`;
   } catch {
-    return isoStr.slice(11, 23) || isoStr;
+    return isoStr.slice(11, 19) || isoStr;
   }
 }
 
