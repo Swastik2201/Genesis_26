@@ -64,22 +64,41 @@ export function renderDecisionGrid(container, event, options = {}) {
             STRUCTURED FACTS:
           </div>
           <div class="state-facts-grid">
-            <div class="fact-badge">
-              <span class="fact-key">SNAKE LENGTH</span>
-              <span class="fact-val">${state.facts?.body_length || (state.facts?.snake ? state.facts.snake.length : 3)}</span>
-            </div>
-            <div class="fact-badge">
-              <span class="fact-key">DIRECTION</span>
-              <span class="fact-val">${String(state.facts?.direction || 'RIGHT').toUpperCase()}</span>
-            </div>
-            <div class="fact-badge">
-              <span class="fact-key">FOOD EATEN</span>
-              <span class="fact-val">${state.facts?.food_eaten ?? 0} / 15</span>
-            </div>
-            <div class="fact-badge">
-              <span class="fact-key">GRID ARENA</span>
-              <span class="fact-val">12x12</span>
-            </div>
+            ${event.game_id === '2048' ? `
+              <div class="fact-badge">
+                <span class="fact-key">BEST TILE</span>
+                <span class="fact-val" style="color: #ffd000;">${state.facts?.best || 2}</span>
+              </div>
+              <div class="fact-badge">
+                <span class="fact-key">IN-GAME SCORE</span>
+                <span class="fact-val" style="color: #38bdf8;">${state.facts?.score || 0}</span>
+              </div>
+              <div class="fact-badge">
+                <span class="fact-key">ARENA POINTS</span>
+                <span class="fact-val" style="color: #4ade80;">${state.score || 0} PTS</span>
+              </div>
+              <div class="fact-badge">
+                <span class="fact-key">GRID ARENA</span>
+                <span class="fact-val">4x4 (2048)</span>
+              </div>
+            ` : `
+              <div class="fact-badge">
+                <span class="fact-key">SNAKE LENGTH</span>
+                <span class="fact-val">${state.facts?.body_length || (state.facts?.snake ? state.facts.snake.length : 3)}</span>
+              </div>
+              <div class="fact-badge">
+                <span class="fact-key">DIRECTION</span>
+                <span class="fact-val">${String(state.facts?.direction || 'RIGHT').toUpperCase()}</span>
+              </div>
+              <div class="fact-badge">
+                <span class="fact-key">FOOD EATEN</span>
+                <span class="fact-val">${state.facts?.food_eaten ?? 0} / 15</span>
+              </div>
+              <div class="fact-badge">
+                <span class="fact-key">GRID ARENA</span>
+                <span class="fact-val">12x12</span>
+              </div>
+            `}
           </div>
         </div>
 
@@ -360,22 +379,41 @@ export function renderSplitDecision(stateContainer, decisionContainer, event, op
 
       <!-- Structured Facts -->
       <div class="state-facts-grid" style="margin-bottom: var(--space-sm);">
-        <div class="fact-badge">
-          <span class="fact-key">SNAKE LENGTH</span>
-          <span class="fact-val">${state.facts?.body_length || (state.facts?.snake ? state.facts.snake.length : 3)}</span>
-        </div>
-        <div class="fact-badge">
-          <span class="fact-key">DIRECTION</span>
-          <span class="fact-val">${String(state.facts?.direction || 'RIGHT').toUpperCase()}</span>
-        </div>
-        <div class="fact-badge">
-          <span class="fact-key">FOOD EATEN</span>
-          <span class="fact-val">${state.facts?.food_eaten ?? 0} / 15</span>
-        </div>
-        <div class="fact-badge">
-          <span class="fact-key">GRID ARENA</span>
-          <span class="fact-val">12x12</span>
-        </div>
+        ${event.game_id === '2048' ? `
+          <div class="fact-badge">
+            <span class="fact-key">BEST TILE</span>
+            <span class="fact-val" style="color: #ffd000;">${state.facts?.best || 2}</span>
+          </div>
+          <div class="fact-badge">
+            <span class="fact-key">IN-GAME SCORE</span>
+            <span class="fact-val" style="color: #38bdf8;">${state.facts?.score || 0}</span>
+          </div>
+          <div class="fact-badge">
+            <span class="fact-key">ARENA POINTS</span>
+            <span class="fact-val" style="color: #4ade80;">${state.score || 0} PTS</span>
+          </div>
+          <div class="fact-badge">
+            <span class="fact-key">GRID ARENA</span>
+            <span class="fact-val">4x4 (2048)</span>
+          </div>
+        ` : `
+          <div class="fact-badge">
+            <span class="fact-key">SNAKE LENGTH</span>
+            <span class="fact-val">${state.facts?.body_length || (state.facts?.snake ? state.facts.snake.length : 3)}</span>
+          </div>
+          <div class="fact-badge">
+            <span class="fact-key">DIRECTION</span>
+            <span class="fact-val">${String(state.facts?.direction || 'RIGHT').toUpperCase()}</span>
+          </div>
+          <div class="fact-badge">
+            <span class="fact-key">FOOD EATEN</span>
+            <span class="fact-val">${state.facts?.food_eaten ?? 0} / 15</span>
+          </div>
+          <div class="fact-badge">
+            <span class="fact-key">GRID ARENA</span>
+            <span class="fact-val">12x12</span>
+          </div>
+        `}
       </div>
 
       <!-- Legal Actions -->
