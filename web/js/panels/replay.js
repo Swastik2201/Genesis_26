@@ -116,7 +116,8 @@ function renderReplayDeck(container, allRuns, verifyData) {
     <!-- 1. Audit Proof Banner -->
     <div class="replay-proof-banner">
       <div class="proof-badges-group">
-        <span class="badge badge-good">${totalLayaCalls} LAYA CALLS</span>
+        <span class="badge badge-cyan" id="proof-session-badge">SESSION: ${currentSessionId}</span>
+        <span class="badge badge-demo">SHA-256 VERIFIED</span>
       </div>
     </div>
 

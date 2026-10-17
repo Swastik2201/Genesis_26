@@ -169,7 +169,8 @@ function renderCalibrationUI(container, data) {
             </thead>
             <tbody>
               ${thresholds.map(t => {
-                const isRec = Math.abs(t.threshold - recThreshold) < 0.05;
+                const isRec = recThreshold != null && Math.abs(t.threshold - recThreshold) < 0.04;
+                const hasCoverage = t.coverage > 0;
                 return `
                   <tr style="${isRec ? 'background: rgba(255, 61, 242, 0.08);' : ''}">
                     <td>
@@ -179,7 +180,9 @@ function renderCalibrationUI(container, data) {
                       </strong>
                     </td>
                     <td style="color: var(--neon-cyan);">${(t.coverage * 100).toFixed(0)}%</td>
-                    <td style="color: var(--neon-green); font-weight: 700;">${(t.accuracy * 100).toFixed(1)}%</td>
+                    <td style="color: ${hasCoverage ? 'var(--neon-green)' : 'var(--text-muted)'}; font-weight: ${hasCoverage ? '700' : '400'};">
+                      ${hasCoverage ? (t.accuracy * 100).toFixed(1) + '%' : '—'}
+                    </td>
                   </tr>
                 `;
               }).join('')}
@@ -238,20 +241,24 @@ function renderReliabilitySvg(bins, totalN) {
     `;
   }).join('');
 
-  // Generate points and path
-  const points = bins.map(b => {
-    const x = padding + (b.mean_confidence || (b.lo + b.hi) / 2) * plotSize;
+  // Filter only bins that have empirical observations (n > 0)
+  const activeBins = (bins || []).filter(b => (b.n || 0) > 0);
+
+  // Generate points and path for observed bins
+  const points = activeBins.map(b => {
+    const conf = b.mean_confidence !== undefined ? b.mean_confidence : (b.lo + b.hi) / 2;
+    const x = padding + conf * plotSize;
     const y = size - padding - (b.accuracy || 0) * plotSize;
-    const radius = Math.max(5, Math.min(18, ((b.n || 1) / Math.max(1, totalN)) * 36));
+    const radius = Math.max(6, Math.min(20, ((b.n || 1) / Math.max(1, totalN)) * 36));
     return { x, y, radius, b };
   });
 
-  const pathD = points.length > 0 
+  const pathD = points.length > 1 
     ? `M ${points.map(p => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' L ')}` 
     : '';
 
   const bubbles = points.map(p => `
-    <circle cx="${p.x}" cy="${p.y}" r="${p.radius}" fill="rgba(34, 230, 255, 0.4)" stroke="#22e6ff" stroke-width="2">
+    <circle cx="${p.x}" cy="${p.y}" r="${p.radius}" fill="rgba(34, 230, 255, 0.35)" stroke="#22e6ff" stroke-width="2">
       <title>Bin [${p.b.lo}-${p.b.hi}]: Conf ${(p.b.mean_confidence*100).toFixed(0)}%, Acc ${(p.b.accuracy*100).toFixed(0)}%, n=${p.b.n}</title>
     </circle>
     <circle cx="${p.x}" cy="${p.y}" r="3" fill="#fff" />

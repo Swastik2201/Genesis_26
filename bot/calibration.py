@@ -197,6 +197,20 @@ def compute(
     }
 
 
+def compute_aggregate(
+    logs_dir: Path | str = "logs/runs",
+    target_accuracy: float = 0.90,
+    min_samples: int = 20,
+) -> dict[str, Any]:
+    """Compute aggregate calibration metrics across all recorded runs in logs_dir."""
+    p = Path(logs_dir)
+    if not p.exists():
+        return compute([], target_accuracy=target_accuracy, min_samples=min_samples)
+    jsonl_files = sorted(p.glob("*.jsonl"))
+    events = load_events_from_files(jsonl_files)
+    return compute(events, target_accuracy=target_accuracy, min_samples=min_samples)
+
+
 def _extract_question_type(call: dict[str, Any]) -> str:
     """Infer primary question type from laya_call dictionary."""
     questions = call.get("questions")

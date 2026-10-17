@@ -1,6 +1,6 @@
 {
   "name": "test-lab-run",
-  "created_at": "2026-10-16T19:55:34.721Z",
+  "created_at": "2026-10-17T04:22:23.258Z",
   "adapter": "mock",
   "variants": [
     {
@@ -9,12 +9,12 @@
       "avg_score": 180.0,
       "best_score": 180.0,
       "invalid_rate": 0.0,
-      "avg_latency_ms": 0.01,
+      "avg_latency_ms": 0.76,
       "completion_rate": 1.0,
       "avg_confidence": 0.3333,
       "session_ids": [
-        "20261016-195534-f22a",
-        "20261016-195534-6344"
+        "20261017-042223-09be",
+        "20261017-042223-86c1"
       ]
     },
     {
@@ -27,8 +27,8 @@
       "completion_rate": 1.0,
       "avg_confidence": 0.3333,
       "session_ids": [
-        "20261016-195534-d9ea",
-        "20261016-195534-0a8c"
+        "20261017-042223-79df",
+        "20261017-042223-e749"
       ]
     }
   ]

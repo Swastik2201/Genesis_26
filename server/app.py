@@ -713,6 +713,19 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
                             probs[d] = round(rem, 3)
                 reason = f"Live lockstep move from topgameai.com as team {agent_name}"
 
+        is_good_move = True
+        if snake and action:
+            try:
+                from bot.laya.snake_spatial import analyze_snake_state
+                analysis = analyze_snake_state(snake, food, direction)
+                cand = analysis.get(action, {})
+                if cand.get("legal"):
+                    is_good_move = cand.get("is_safe", True) and not cand.get("is_trapped", False)
+                else:
+                    is_good_move = False
+            except Exception:
+                is_good_move = True
+
         event_data = {
             "step": step,
             "session_id": session_id,
@@ -778,7 +791,7 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
             "validator": {"retries": 0, "fallback": False, "rejections": []},
             "final_action": action,
             "game_response": {
-                "good": True,
+                "good": is_good_move,
                 "score_before": max(0.0, score - (60.0 if food_eaten > 0 else 0.0)),
                 "score_after": score,
                 "done": done,

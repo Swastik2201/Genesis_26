@@ -1,6 +1,6 @@
 # Question Lab Experiment: test-lab-run
 
-- **Timestamp:** `2026-10-16T19:55:34.721Z`
+- **Timestamp:** `2026-10-17T04:22:23.258Z`
 - **Adapter:** `mock`
 - **Evaluated Variants:** v1_perception, v2_direct_action
 
@@ -8,7 +8,7 @@
 
 | Question Set Variant | Games | Avg Score | Best Score | Invalid Move Rate | Avg Latency (ms) | Completion Rate | Avg Confidence |
 |---|---|---|---|---|---|---|---|
-| `v1_perception` | 2 | 180.0 | 180 | 0.0% | 0.0 ms | 100% | 0.333 |
+| `v1_perception` | 2 | 180.0 | 180 | 0.0% | 0.8 ms | 100% | 0.333 |
 | `v2_direct_action` | 2 | 180.0 | 180 | 0.0% | 0.0 ms | 100% | 0.333 |
 
 ## Analysis & Observations
