@@ -2,7 +2,7 @@
  * ==========================================================================
  * BEAT THE BOT — LIVE RUN HERO PANEL (panels/live.js)
  * Real-time inference viewer: State ➔ Questions ➔ Probabilities ➔ Chosen Move.
- * Full gamer HUD aesthetic with playback controls and step timeline.
+ * Supports both Snake Arena (12x12) and 2048 Arena (4x4) with adjacent switcher.
  * ==========================================================================
  */
 
@@ -10,7 +10,7 @@ import { store } from '../store.js';
 import * as api from '../api.js';
 import { typewriter, animateCounter, triggerGlitch } from '../fx.js';
 import { renderDecisionGrid, renderSplitDecision } from '../components/decisionCard.js';
-import { GameViewport } from '../components/gameCanvas.js?v=20261016_v6';
+import { GameViewport } from '../components/gameCanvas.js';
 import * as sound from '../sound.js';
 
 let streamController = null;
@@ -18,9 +18,9 @@ let storeUnsubscribe = null;
 let currentDisplayedStep = null;
 let isFollowLive = true;
 let isPaused = false;
-let playbackSpeed = 800; // ms per step
 let currentContainer = null;
 let gameViewport = null;
+let selectedGame = 'snake'; // 'snake' | '2048'
 
 const prefersReducedMotion = () => {
   return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -33,7 +33,6 @@ export async function mount(container) {
   currentContainer = container;
   const state = store.getState();
 
-  // Reset local controller state
   isFollowLive = true;
   isPaused = !state.isStreaming;
 
@@ -44,6 +43,7 @@ export async function mount(container) {
   const viewportMount = container.querySelector('#live-game-viewport-mount');
   if (viewportMount) {
     gameViewport = new GameViewport(viewportMount, {
+      gameType: selectedGame,
       onRestart: () => {
         restartLiveRun();
       },
@@ -61,7 +61,6 @@ export async function mount(container) {
       : state.events[state.events.length - 1].step;
     renderStep(targetStep, false);
   } else {
-    // Show waiting state
     showWaitingState(container);
   }
 
@@ -69,14 +68,12 @@ export async function mount(container) {
   storeUnsubscribe = store.subscribe((newState, prevState) => {
     updateTimelineStrip(newState.events, currentDisplayedStep);
 
-    // If following live and new events arrive, render latest
     if (isFollowLive && newState.latestEvent) {
       if (!prevState || !prevState.latestEvent || newState.latestEvent.step !== prevState.latestEvent.step) {
         renderStep(newState.latestEvent.step, true);
       }
     }
 
-    // Update play/pause button state visually
     const playPauseBtn = document.getElementById('live-btn-play');
     if (playPauseBtn) {
       playPauseBtn.innerHTML = newState.isStreaming 
@@ -85,7 +82,6 @@ export async function mount(container) {
     }
   });
 
-  // Automatically initiate stream if not currently active
   if (!state.isStreaming) {
     startStream();
   }
@@ -100,7 +96,6 @@ export function restartLiveRun() {
     streamController = null;
   }
 
-  // 1. Reset store events to empty
   store.setState({
     events: [],
     selectedStep: null,
@@ -112,7 +107,6 @@ export function restartLiveRun() {
   currentDisplayedStep = null;
   isFollowLive = true;
 
-  // 2. Clear state and decision mounts for clean entry
   const stateMount = document.getElementById('live-state-mount');
   const decisionMount = document.getElementById('live-decision-mount');
   if (stateMount) stateMount.innerHTML = '';
@@ -132,17 +126,14 @@ export function restartLiveRun() {
     `;
   }
 
-  // 3. Clear bottom timeline pips track
   const track = document.getElementById('timeline-pips-track');
   if (track) track.innerHTML = '';
 
-  // 4. Reset game canvas
   if (gameViewport) {
-    gameViewport.resetSkin(gameViewport.gameSkin);
+    gameViewport.resetGame();
     gameViewport.setPaused(false);
   }
 
-  // 5. Reset UI toggles
   const followToggle = document.getElementById('live-follow-toggle');
   if (followToggle) followToggle.checked = true;
 
@@ -152,7 +143,6 @@ export function restartLiveRun() {
   const indicator = document.getElementById('inspecting-indicator');
   if (indicator) indicator.style.display = 'none';
 
-  // 6. Start stream fresh from step 0
   startStream(true);
 }
 
@@ -192,7 +182,6 @@ function startStream(forceDemo = false) {
   }
 
   streamController = api.stream(sessionId, (event) => {
-    // Event automatically added to store in api.js
     hideWaitingState();
   }, (err) => {
     showErrorState(err);
@@ -205,12 +194,116 @@ function startStream(forceDemo = false) {
 }
 
 /**
+ * Switch the active game in the Live Run panel.
+ */
+function switchGame(gameName) {
+  selectedGame = gameName === '2048' ? '2048' : 'snake';
+
+  // Update tabs
+  const tabSnake = document.getElementById('tab-game-snake');
+  const tab2048 = document.getElementById('tab-game-2048');
+  const dropdown = document.getElementById('live-game-dropdown');
+
+  if (dropdown) dropdown.value = selectedGame;
+
+  if (selectedGame === '2048') {
+    if (tab2048) {
+      tab2048.classList.add('active');
+      tab2048.style.background = 'rgba(147, 51, 234, 0.3)';
+      tab2048.style.borderColor = '#a855f7';
+      tab2048.style.color = '#d8b4fe';
+    }
+    if (tabSnake) {
+      tabSnake.classList.remove('active');
+      tabSnake.style.background = 'rgba(15, 23, 42, 0.6)';
+      tabSnake.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+      tabSnake.style.color = '#94a3b8';
+    }
+  } else {
+    if (tabSnake) {
+      tabSnake.classList.add('active');
+      tabSnake.style.background = 'rgba(16, 185, 129, 0.25)';
+      tabSnake.style.borderColor = '#10b981';
+      tabSnake.style.color = '#4ade80';
+    }
+    if (tab2048) {
+      tab2048.classList.remove('active');
+      tab2048.style.background = 'rgba(15, 23, 42, 0.6)';
+      tab2048.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+      tab2048.style.color = '#94a3b8';
+    }
+  }
+
+  // Update Broadcast Synchronizer Card text
+  updateBroadcastCard();
+
+  // Update Game Viewport
+  if (gameViewport) {
+    gameViewport.setGameType(selectedGame);
+  }
+}
+
+function updateBroadcastCard() {
+  const icon = document.getElementById('arena-broadcast-icon');
+  const title = document.getElementById('arena-broadcast-title');
+  const sub = document.getElementById('arena-broadcast-sub');
+  const startBtn = document.getElementById('btn-arena-start-match');
+  const team = document.getElementById('arena-card-team-input')?.value || '4-Goats';
+
+  if (selectedGame === '2048') {
+    if (icon) icon.textContent = '🔢';
+    if (title) title.textContent = 'TOPGAMEAI 2048 ARENA BROADCAST';
+    if (sub) {
+      sub.innerHTML = `Play on <a href="https://topgameai.com/arena/2048" target="_blank" style="color: #38bdf8; text-decoration: underline;">topgameai.com/arena/2048</a> as <strong>${team}</strong> (Step Cap: 2000 | Points: (log2(tile)-6)*143 + score/1000)`;
+    }
+    if (startBtn) startBtn.innerHTML = `<span>▶ PLAY 2048 (${team.toUpperCase()})</span>`;
+  } else {
+    if (icon) icon.textContent = '🐍';
+    if (title) title.textContent = 'TOPGAMEAI SNAKE ARENA BROADCAST';
+    if (sub) {
+      sub.innerHTML = `Play on <a href="https://topgameai.com/arena/snake" target="_blank" style="color: #38bdf8; text-decoration: underline;">topgameai.com/arena/snake</a> as <strong>${team}</strong> (Target: 15 foods | Cap: 300 steps)`;
+    }
+    if (startBtn) startBtn.innerHTML = `<span>▶ PLAY SNAKE (${team.toUpperCase()})</span>`;
+  }
+}
+
+/**
  * Renders the top-level HTML skeleton of the Live Run screen.
  */
 function renderShell(container) {
   container.innerHTML = `
     <div class="panel-live-hero" id="live-hero-root">
-      <!-- 1. Top Controls Toolbar (Speed buttons 0.5x, 1x, 2x removed) -->
+
+      <!-- ADJACENT GAME SELECTOR (SNAKE VS 2048) -->
+      <div class="hud-card" style="margin-bottom: var(--space-sm); padding: 8px 14px; background: rgba(15, 23, 42, 0.9); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; border: 1px solid rgba(255, 255, 255, 0.12);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 11px; font-weight: 700; color: #a855f7; letter-spacing: 0.5px;">SELECT ARENA GAME:</span>
+          <div class="arena-game-tabs" style="display: inline-flex; gap: 6px;">
+            <button id="tab-game-snake" class="btn btn-sm ${selectedGame === 'snake' ? 'active' : ''}" style="background: ${selectedGame === 'snake' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(15, 23, 42, 0.6)'}; border: 1px solid ${selectedGame === 'snake' ? '#10b981' : 'rgba(255,255,255,0.15)'}; color: ${selectedGame === 'snake' ? '#4ade80' : '#94a3b8'}; font-weight: 700; padding: 4px 10px; border-radius: 6px;">
+              <span>🐍 SNAKE ARENA (12x12)</span>
+            </button>
+            <button id="tab-game-2048" class="btn btn-sm ${selectedGame === '2048' ? 'active' : ''}" style="background: ${selectedGame === '2048' ? 'rgba(147, 51, 234, 0.3)' : 'rgba(15, 23, 42, 0.6)'}; border: 1px solid ${selectedGame === '2048' ? '#a855f7' : 'rgba(255,255,255,0.15)'}; color: ${selectedGame === '2048' ? '#d8b4fe' : '#94a3b8'}; font-weight: 700; padding: 4px 10px; border-radius: 6px;">
+              <span>🔢 2048 ARENA (4x4)</span>
+            </button>
+          </div>
+          <!-- Dropdown alternate option -->
+          <select id="live-game-dropdown" style="background: #0f172a; border: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-family: monospace;">
+            <option value="snake">Game: Snake (12x12)</option>
+            <option value="2048">Game: 2048 (4x4)</option>
+          </select>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button id="btn-copy-relay-code" class="btn btn-sm" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; font-weight: 600; padding: 4px 10px;" title="Copy snippet to paste into TopGameAI browser console">
+            <span>📋 COPY INSPECT CODE</span>
+          </button>
+          <span id="copy-code-feedback" style="display: none; font-size: 11px; color: #4ade80; font-weight: bold;">
+            ✓ COPIED! Paste into F12 Console on topgameai.com
+          </span>
+        </div>
+      </div>
+
+      <!-- 1. Top Controls Toolbar -->
       <div class="live-toolbar">
         <div class="live-controls-group">
           <button id="live-btn-play" class="btn btn-primary btn-sm" aria-label="Toggle live stream and game simulation playback">
@@ -222,28 +315,53 @@ function renderShell(container) {
           <button id="live-btn-restart" class="btn btn-secondary btn-sm" aria-label="Restart decision step timeline and simulation from step 0">
             <span>🔄 RESTART</span>
           </button>
-          <button id="live-btn-copy-hook" class="btn btn-secondary btn-sm" title="Copy 1-line script to paste into DevTools Console on topgameai.com/arena/snake">
-            <span>📋 COPY RELAY HOOK</span>
-          </button>
-          <button id="live-btn-play-topgameai" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #9333ea, #4f46e5); border-color: #a855f7; box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);" title="Plays simultaneously on TopGameAI Arena & streams live here as 4-Goats">
-            <span>⚔️ PLAY TOPGAMEAI (4-GOATS)</span>
-          </button>
+          <div class="arena-team-picker" style="display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; border-left: 1px solid rgba(255,255,255,0.15); padding-left: 10px;">
+            <span style="font-size: 11px; font-weight: 700; color: #a855f7;">TEAM:</span>
+            <input type="text" id="live-team-name-input" value="4-Goats" style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(168, 85, 247, 0.4); color: #fff; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 12px; width: 95px;" placeholder="4-Goats" aria-label="Team name">
+            <button id="live-btn-launch-arena" class="btn btn-sm" style="background: linear-gradient(135deg, #7c3aed, #2563eb); color: #fff; border: 1px solid #9333ea; font-weight: 600;" title="Simultaneously play on TopGameAI Arena and stream here">
+              <span>⚔️ PLAY ARENA MATCH</span>
+            </button>
+          </div>
         </div>
 
         <div style="display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap;">
-          <!-- Follow Live Toggle -->
           <label class="follow-toggle-label" for="live-follow-toggle">
             <input type="checkbox" id="live-follow-toggle" class="follow-checkbox" checked>
             <span>FOLLOW LIVE</span>
           </label>
 
-          <!-- Inspecting Status Badge -->
           <span id="inspecting-indicator" class="badge badge-cyan" style="display: none;">
             INSPECTING HISTORIC STEP
           </span>
 
           <button id="btn-reconnect-stream" class="btn btn-ghost btn-sm" style="display: none;">
             <span>RECONNECT</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. TopGameAI Arena Broadcast Synchronizer Card -->
+      <div class="hud-card arena-broadcast-bar" style="margin-bottom: var(--space-md); padding: 12px 18px; border-left: 3px solid #a855f7; background: linear-gradient(90deg, rgba(147, 51, 234, 0.12), rgba(15, 23, 42, 0.85)); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span id="arena-broadcast-icon" style="font-size: 1.5rem;">${selectedGame === '2048' ? '🔢' : '🐍'}</span>
+          <div>
+            <div style="font-weight: 700; color: #fff; font-size: 13px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
+              <span id="arena-broadcast-title">TOPGAMEAI ${selectedGame.toUpperCase()} ARENA BROADCAST</span>
+              <span class="badge" style="background: rgba(34, 230, 255, 0.15); color: #22e6ff; border-color: #22e6ff; font-size: 10px;">LIVE LOCKSTEP</span>
+            </div>
+            <div id="arena-broadcast-sub" style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">
+              Play on <a href="https://topgameai.com/arena/${selectedGame}" target="_blank" style="color: #38bdf8; text-decoration: underline;">topgameai.com/arena/${selectedGame}</a> as <strong>4-Goats</strong> to mirror live, or launch directly below!
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 11px; color: #a855f7; font-weight: 700;">TEAM:</span>
+            <input type="text" id="arena-card-team-input" value="4-Goats" style="background: rgba(0,0,0,0.6); border: 1px solid rgba(168,85,247,0.5); color: #fff; font-family: monospace; font-size: 12px; padding: 5px 10px; border-radius: 4px; width: 90px;" aria-label="Team name">
+          </div>
+          <button id="btn-arena-start-match" class="btn btn-sm" style="background: linear-gradient(135deg, #7c3aed, #2563eb); color: #fff; border: 1px solid #9333ea; font-weight: 600;">
+            <span>▶ PLAY NOW (4-GOATS)</span>
           </button>
         </div>
       </div>
@@ -271,8 +389,9 @@ function renderShell(container) {
             <span class="timeline-legend-item"><span class="pip-legend-dot bad"></span> COLLISION / BAD</span>
           </div>
         </div>
-        <div id="timeline-pips-track" class="timeline-pips-track" role="tablist" aria-label="Step timeline">
-          <!-- Pips injected dynamically -->
+
+        <div class="timeline-pips-track" id="timeline-pips-track" role="tablist" aria-label="Step timeline">
+          <!-- Dynamically populated -->
         </div>
       </div>
     </div>
@@ -280,7 +399,7 @@ function renderShell(container) {
 }
 
 /**
- * Attaches event listeners for toolbar buttons and playback options.
+ * Binds event listeners to top buttons, toolbar controls, and arena launcher.
  */
 function bindControls(container) {
   const playBtn = container.querySelector('#live-btn-play');
@@ -289,22 +408,47 @@ function bindControls(container) {
   const followToggle = container.querySelector('#live-follow-toggle');
   const reconnectBtn = container.querySelector('#btn-reconnect-stream');
 
+  // Game Selector Tabs & Dropdown
+  const tabSnake = container.querySelector('#tab-game-snake');
+  const tab2048 = container.querySelector('#tab-game-2048');
+  const dropdown = container.querySelector('#live-game-dropdown');
+  const copyRelayBtn = container.querySelector('#btn-copy-relay-code');
+  const copyFeedback = container.querySelector('#copy-code-feedback');
+
+  if (tabSnake) tabSnake.addEventListener('click', () => switchGame('snake'));
+  if (tab2048) tab2048.addEventListener('click', () => switchGame('2048'));
+  if (dropdown) dropdown.addEventListener('change', (e) => switchGame(e.target.value));
+
+  if (copyRelayBtn) {
+    copyRelayBtn.addEventListener('click', () => {
+      const codeSnippet = `fetch('http://localhost:8000/relay.js').then(r=>r.text()).then(eval)`;
+      navigator.clipboard.writeText(codeSnippet).then(() => {
+        if (copyFeedback) {
+          copyFeedback.style.display = 'inline-block';
+          setTimeout(() => { copyFeedback.style.display = 'none'; }, 4000);
+        }
+        copyRelayBtn.innerHTML = '<span>✓ COPIED CODE!</span>';
+        setTimeout(() => {
+          copyRelayBtn.innerHTML = '<span>📋 COPY INSPECT CODE</span>';
+        }, 3000);
+      }).catch(() => {
+        prompt('Copy this code into TopGameAI browser console (F12):', codeSnippet);
+      });
+    });
+  }
+
   if (playBtn) {
     playBtn.addEventListener('click', () => {
       const state = store.getState();
       if (state.isStreaming) {
-        if (streamController) {
-          streamController.close();
-          streamController = null;
-        }
-        store.setStreaming(false);
+        store.setState({ isStreaming: false });
+        if (streamController) streamController.close();
         if (gameViewport) gameViewport.setPaused(true);
         playBtn.innerHTML = '<span>▶ PLAY LIVE</span>';
       } else {
-        isFollowLive = true;
-        if (followToggle) followToggle.checked = true;
-        if (gameViewport) gameViewport.setPaused(false);
+        store.setState({ isStreaming: true });
         startStream();
+        if (gameViewport) gameViewport.setPaused(false);
         playBtn.innerHTML = '<span>⏸ PAUSE</span>';
       }
     });
@@ -341,48 +485,60 @@ function bindControls(container) {
     });
   }
 
-  const playTopGameBtn = container.querySelector('#live-btn-play-topgameai');
-  if (playTopGameBtn) {
-    playTopGameBtn.addEventListener('click', async () => {
-      playTopGameBtn.disabled = true;
-      playTopGameBtn.innerHTML = '<span>⚡ CONNECTING TOPGAMEAI...</span>';
+  const launchBtn = container.querySelector('#live-btn-launch-arena');
+  const teamInput = container.querySelector('#live-team-name-input');
+  if (launchBtn) {
+    launchBtn.addEventListener('click', async () => {
+      const team = (teamInput?.value || '4-Goats').trim();
+      launchBtn.disabled = true;
+      launchBtn.innerHTML = '<span>⏳ CONNECTING...</span>';
       try {
-        await fetch('/api/arena/play', {
+        const resp = await fetch('/api/arena/play', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ agent_name: '4-Goats', delay: 0.08 })
+          body: JSON.stringify({ agent_name: team, game: selectedGame, delay: 0.10 })
         });
-        sound.playSelectTone?.();
-        // Give 400ms for session to initialize then stream
+        const data = await resp.json();
+        launchBtn.innerHTML = `<span>⚔️ PLAYING ${selectedGame.toUpperCase()}</span>`;
         setTimeout(() => {
-          isFollowLive = true;
-          if (followToggle) followToggle.checked = true;
           startStream();
-          playTopGameBtn.innerHTML = '<span>⚔️ 4-GOATS PLAYING LIVE</span>';
-        }, 500);
-      } catch (e) {
-        console.error(e);
-        playTopGameBtn.innerHTML = '<span>⚠ FAILED TO LAUNCH</span>';
+          launchBtn.disabled = false;
+          launchBtn.innerHTML = '<span>⚔️ PLAY ARENA MATCH</span>';
+        }, 1200);
+      } catch (err) {
+        console.error('Launch arena match failed:', err);
+        launchBtn.disabled = false;
+        launchBtn.innerHTML = '<span>❌ RETRY MATCH</span>';
       }
-      setTimeout(() => {
-        playTopGameBtn.disabled = false;
-        playTopGameBtn.innerHTML = '<span>⚔️ PLAY TOPGAMEAI (4-GOATS)</span>';
-      }, 8000);
     });
   }
 
-  const copyHookBtn = container.querySelector('#live-btn-copy-hook');
-  if (copyHookBtn) {
-    copyHookBtn.addEventListener('click', () => {
-      const scriptCode = `fetch('http://localhost:8000/relay.js').then(r=>r.text()).then(eval);`;
-      navigator.clipboard.writeText(scriptCode).then(() => {
-        copyHookBtn.innerHTML = '<span>✓ COPIED TO CLIPBOARD!</span>';
+  // TopGameAI Arena Broadcast Card Controls
+  const cardStartBtn = container.querySelector('#btn-arena-start-match');
+  const cardTeamInput = container.querySelector('#arena-card-team-input');
+  if (cardStartBtn) {
+    cardStartBtn.addEventListener('click', async () => {
+      const team = (cardTeamInput?.value || '4-Goats').trim();
+      cardStartBtn.disabled = true;
+      cardStartBtn.innerHTML = '<span>⏳ STARTING ARENA...</span>';
+      try {
+        const resp = await fetch('/api/arena/play', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agent_name: team, game: selectedGame, delay: 0.10 })
+        });
+        const data = await resp.json();
+        cardStartBtn.innerHTML = `<span>⚡ PLAYING (${team})</span>`;
         setTimeout(() => {
-          copyHookBtn.innerHTML = '<span>📋 COPY RELAY HOOK</span>';
-        }, 3000);
-      }).catch(() => {
-        prompt('Copy and paste into DevTools Console on https://topgameai.com/arena/snake:', scriptCode);
-      });
+          startStream();
+          cardStartBtn.disabled = false;
+          cardStartBtn.innerHTML = `<span>▶ PLAY ${selectedGame.toUpperCase()} (${team.toUpperCase()})</span>`;
+        }, 1000);
+      } catch (err) {
+        console.error('Start arena match failed:', err);
+        cardStartBtn.disabled = false;
+        cardStartBtn.innerHTML = '<span>❌ RETRY</span>';
+      }
     });
   }
 }
@@ -403,8 +559,6 @@ function advanceOneStep() {
 
 /**
  * Renders an exact step in the 3-column viewer.
- * @param {number} stepNumber - Step to render
- * @param {boolean} shouldAnimate - Whether to run typewriter & staggers
  */
 function renderStep(stepNumber, shouldAnimate = true) {
   const events = store.getState().events;
@@ -414,32 +568,34 @@ function renderStep(stepNumber, shouldAnimate = true) {
   currentDisplayedStep = stepNumber;
   store.selectStep(stepNumber);
 
+  // Synchronize game mode with event if incoming event is 2048
+  if (event.game_id === '2048' && selectedGame !== '2048') {
+    switchGame('2048');
+  } else if (event.game_id === 'snake' && selectedGame !== 'snake') {
+    switchGame('snake');
+  }
+
   const isReduced = prefersReducedMotion() || !shouldAnimate;
   const isLatest = event.step === events[events.length - 1].step;
 
-  // Toggle inspecting indicator
   const indicator = document.getElementById('inspecting-indicator');
   if (indicator) {
     indicator.style.display = (!isLatest || !isFollowLive) ? 'inline-flex' : 'none';
     if (!isLatest) indicator.textContent = `INSPECTING STEP ${event.step} (CLICK TIMELINE FOR OTHERS)`;
   }
 
-  // Render Side-by-Side: State on Left under canvas, Laya Decisions on Right!
   const stateMount = document.getElementById('live-state-mount');
   const decisionMount = document.getElementById('live-decision-mount');
   if (stateMount && decisionMount) {
     renderSplitDecision(stateMount, decisionMount, event, { isReduced, animate: shouldAnimate });
   }
 
-  // Feed step to visual game canvas viewport
   if (gameViewport) {
     gameViewport.feedStep(event);
   }
 
-  // Update Bottom Timeline Track
   updateTimelineStrip(events, stepNumber);
 
-  // Trigger synthesized sound if active and animating
   if (shouldAnimate) {
     if (event.validator?.retries > 0 || event.validator?.rejections?.length > 0) {
       sound.playIllegalMoveSound();
@@ -475,7 +631,6 @@ function updateTimelineStrip(events, activeStep) {
     `;
   }).join('');
 
-  // Attach click listeners to pips
   track.querySelectorAll('.timeline-pip').forEach(pip => {
     pip.addEventListener('click', (e) => {
       const step = Number(pip.getAttribute('data-step'));
@@ -486,7 +641,6 @@ function updateTimelineStrip(events, activeStep) {
     });
   });
 
-  // Auto-scroll timeline to active pip HORIZONTALLY ONLY, WITHOUT scrolling the parent window!
   const currentPip = track.querySelector('.timeline-pip.is-current');
   if (currentPip) {
     const pipLeft = currentPip.offsetLeft;
@@ -499,88 +653,34 @@ function updateTimelineStrip(events, activeStep) {
   }
 }
 
-/**
- * Renders an empty waiting state if no events have arrived yet.
- */
 function showWaitingState(container) {
   const decisionMount = container.querySelector('#live-decision-mount');
   if (!decisionMount) return;
 
   decisionMount.innerHTML = `
     <div class="empty-hero-state hud-card" style="padding: var(--space-xl);">
-      <div style="font-size: 2.5rem; color: var(--neon-cyan); margin-bottom: var(--space-sm); animation: pulseDot 1.6s infinite;">
+      <div style="font-size: 2.5rem; color: var(--neon-cyan); margin-bottom: var(--space-sm); animation: pulseDot 1.5s infinite;">
         📡
       </div>
       <h3 style="font-size: var(--text-lg); color: #fff; margin-bottom: var(--space-xs);">
-        WAITING FOR LAYA DECISIONS...
+        WAITING FOR ARENA TELEMETRY...
       </h3>
-      <p style="color: var(--text-secondary); font-size: var(--text-sm); max-width: 440px; margin-bottom: var(--space-md);">
-        The live decision telemetry is listening for Laya model calls. Stream events with demo_feeder or replay a run above.
+      <p style="color: var(--text-secondary); font-size: var(--text-sm); max-width: 440px; margin: 0 auto var(--space-md);">
+        Click <strong>⚔️ PLAY ARENA MATCH</strong> above or copy the inspect snippet to play live on TopGameAI Arena.
       </p>
-      <div style="display: flex; gap: var(--space-sm);">
-        <button id="btn-start-demo-stream" class="btn btn-primary btn-sm">
-          <span>START DEMO STREAM</span>
-        </button>
+      <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 10px 14px; font-family: monospace; font-size: 11px; color: #a855f7; display: inline-block;">
+        fetch('http://localhost:8000/relay.js').then(r=>r.text()).then(eval)
       </div>
     </div>
   `;
+}
 
-  const btn = decisionMount.querySelector('#btn-start-demo-stream');
-  if (btn) {
-    btn.addEventListener('click', () => {
-      hideWaitingState();
-      // Reset store to step 0 for a fresh run
-      store.setState({ events: [], selectedStep: null, latestEvent: null });
-      if (gameViewport) {
-        gameViewport.resetSkin(gameViewport.gameSkin);
-        gameViewport.setPaused(false);
-      }
-      isFollowLive = true;
-      const followToggle = document.getElementById('live-follow-toggle');
-      if (followToggle) followToggle.checked = true;
-      startStream(true);
-    });
-  }
+function showErrorState(err) {
+  const indicator = document.getElementById('btn-reconnect-stream');
+  if (indicator) indicator.style.display = 'inline-flex';
 }
 
 function hideWaitingState() {
-  const empty = document.querySelector('.empty-hero-state');
-  if (empty && empty.parentElement) {
-    // Content will be replaced on renderStep
-  }
-}
-
-/**
- * Renders a reconnectable error state if stream connection fails.
- */
-function showErrorState(err) {
-  const viewer = document.getElementById('live-viewer-content');
-  const reconnectBtn = document.getElementById('btn-reconnect-stream');
-  if (reconnectBtn) reconnectBtn.style.display = 'inline-flex';
-
-  if (!viewer) return;
-
-  // If no events rendered at all, show prominent error card
-  if (store.getState().events.length === 0) {
-    viewer.innerHTML = `
-      <div class="empty-hero-state hud-card" style="grid-column: 1 / -1; border-color: var(--red);">
-        <div style="font-size: 2.5rem; color: var(--red); margin-bottom: var(--space-sm);">⚠</div>
-        <h3 style="color: var(--red); margin-bottom: var(--space-xs);">STREAM DISCONNECTED</h3>
-        <p style="color: var(--text-secondary); max-width: 480px; margin-bottom: var(--space-md);">
-          Could not establish connection to the game stream. You can retry connecting or switch to offline demo fixtures.
-        </p>
-        <div style="display: flex; gap: var(--space-sm);">
-          <button id="btn-err-reconnect" class="btn btn-primary btn-sm">RECONNECT STREAM</button>
-          <a href="?mock=1#/live" class="btn btn-secondary btn-sm">SWITCH TO MOCK DATA</a>
-        </div>
-      </div>
-    `;
-
-    const retry = viewer.querySelector('#btn-err-reconnect');
-    if (retry) {
-      retry.addEventListener('click', () => {
-        startStream();
-      });
-    }
-  }
+  const waitingEl = document.querySelector('.empty-hero-state');
+  if (waitingEl) waitingEl.remove();
 }

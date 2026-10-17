@@ -11,7 +11,10 @@
   ],
   "content_scripts": [
     {
-      "matches": ["https://topgameai.com/arena/snake*"],
+      "matches": [
+        "https://topgameai.com/arena/snake*",
+        "https://topgameai.com/arena/2048*"
+      ],
       "js": ["content.js"],
       "run_at": "document_start",
       "world": "MAIN"
