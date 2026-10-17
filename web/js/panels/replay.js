@@ -109,10 +109,14 @@ function renderReplayDeck(container, allRuns, verifyData) {
         <select id="replay-session-dropdown" class="session-select-input" style="width: auto; min-width: 220px;" aria-label="Select session to replay">
           ${(allRuns || []).map(r => `
             <option value="${r.session_id}" ${r.session_id === currentSessionId ? 'selected' : ''}>
-              ${r.session_id} (${r.final_score ?? 0} pts)
+              [${(r.game_id || 'game').toUpperCase()}] ${r.session_id.slice(0, 16)}... (${r.steps} steps | ${r.final_score ?? 0} pts)
             </option>
           `).join('')}
         </select>
+
+        <a href="#/autopsy?session=${encodeURIComponent(currentSessionId)}" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #a855f7, #6366f1); border-color: #a855f7; color: #fff; font-weight: 700; text-decoration: none;">
+          <span>🔬 AUTOPSY</span>
+        </a>
 
         <a href="${api.downloadUrl(currentSessionId)}" download="${currentSessionId}.jsonl" class="btn btn-secondary btn-sm" id="btn-download-jsonl">
           <span>DOWNLOAD .JSONL</span>

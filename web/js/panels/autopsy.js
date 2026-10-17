@@ -13,6 +13,8 @@ let activeFilter = 'all';
 let currentAutopsyData = null;
 let currentEventsMap = new Map();
 let currentContainer = null;
+let currentSessionId = null;
+let allRunsList = [];
 
 const VERDICT_META = {
   all: { label: 'ALL VERDICTS', colorClass: 'badge-cyan' },
@@ -24,10 +26,20 @@ const VERDICT_META = {
   as_predicted: { label: 'AS PREDICTED', colorClass: 'badge-good' }
 };
 
-export async function mount(container) {
+export async function mount(container, params = {}) {
   currentContainer = container;
   const state = store.getState();
-  const sessionId = state.currentSession || 'demo-runner-20261013-001';
+  let sessionId = params.session || state.currentSession;
+
+  if (!sessionId || sessionId === 'latest') {
+    try {
+      const health = await api.health();
+      sessionId = health.latest_session_id || 'demo-runner-20261013-001';
+    } catch (e) {
+      sessionId = 'demo-runner-20261013-001';
+    }
+  }
+  currentSessionId = sessionId;
 
   // Render initial loading skeleton
   container.innerHTML = `
@@ -50,11 +62,13 @@ export async function mount(container) {
   `;
 
   try {
-    const [autopsyRes, eventsRes] = await Promise.all([
+    const [autopsyRes, eventsRes, runsRes] = await Promise.all([
       api.autopsy(sessionId),
-      api.events(sessionId, 0, 100)
+      api.events(sessionId, 0, 500),
+      api.runs().catch(() => ({ runs: [] }))
     ]);
 
+    allRunsList = runsRes?.runs || [];
     currentAutopsyData = autopsyRes;
     const eventsList = eventsRes?.events || [];
     currentEventsMap = new Map(eventsList.map(e => [e.step, e]));
@@ -70,7 +84,7 @@ export async function mount(container) {
       </div>
     `;
     const btn = container.querySelector('#btn-retry-autopsy');
-    if (btn) btn.addEventListener('click', () => mount(container));
+    if (btn) btn.addEventListener('click', () => mount(container, params));
   }
 }
 
@@ -107,11 +121,18 @@ function renderAutopsyUI(container) {
           <h2 style="margin-bottom: 4px;">DECISION AUTOPSY</h2>
           <p style="color: var(--text-muted); margin-bottom: 0;">Turn failed moves into scientific investigations. Explanations framed strictly as testable hypotheses.</p>
         </div>
-        <div style="display: flex; gap: var(--space-xs);">
+        <div style="display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label for="autopsy-session-selector" style="font-size: 11px; font-weight: 700; color: #a855f7;">SESSION:</label>
+            <select id="autopsy-session-selector" style="background: #0f172a; border: 1px solid rgba(168, 85, 247, 0.4); color: #fff; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; max-width: 260px;">
+              ${allRunsList.map(r => `
+                <option value="${r.session_id}" ${r.session_id === currentSessionId ? 'selected' : ''}>
+                  [${(r.game_id || 'game').toUpperCase()}] ${r.session_id.slice(0, 16)}... (${r.steps} steps)
+                </option>
+              `).join('')}
+            </select>
+          </div>
           <span class="badge badge-cyan">${items.length} INVESTIGATED STEPS</span>
-          <span class="badge ${store.getState().isMockMode ? 'badge-demo' : 'badge-good'}">
-            ${store.getState().isMockMode ? 'DEMO DATA' : 'AUDITED'}
-          </span>
         </div>
       </div>
 
@@ -161,6 +182,16 @@ function renderAutopsyUI(container) {
       </div>
     </div>
   `;
+
+  // Bind session switcher dropdown
+  const sessionSelector = container.querySelector('#autopsy-session-selector');
+  if (sessionSelector) {
+    sessionSelector.addEventListener('change', (e) => {
+      const newSid = e.target.value;
+      store.setState({ currentSession: newSid });
+      mount(container, { session: newSid });
+    });
+  }
 
   // Bind filter buttons
   container.querySelectorAll('.filter-chip-btn').forEach(btn => {
@@ -236,7 +267,7 @@ function renderCasesList(container, sortedItems) {
                 ${(sev * 100).toFixed(0)}%
               </span>
             </div>
-            <a href="#/replay?step=${item.step}" class="btn btn-primary btn-sm" aria-label="Open step in replay">
+            <a href="#/replay?session=${encodeURIComponent(currentSessionId)}&step=${item.step}" class="btn btn-primary btn-sm" aria-label="Open step in replay">
               <span>OPEN IN REPLAY ➔</span>
             </a>
           </div>
@@ -338,7 +369,7 @@ function renderCasesList(container, sortedItems) {
           <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">
             SESSION: ${event.session_id || 'demo-runner-001'} • TIMESTAMP: ${event.ts || 'UTC'}
           </div>
-          <a href="#/replay?step=${item.step}" class="btn btn-ghost btn-sm">
+          <a href="#/replay?session=${encodeURIComponent(currentSessionId)}&step=${item.step}" class="btn btn-ghost btn-sm">
             <span>INSPECT STEP ${item.step} IN REPLAY</span>
           </a>
         </div>

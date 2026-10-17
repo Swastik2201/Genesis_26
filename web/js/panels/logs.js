@@ -18,9 +18,24 @@ let terminalEl = null;
 let virtualScrollHandler = null;
 let currentFilteredEvents = [];
 
-export async function mount(container) {
+export async function mount(container, params = {}) {
   const state = store.getState();
-  const sessionId = state.currentSession || 'demo-runner-20261013-001';
+  let sessionId = params.session || state.currentSession;
+
+  if (!sessionId || sessionId === 'latest') {
+    try {
+      const health = await api.health();
+      sessionId = health.latest_session_id || 'demo-runner-20261013-001';
+    } catch (e) {
+      sessionId = 'demo-runner-20261013-001';
+    }
+  }
+
+  let allRunsList = [];
+  try {
+    const runsRes = await api.runs();
+    allRunsList = runsRes?.runs || [];
+  } catch (e) {}
 
   // Render Skeleton Shell
   container.innerHTML = `
@@ -32,13 +47,23 @@ export async function mount(container) {
           <p style="color: var(--text-muted); margin-bottom: 0;">Immutable, single-line telemetry records for every decision step.</p>
         </div>
         <div style="display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label for="logs-session-selector" style="font-size: 11px; font-weight: 700; color: #a855f7;">SESSION:</label>
+            <select id="logs-session-selector" style="background: #0f172a; border: 1px solid rgba(168, 85, 247, 0.4); color: #fff; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; max-width: 260px;">
+              ${allRunsList.map(r => `
+                <option value="${r.session_id}" ${r.session_id === sessionId ? 'selected' : ''}>
+                  [${(r.game_id || 'game').toUpperCase()}] ${r.session_id.slice(0, 16)}... (${r.steps} steps)
+                </option>
+              `).join('')}
+            </select>
+          </div>
           <button id="btn-toggle-tail" class="btn btn-secondary btn-sm" title="Toggle autoscroll to new events">
             <span id="tail-status-indicator" class="pulse-indicator" style="background: var(--neon-green);"></span>
             <span id="tail-btn-label">TAIL: ACTIVE</span>
           </button>
-          <button id="btn-download-jsonl" class="btn btn-primary btn-sm" title="Download session as .jsonl">
+          <a href="${api.downloadUrl(sessionId)}" download="${sessionId}.jsonl" id="btn-download-jsonl" class="btn btn-primary btn-sm" title="Download session as .jsonl" style="text-decoration: none;">
             <span>⤓ DOWNLOAD .JSONL</span>
-          </button>
+          </a>
         </div>
       </div>
 
@@ -83,7 +108,7 @@ export async function mount(container) {
         <!-- Scrollable Log Stream -->
         <div id="log-stream-terminal" class="log-terminal" role="region" aria-label="Live logs terminal">
           <div style="padding: var(--space-xl); text-align: center; color: var(--text-muted); font-family: var(--font-mono);">
-            Initializing log stream buffers...
+            Loading log events for ${sessionId}...
           </div>
         </div>
 
@@ -104,14 +129,24 @@ export async function mount(container) {
   terminalEl = container.querySelector('#log-stream-terminal');
 
   // Load events
-  let events = state.events;
-  if (!events || events.length === 0) {
-    try {
-      events = await api.events(sessionId);
-      store.setEvents(events);
-    } catch (e) {
-      console.warn('[Logs] Falling back to sample events:', e);
-    }
+  let events = [];
+  try {
+    const evRes = await api.events(sessionId, 0, 1000);
+    events = evRes?.events || (Array.isArray(evRes) ? evRes : []);
+    store.setEvents(events);
+  } catch (e) {
+    console.warn('[Logs] Falling back to state events:', e);
+    events = state.events || [];
+  }
+
+  // Session selector binding
+  const sessionSelector = container.querySelector('#logs-session-selector');
+  if (sessionSelector) {
+    sessionSelector.addEventListener('change', (e) => {
+      const newSid = e.target.value;
+      store.setState({ currentSession: newSid });
+      mount(container, { session: newSid });
+    });
   }
 
   // Setup Event Listeners

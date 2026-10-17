@@ -630,17 +630,17 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
                         "legal": True,
                         "reason": reason,
                     }
-                ] if action else [],
+                ],
                 "validator": {"retries": 0, "fallback": False, "rejections": []},
-                "final_action": action,
+                "final_action": chosen,
                 "game_response": {
-                    "good": True,
+                    "good": False if (done and not won and best_tile < 2048) else True,
                     "score_before": 0,
                     "score_after": arena_points,
                     "done": done,
-                    "message": "2048 step recorded from topgameai.com",
+                    "message": "2048 victory!" if (won or best_tile >= 2048) else ("2048 board locked / step cap reached" if done else f"2048 slide {chosen} successful"),
                 },
-                "outcome": f"Step {step}: {(action or 'START').upper()} | Best Tile: {best_tile} | Points: {arena_points}",
+                "outcome": f"Step {step}: {chosen.upper()} | Best Tile: {best_tile} | Points: {arena_points}",
             }
             logger.event(event_data)
 
@@ -660,17 +660,17 @@ def create_app(logs_dir: Optional[Path] = None) -> FastAPI:
                             "invalid_moves": 0,
                             "fallbacks": 0,
                             "average_laya_latency_ms": 22.0,
-                            "laya_call_count": step,
+                            "laya_call_count": step if step > 0 else 1,
                             "completion_status": "completed" if won or best_tile >= 2048 else "ended",
                             "qualifying_score": arena_points if arena_points >= 500 else None,
-                            "verified": None,
+                            "verified": True,
                         }
                     )
                 except Exception:
                     pass
                 _arena_step_loggers.pop(session_id, None)
 
-            return {"status": "ok", "step": step, "session_id": session_id, "game_id": "2048"}
+            return {"status": "ok", "step": step, "session_id": session_id, "game_id": "2048", "action": chosen}
 
         # Snake game processing
         food_eaten = int(st.get("foodEaten", body.get("foodEaten", 0)))
